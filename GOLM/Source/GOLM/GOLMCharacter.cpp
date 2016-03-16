@@ -285,13 +285,13 @@ void AGOLMCharacter::UpdateAim()
 					FRotator FinalAim;
 
 					//if (bAimPitchable)
-						FinalAim.Roll = -(aim.Pitch + 0.4f);
+						//FinalAim.Roll = -(aim.Pitch + 0.4f);
 					//else
 						//FinalAim.Roll = 0;
 
-					FinalAim.Yaw = (aim.Yaw + 10) - GetActorForwardVector().Rotation().Yaw;
-					FinalAim.Pitch = 0;
-					WeaponAim = FinalAim;
+					//FinalAim.Yaw = (aim.Yaw + 10) - GetActorForwardVector().Rotation().Yaw;
+					//FinalAim.Pitch = 0;
+					WeaponAim = aim;
 
 					if(Role != ROLE_Authority)
 						UpdateAim_ServerUpdate(FinalAim);

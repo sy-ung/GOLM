@@ -17,7 +17,6 @@ class AGOLMCharacter : public ACharacter
 
 	FVector Direction;
 
-
 	void UpdateAim();
 	UFUNCTION(Server, Reliable, WithValidation)
 		void UpdateAim_ServerUpdate(FRotator NewWeaponAim);
@@ -49,6 +48,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *PlayerCamera;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* PlayerCameraBoom;
+
 
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon Scale")	float WeaponScale;
