@@ -275,14 +275,13 @@ void AGOLMCharacter::UpdateAim()
 
 					WeaponMuzzleRotation = CurrentWeapon->WeaponMesh->GetSocketRotation("MuzzleFlash");
 					WeaponMuzzleLocation = CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash");
-
-					FVector startLocation = WeaponMuzzleLocation;
+					//WeaponMuzzleLocation = GetMesh()->GetSocketLocation("SpineSocket");
 
 					FVector mouseHit = playerController->GetMouseHit();
-					//TracePath(startLocation, mouseHit);
 					FRotator aim = (mouseHit - WeaponMuzzleLocation).Rotation();
+					aim.Yaw -= -10 + GetActorForwardVector().Rotation().Yaw;
 
-					FRotator FinalAim;
+					//FRotator FinalAim;
 
 					//if (bAimPitchable)
 						//FinalAim.Roll = -(aim.Pitch + 0.4f);
@@ -292,9 +291,11 @@ void AGOLMCharacter::UpdateAim()
 					//FinalAim.Yaw = (aim.Yaw + 10) - GetActorForwardVector().Rotation().Yaw;
 					//FinalAim.Pitch = 0;
 					WeaponAim = aim;
+					//GEngine->ClearOnScreenDebugMessages();
+					//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, WeaponAim.ToString());
 
-					if(Role != ROLE_Authority)
-						UpdateAim_ServerUpdate(FinalAim);
+					if (Role != ROLE_Authority)
+						UpdateAim_ServerUpdate(aim);
 				}
 			
 		}
