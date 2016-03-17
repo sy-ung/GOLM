@@ -241,8 +241,15 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	{
 		if(bMoving)
 		{
-			SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
-			GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
+			if(!bHasHandWeapon)
+			{
+				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
+				GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
+			}
+			else if (bHasHandWeapon)
+			{
+				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
+			}
 		}
 		Boost(DeltaSeconds, bBoosting);
 	}
@@ -278,8 +285,10 @@ void AGOLMCharacter::UpdateAim()
 					//WeaponMuzzleLocation = GetMesh()->GetSocketLocation("SpineSocket");
 
 					FVector mouseHit = playerController->GetMouseHit();
-					FRotator aim = (mouseHit - WeaponMuzzleLocation).Rotation();
-					aim.Yaw -= -10 + GetActorForwardVector().Rotation().Yaw;
+					FRotator aim = (mouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
+
+					if(bHasHandWeapon)
+						SetActorRotation(FRotator(0, aim.Yaw, 0));
 
 					//FRotator FinalAim;
 
@@ -290,9 +299,11 @@ void AGOLMCharacter::UpdateAim()
 
 					//FinalAim.Yaw = (aim.Yaw + 10) - GetActorForwardVector().Rotation().Yaw;
 					//FinalAim.Pitch = 0;
+
+					//WeaponAim = UKismetMathLibrary::FindLookAtRotation(SockLoc, mouseHit);
+
 					WeaponAim = aim;
-					//GEngine->ClearOnScreenDebugMessages();
-					//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, WeaponAim.ToString());
+			
 
 					if (Role != ROLE_Authority)
 						UpdateAim_ServerUpdate(aim);
@@ -451,6 +462,7 @@ void AGOLMCharacter::MoveCheck()
 			if (bMovingDown)
 			{
 				OverallDirection += -PlayerCamera->GetForwardVector();
+				
 			}
 
 			if (bMovingRight)
@@ -793,4 +805,20 @@ void AGOLMCharacter::ToggleNoCollisionProfile(bool ToggleOn)
 	}
 
 
+}
+
+FVector AGOLMCharacter::GetNormalMovementDirection()
+{
+	GEngine->ClearOnScreenDebugMessages();
+	FVector FinalOrientationVec = FinalOrientation.Vector();
+	FVector WeaponAimVec = WeaponAim.Vector();
+	FVector Velocity = GetVelocity().GetSafeNormal();
+	FVector MovementDir = (FinalOrientationVec - WeaponAimVec).GetSafeNormal();
+
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Final Orientation: " + FinalOrientationVec.ToString());
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Weapon Aim Vector: " + WeaponAimVec.ToString());
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Velocity: " + Velocity.ToString());
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Movement Direction: " + MovementDir.ToString());
+
+	return FVector::ZeroVector;
 }

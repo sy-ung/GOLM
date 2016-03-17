@@ -149,6 +149,8 @@ public:
 		void ServerDeath_Implementation();
 		bool ServerDeath_Validate();
 
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		FVector GetNormalMovementDirection();
 	
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
