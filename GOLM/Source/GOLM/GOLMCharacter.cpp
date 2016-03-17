@@ -103,8 +103,9 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 
-	DOREPLIFETIME(AGOLMCharacter, WeaponAim);
-	DOREPLIFETIME(AGOLMCharacter, FinalOrientation);
+	DOREPLIFETIME(AGOLMCharacter, WeaponAimPitch);
+	DOREPLIFETIME(AGOLMCharacter, RelativeForward);
+	DOREPLIFETIME(AGOLMCharacter, RelativeRight);
 	DOREPLIFETIME(AGOLMCharacter, bMoving);
 	DOREPLIFETIME(AGOLMCharacter, CurrentWeapon);
 	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
@@ -113,6 +114,7 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, Health);
 	DOREPLIFETIME(AGOLMCharacter, bAlive);
 	DOREPLIFETIME(AGOLMCharacter, TimeUntilRespawn);
+	DOREPLIFETIME(AGOLMCharacter, bHasHandWeapon);
 
 }
 
@@ -208,11 +210,6 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	}
 	if(Role != ROLE_Authority || IsLocallyControlled())
 	{
-		//GEngine->ClearOnScreenDebugMessages();
-		//if (bAlive)
-		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Health: " + FString::SanitizeFloat(Health));
-		//else
-		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn in: " + FString::SanitizeFloat(TimeUntilRespawn));
 
 		if (bStartShooting)
 		{
@@ -232,6 +229,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 		MoveCheck();
 		UpdateAim();
+		CalculateRelativeDirectionScale();
 	}
 	//SetActorRelativeRotation(FinalOrientation);
 
@@ -239,6 +237,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	//Variables must be changed from client to server to see the effect
 	if(bAlive)
 	{
+
+
 		if(bMoving)
 		{
 			if(!bHasHandWeapon)
@@ -250,8 +250,13 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			{
 				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
 			}
+
+			if (bBoosting)
+			{
+				Boost();
+			}
 		}
-		Boost(DeltaSeconds, bBoosting);
+
 	}
 }
 
@@ -267,62 +272,45 @@ void AGOLMCharacter::NotifyHit
 
 void AGOLMCharacter::UpdateAim()
 {
-	//DO NOT TOUCH ANYTHING HERE IF YOU DONT KNOW WHAT IS GOOD FOR YOU! IT TOOK ME FOREVER TO GET IT RIGHT
-
-	//Making sure the server does not touch the aim of the player AT ALL
-
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
 		if (GetController() != NULL)
 		{
 
-				if (CurrentWeapon != NULL)
-				{
-					AGOLMPlayerController *playerController = Cast<AGOLMPlayerController>(GetController());
+			if (CurrentWeapon != NULL)
+			{
+				AGOLMPlayerController *playerController = Cast<AGOLMPlayerController>(GetController());
 
-					WeaponMuzzleRotation = CurrentWeapon->WeaponMesh->GetSocketRotation("MuzzleFlash");
-					WeaponMuzzleLocation = CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash");
-					//WeaponMuzzleLocation = GetMesh()->GetSocketLocation("SpineSocket");
+				WeaponMuzzleRotation = CurrentWeapon->WeaponMesh->GetSocketRotation("MuzzleFlash");
+				WeaponMuzzleLocation = CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash");
 
-					FVector mouseHit = playerController->GetMouseHit();
-					FRotator aim = (mouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
+				FVector mouseHit = playerController->GetMouseHit();
+				FRotator aim = (mouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
 
-					if(bHasHandWeapon)
-						SetActorRotation(FRotator(0, aim.Yaw, 0));
+				if(bHasHandWeapon)
+					SetActorRotation(FRotator(0, aim.Yaw, 0));
 
-					//FRotator FinalAim;
-
-					//if (bAimPitchable)
-						//FinalAim.Roll = -(aim.Pitch + 0.4f);
-					//else
-						//FinalAim.Roll = 0;
-
-					//FinalAim.Yaw = (aim.Yaw + 10) - GetActorForwardVector().Rotation().Yaw;
-					//FinalAim.Pitch = 0;
-
-					//WeaponAim = UKismetMathLibrary::FindLookAtRotation(SockLoc, mouseHit);
-
-					WeaponAim = aim;
+				WeaponAimPitch = aim.Pitch;
 			
 
-					if (Role != ROLE_Authority)
-						UpdateAim_ServerUpdate(aim);
-				}
-			
+				if (Role != ROLE_Authority)
+					UpdateAim_ServerUpdate(WeaponAimPitch,aim.Yaw);
+			}
+
 		}
-		//Even though THIS WeaponAim is the same name on client and server,
-		//the server has no idea what THIS UPDATED CLIENT VALUE is.
-		//Once WeaponAim is updated it will be sent to the server to process.
+
 	}
 }
 
 
-void AGOLMCharacter::UpdateAim_ServerUpdate_Implementation(FRotator NewWeaponAim)
+void AGOLMCharacter::UpdateAim_ServerUpdate_Implementation(float NewWeaponAimPitch, float NewActorYaw)
 {
 	//WeaponAim is on the server and NewWeaponAim is from the client, from the client's WeaponAim.
-	WeaponAim = NewWeaponAim;
+	WeaponAimPitch = NewWeaponAimPitch;
+	if (bHasHandWeapon)
+		SetActorRotation(FRotator(0, NewActorYaw, 0));
 }
-bool AGOLMCharacter::UpdateAim_ServerUpdate_Validate(FRotator NewWeaponAim)
+bool AGOLMCharacter::UpdateAim_ServerUpdate_Validate(float NewWeaponAimPitch, float NewActorYaw)
 {
 	return true;
 }
@@ -497,21 +485,45 @@ bool AGOLMCharacter::ServerMove_Validate(FRotator direction, bool status)
 }
 
 
-void AGOLMCharacter::Boost(float DeltaTime, bool value)
+void AGOLMCharacter::Boost()
 {
-	if(value)
+	FVector direction = FVector::ZeroVector;
+	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
-		LaunchCharacter(GetActorUpVector() * BoostSpeed,false,false);
+		
+
+		if (bMovingUp)
+			direction += PlayerCamera->GetForwardVector();
+		if (bMovingDown)
+			direction += -PlayerCamera->GetForwardVector();
+		if (bMovingRight)
+			direction += PlayerCamera->GetRightVector();
+		if (bMovingLeft)
+			direction += -PlayerCamera->GetRightVector();
+
+		direction.Z = 0;
+
+		if(direction != FVector::ZeroVector)
+		{
+			LaunchCharacter(direction.GetSafeNormal() * BoostSpeed,false,false);
+			if(!bHasHandWeapon)
+				SetActorRotation(direction.GetSafeNormal().Rotation());
+		}
 	}
 
 	if (Role != ROLE_Authority)
-		ServerBoost(value);
+	{
+		if (direction != FVector::ZeroVector)
+			ServerBoost(direction.GetSafeNormal());
+	}
 }
-void AGOLMCharacter::ServerBoost_Implementation(bool value)
+void AGOLMCharacter::ServerBoost_Implementation(FVector LaunchDirection)
 {
-	bBoosting = value;
+	LaunchCharacter(LaunchDirection * BoostSpeed, false, false);
+	if (!bHasHandWeapon)
+		SetActorRotation(LaunchDirection.Rotation());
 }
-bool AGOLMCharacter::ServerBoost_Validate(bool value)
+bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection)
 {
 	return true;
 }
@@ -633,16 +645,6 @@ void AGOLMCharacter::MoveCamera()
 AWeapon *AGOLMCharacter::GetCurrentWeapon()
 {
 	return CurrentWeapon;
-}
-
-FRotator AGOLMCharacter::GetWeaponAimRotation()
-{
-	return WeaponAim;
-}
-
-void AGOLMCharacter::SetWeaponAimRotation(FRotator deltaROT)
-{
-	WeaponAim += deltaROT;
 }
 
 
@@ -807,18 +809,29 @@ void AGOLMCharacter::ToggleNoCollisionProfile(bool ToggleOn)
 
 }
 
-FVector AGOLMCharacter::GetNormalMovementDirection()
+void AGOLMCharacter::CalculateRelativeDirectionScale()
 {
-	GEngine->ClearOnScreenDebugMessages();
-	FVector FinalOrientationVec = FinalOrientation.Vector();
-	FVector WeaponAimVec = WeaponAim.Vector();
-	FVector Velocity = GetVelocity().GetSafeNormal();
-	FVector MovementDir = (FinalOrientationVec - WeaponAimVec).GetSafeNormal();
+	if (Role != ROLE_Authority || IsLocallyControlled())
+	{
+		FVector FacingVec = GetActorForwardVector();
+		FacingVec.Z = 0;
+		FVector MovementVec = FinalOrientation.Vector();
+		MovementVec.Z = 0;
+		FVector RightFacingVec = GetActorRightVector();
+		RightFacingVec.Z = 0;
 
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Final Orientation: " + FinalOrientationVec.ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Weapon Aim Vector: " + WeaponAimVec.ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Velocity: " + Velocity.ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Movement Direction: " + MovementDir.ToString());
+		RelativeForward = FVector::DotProduct(FacingVec, MovementVec);
+		RelativeRight = FVector::DotProduct(RightFacingVec, MovementVec);
+		ServerUpdateRelativeDirectionScale(RelativeForward, RelativeRight);
+	}
+}
 
-	return FVector::ZeroVector;
+void AGOLMCharacter::ServerUpdateRelativeDirectionScale_Implementation(float relativeforwardscale, float relativerightscale)
+{
+	RelativeForward = relativeforwardscale;
+	RelativeRight = relativerightscale;
+}
+bool AGOLMCharacter::ServerUpdateRelativeDirectionScale_Validate(float relativeforwardscale, float relativerightscale)
+{
+	return true;
 }

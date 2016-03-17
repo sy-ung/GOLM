@@ -118,6 +118,15 @@ void AGOLMPlayerController::MovePlayerRight(bool value)
 			PlayerChar->bMovingRight = value;
 	}
 }
+void AGOLMPlayerController::BoostPlayer(bool value)
+{
+	{
+		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+		if (PlayerChar)
+			PlayerChar->bBoosting = value;
+	}
+}
+
 
 
 void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)

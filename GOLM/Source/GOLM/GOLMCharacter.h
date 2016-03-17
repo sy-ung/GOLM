@@ -19,9 +19,9 @@ class AGOLMCharacter : public ACharacter
 
 	void UpdateAim();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void UpdateAim_ServerUpdate(FRotator NewWeaponAim);
-		void UpdateAim_ServerUpdate_Implementation(FRotator NewWeaponAim);
-		bool UpdateAim_ServerUpdate_Validate(FRotator NewWeaponAim);
+		void UpdateAim_ServerUpdate(float NewWeaponAimPitch, float NewActorYaw);
+		void UpdateAim_ServerUpdate_Implementation(float NewWeaponAimPitch, float NewActorYaw);
+		bool UpdateAim_ServerUpdate_Validate(float NewWeaponAimPitch, float NewActorYaw);
 
 
 	void TracePath(FVector &start, FVector &finish);
@@ -68,8 +68,9 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float deathTimer;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float RespawnTimeCheck;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)		bool bBoosting;
 	UPROPERTY(Replicated)		bool bAlive;
-	UPROPERTY(Replicated)		bool bBoosting;
 	UPROPERTY(Replicated)		bool bAbleToShoot;
 	UPROPERTY(Replicated)		float TimeUntilRespawn;
 
@@ -79,11 +80,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bRotatingCamera;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bMovingCamera;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)		FRotator WeaponAim;
+	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeForward;
+	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeRight;
+	UPROPERTY(BlueprintReadOnly, Replicated)		float WeaponAimPitch;
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, Replicated)		AWeapon *CurrentWeapon;
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	FRotator FinalOrientation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bHasHandWeapon;
 
@@ -93,8 +96,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingRight;
 	
 	
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FRotator FinalBoneOrientation;
-
 	UFUNCTION()
 		virtual void BeginPlay() override;
 
@@ -148,10 +149,13 @@ public:
 		void ServerDeath();
 		void ServerDeath_Implementation();
 		bool ServerDeath_Validate();
-
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		FVector GetNormalMovementDirection();
 	
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		void CalculateRelativeDirectionScale();
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerUpdateRelativeDirectionScale(float relativeforwardscale, float relativerightscale);
+		void ServerUpdateRelativeDirectionScale_Implementation(float relativeforwardscale, float relativerightscale);
+		bool ServerUpdateRelativeDirectionScale_Validate(float relativeforwardscale, float relativerightscale);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void ZoomCamera(float deltaZoom);
@@ -185,11 +189,11 @@ public:
 		bool ServerMove_Validate(FRotator direction,bool status);
 
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
-		void Boost(float DeltaTime, bool value);
+		void Boost();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerBoost(bool value);
-		void ServerBoost_Implementation(bool value);
-		bool ServerBoost_Validate(bool value);
+		void ServerBoost(FVector LaunchDirection);
+		void ServerBoost_Implementation(FVector LaunchDirection);
+		bool ServerBoost_Validate(FVector LaunchDirection);
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
@@ -200,13 +204,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		AWeapon *GetCurrentWeapon();
-
-	
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		FRotator GetWeaponAimRotation();
-
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void SetWeaponAimRotation(FRotator deltaROT);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		float GetPlayerSpeed();

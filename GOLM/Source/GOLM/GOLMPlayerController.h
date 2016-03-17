@@ -42,6 +42,9 @@ public:
 		void MovePlayerLeft(bool value);
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void MovePlayerRight(bool value);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		void BoostPlayer(bool value);
+
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void ZoomPlayerCamera(float deltaZoom);
