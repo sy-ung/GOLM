@@ -38,7 +38,6 @@ AGOLMCharacter::AGOLMCharacter()
 	
 	SetReplicates(true);
 
-
 	//MovementComponent = CreateDefaultSubobject<UGOLMPawnMovementComponent>(TEXT("GOLM Movement Component"));
 	//MovementComponent->UpdatedComponent = RootComponent;
 }
@@ -55,11 +54,6 @@ void AGOLMCharacter::InitLevels()
 		UGameplayStatics::GetStreamingLevel(World, "GameLevel")->bShouldBeVisible = false;
 		UGameplayStatics::GetStreamingLevel(World, "Bottomworld")->bShouldBeVisible = false;
 
-		//TArray<AActor*, FDefaultAllocator> SpawnLocs;
-		//UGameplayStatics::GetAllActorsOfClass(UGameplayStatics::GetStreamingLevel(World, "Bottomworld")->GetWorld(), APlayerStart::StaticClass(), SpawnLocs);
-
-		//for (int32 i = 0; i < SpawnLocs.Num(); i++)
-		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, SpawnLocs[i]->GetActorLocation().ToString());
 	}
 
 }
@@ -92,8 +86,9 @@ void AGOLMCharacter::BeginPlay()
 	Health = 100;
 	deathTimer = 5.0f;
 
-	OriginalCollisionProfile = GetCapsuleComponent()->GetCollisionProfileName();
+	OriginalCollisionProfile = "Pawn";
 	NoPawnCollisionProfile = "NoPawn";
+
 
 }
 
@@ -235,7 +230,12 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	//Everything here is ticked on the server as well as the client
 	//Variables must be changed from client to server to see the effect
 
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
+
+	GEngine->ClearOnScreenDebugMessages();
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Current: " + GetCapsuleComponent()->GetCollisionProfileName().ToString());
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Original: " + OriginalCollisionProfile.ToString());
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "No Collision: " + NoPawnCollisionProfile.ToString());
+
 
 	if(bAlive)
 	{
@@ -563,9 +563,7 @@ void AGOLMCharacter::Respawn()
 	bAlive = true;
 	RespawnTimeCheck = 0;
 	Health = 100;
-	GetCapsuleComponent()->SetCollisionProfileName(OriginalCollisionProfile);
-	ClientRespawn();
-	ClientLoadEntranceLevel("LockerRoom", CurrentLevelStream);
+	LoadEntranceLevel("LockerRoom", CurrentLevelStream);
 	
 
 }
@@ -574,7 +572,7 @@ void AGOLMCharacter::ClientRespawn_Implementation()
 {
 	if(Role != ROLE_Authority)
 	{
-		GetCapsuleComponent()->SetCollisionProfileName(OriginalCollisionProfile);
+		TurnOnNoCollisionProfile(false);
 	}
 }
 bool AGOLMCharacter::ClientRespawn_Validate()
@@ -685,22 +683,28 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName, FName ExitLevelN
 	//UGameplayStatics::LoadStreamLevel(GetWorld(), EntranceLevelName, true, true, LatInfo);
 	
 	
-	if(IsLocallyControlled() && Role != ROLE_Authority)
+	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
-		
+
 		UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
-		if(ExitLevelName != "None" && ExitLevelName != EntranceLevelName)
+		if (ExitLevelName != "None" && ExitLevelName != EntranceLevelName)
 		{
 			UGameplayStatics::GetStreamingLevel(GetWorld(), ExitLevelName)->bShouldBeVisible = false;
 		}
+		
 	}
+	else
+		ClientLoadEntranceLevel(EntranceLevelName, ExitLevelName);
+
 	MoveToEntrance(EntranceLevelName);
+	
 	
 }
 
 void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(FName EntranceLevelName, FName ExitLevelName)
 {
-	LoadEntranceLevel(EntranceLevelName, ExitLevelName);
+	if(Role!= ROLE_Authority)
+		LoadEntranceLevel(EntranceLevelName, ExitLevelName);
 }
 bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(FName EntranceLevelName, FName ExitLevelName)
 {
@@ -710,17 +714,23 @@ bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(FName EntranceLevelName, F
 
 void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 {
+	if (EntranceLevelName == "LockerRoom")
+	{
+		//TurnOnNoCollisionProfile(true);
+		if (CurrentWeapon != NULL)
+			CurrentWeapon->ToggleProjectileCollision(false);
+		GetCapsuleComponent()->SetCollisionProfileName(NoPawnCollisionProfile);
+	}
+	else
+	{
+		//TurnOnNoCollisionProfile(false);
+		if (CurrentWeapon != NULL)
+			CurrentWeapon->ToggleProjectileCollision(true);
+		GetCapsuleComponent()->SetCollisionProfileName(OriginalCollisionProfile);
+	}
+
 	if (Role == ROLE_Authority)
 	{
-		if (EntranceLevelName == "LockerRoom")
-		{
-			ToggleNoCollisionProfile(true);
-		}
-		else
-		{
-			ToggleNoCollisionProfile(false);
-		}
-
 		CurrentLevelStream = EntranceLevelName;
 		Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GotoSpawnLocation(EntranceLevelName, this);
 	}
@@ -741,25 +751,21 @@ bool AGOLMCharacter::ServerMoveToEntrance_Validate(FName EntranceLevelName)
 
 void AGOLMCharacter::SetRagDoll(bool value)
 {
-	//GetMesh()->SetAllBodiesBelowSimulatePhysics("Base-ZMechPelvis", value);
 	if(!IsRunningDedicatedServer())
 	{
 		GetMesh()->SetSimulatePhysics(value);
 		if (value)
 		{
 			GetMesh()->SetCollisionProfileName("Ragdoll");
-			//GetMesh()->WakeAllRigidBodies();
 			if (CurrentWeapon != NULL)
 				CurrentWeapon->DetachRootComponentFromParent(true);
 		}
 		else
 		{
 			GetMesh()->SetCollisionProfileName("CharacterMesh");
-			//CapsuleComponent->SetWorldRotation(FRotator(0, 0, 0));
 			GetMesh()->AttachTo(GetCapsuleComponent(), NAME_None, EAttachLocation::SnapToTarget, true);
 			GetMesh()->AddLocalOffset(FVector(0, 0, 0));
 			GetMesh()->AddLocalRotation(FRotator(0, -90, 0));
-			//GetMesh()->PutAllRigidBodiesToSleep();
 		}
 		if (CurrentWeapon != NULL)
 			CurrentWeapon->SetRagDoll(value);
@@ -796,8 +802,9 @@ bool AGOLMCharacter::ServerRecieveDamage_Validate(float damage)
 	return true;
 }
 
-void AGOLMCharacter::ToggleNoCollisionProfile(bool ToggleOn)
+void AGOLMCharacter::TurnOnNoCollisionProfile(bool ToggleOn)
 {
+	
 	if (ToggleOn)
 	{
 		if (CurrentWeapon != NULL)
@@ -811,7 +818,14 @@ void AGOLMCharacter::ToggleNoCollisionProfile(bool ToggleOn)
 		GetCapsuleComponent()->SetCollisionProfileName(OriginalCollisionProfile);
 	}
 
+	if (Role == ROLE_Authority)
+		ClientTurnOnNoCollisionProfile(ToggleOn);
+}
 
+void AGOLMCharacter::ClientTurnOnNoCollisionProfile_Implementation(bool value)
+{
+	if(Role!=ROLE_Authority)
+		TurnOnNoCollisionProfile(value);
 }
 
 void AGOLMCharacter::CalculateRelativeDirectionScale()

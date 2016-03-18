@@ -31,8 +31,7 @@ class AGOLMCharacter : public ACharacter
 	FRotator WeaponMuzzleRotation;
 	FVector WeaponMuzzleLocation;
 
-	FName OriginalCollisionProfile;
-	FName NoPawnCollisionProfile;
+
 
 	bool bAimPitchable;
 
@@ -86,6 +85,9 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, Replicated)		AWeapon *CurrentWeapon;
 
+	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
+	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bHasHandWeapon;
@@ -98,6 +100,7 @@ public:
 	
 	UFUNCTION()
 		virtual void BeginPlay() override;
+
 
 	UFUNCTION()
 		virtual void Tick(float DeltaSeconds) override;
@@ -243,7 +246,11 @@ public:
 		void ServerRecieveDamage_Implementation(float damage);
 		bool ServerRecieveDamage_Validate(float damage);
 
-	UFUNCTION()
-		void ToggleNoCollisionProfile(bool ToggleOn);
+
+		void TurnOnNoCollisionProfile(bool ToggleOn);
+	UFUNCTION(Client, Reliable)
+		void ClientTurnOnNoCollisionProfile(bool value);
+		void ClientTurnOnNoCollisionProfile_Implementation(bool value);
+			
 };
 

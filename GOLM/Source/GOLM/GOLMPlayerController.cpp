@@ -140,7 +140,7 @@ void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 }
 void AGOLMPlayerController::Boost(bool value)
 {
-	if (CheckIsNotServer())
+	//if (CheckIsNotServer())
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
