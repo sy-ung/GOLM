@@ -83,11 +83,10 @@ void AGOLMCharacter::BeginPlay()
 	GetCharacterMovement()->RotationRate.Yaw = TurnSpeed;
 	PlayerCameraBoom->TargetArmLength = MinCameraHeight;
 
-	//PlayerState = Cast<AGOLMPlayerState>(Cast<AGOLMPlayerController>(GetController())->PlayerState);
 	
 	RespawnTimeCheck = 0;
 
-	//Equip(EGetWeapon::ROCKET_LAUNCHER, EEquipSlot::HAND_SLOT);
+	
 	DefaultNetCullDistanceSquared = NetCullDistanceSquared;
 	bAlive = true;
 	Health = 100;
@@ -95,8 +94,7 @@ void AGOLMCharacter::BeginPlay()
 
 	OriginalCollisionProfile = GetCapsuleComponent()->GetCollisionProfileName();
 	NoPawnCollisionProfile = "NoPawn";
-	//GetCapsuleComponent()->SetCollisionProfileName(NoPawnCollisionProfile);
-	//GetEquippedWeapons();
+
 }
 
 void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -686,7 +684,7 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName, FName ExitLevelN
 	//FLatentActionInfo LatInfo;
 	//UGameplayStatics::LoadStreamLevel(GetWorld(), EntranceLevelName, true, true, LatInfo);
 	
-	MoveToEntrance(EntranceLevelName);
+	
 	if(IsLocallyControlled() && Role != ROLE_Authority)
 	{
 		
@@ -696,7 +694,7 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName, FName ExitLevelN
 			UGameplayStatics::GetStreamingLevel(GetWorld(), ExitLevelName)->bShouldBeVisible = false;
 		}
 	}
-	
+	MoveToEntrance(EntranceLevelName);
 	
 }
 
@@ -726,7 +724,7 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 		CurrentLevelStream = EntranceLevelName;
 		Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GotoSpawnLocation(EntranceLevelName, this);
 	}
-	else
+	else if (Role != ROLE_Authority)
 	{
 		ServerMoveToEntrance(EntranceLevelName);
 	}
