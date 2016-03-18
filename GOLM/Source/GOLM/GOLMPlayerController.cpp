@@ -189,17 +189,20 @@ void AGOLMPlayerController::ChangeWeapon(EGetWeapon NewWeapon, EEquipSlot Slot)
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		AGOLMPlayerState *PS = Cast<AGOLMPlayerState>(PlayerState);
 		if (PlayerChar)
-			PlayerChar->Equip(NewWeapon, Slot);
+		{
+			if (PlayerChar->CurrentLevelStream == "LockerRoom")
+				PlayerChar->Equip(NewWeapon, Slot);
+		}
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Character is NULL");
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Character is NULL from Controller");
 			return;
 		}
 		if (PS)
 			PS->SetWeaponFor(NewWeapon, Slot);
 		else
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL");
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL from Controller");
 			return;
 		}
 

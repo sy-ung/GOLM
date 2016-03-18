@@ -95,7 +95,8 @@ void AGOLMCharacter::BeginPlay()
 
 	OriginalCollisionProfile = GetCapsuleComponent()->GetCollisionProfileName();
 	NoPawnCollisionProfile = "NoPawn";
-	GetEquippedWeapons();
+	//GetCapsuleComponent()->SetCollisionProfileName(NoPawnCollisionProfile);
+	//GetEquippedWeapons();
 }
 
 void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -235,6 +236,9 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 	//Everything here is ticked on the server as well as the client
 	//Variables must be changed from client to server to see the effect
+
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
+
 	if(bAlive)
 	{
 
@@ -249,14 +253,9 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			else if (bHasHandWeapon)
 			{
 				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
-			}
-
-			if (bBoosting)
-			{
-				Boost();
-			}
+			}	
 		}
-
+		//Boost();
 	}
 }
 
@@ -359,14 +358,16 @@ void AGOLMCharacter::GetEquippedWeapons()
 {
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
-		
-		AGOLMPlayerState *PS = Cast<AGOLMPlayerState>(GetController()->PlayerState);
-		if (PS)
+		AGOLMPlayerState *PS = NULL;
+		if(GetController() != NULL)
+			 PS = Cast<AGOLMPlayerState>(GetController()->PlayerState);
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player Controller is NULL from Character");
+
+		if (PS!=NULL)
 			Equip(PS->GetWeaponFor(EEquipSlot::HAND_SLOT), EEquipSlot::HAND_SLOT);
 		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL");
-		}
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL from Character");
 	}
 	
 	if(Role == ROLE_Authority)
@@ -487,43 +488,45 @@ bool AGOLMCharacter::ServerMove_Validate(FRotator direction, bool status)
 
 void AGOLMCharacter::Boost()
 {
-	FVector direction = FVector::ZeroVector;
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
-		
-
-		if (bMovingUp)
-			direction += PlayerCamera->GetForwardVector();
-		if (bMovingDown)
-			direction += -PlayerCamera->GetForwardVector();
-		if (bMovingRight)
-			direction += PlayerCamera->GetRightVector();
-		if (bMovingLeft)
-			direction += -PlayerCamera->GetRightVector();
-
-		direction.Z = 0;
-
-		if(direction != FVector::ZeroVector)
+		FVector direction = FVector::ZeroVector;
+		if(bBoosting)
 		{
-			LaunchCharacter(direction.GetSafeNormal() * BoostSpeed,false,false);
-			if(!bHasHandWeapon)
-				SetActorRotation(direction.GetSafeNormal().Rotation());
+			if (bMovingUp)
+				direction += PlayerCamera->GetForwardVector();
+			if (bMovingDown)
+				direction += -PlayerCamera->GetForwardVector();
+			if (bMovingRight)
+				direction += PlayerCamera->GetRightVector();
+			if (bMovingLeft)
+				direction += -PlayerCamera->GetRightVector();
+
+			direction.Z = 0;
+
+			if(direction != FVector::ZeroVector)
+			{
+				LaunchCharacter(direction.GetSafeNormal() * BoostSpeed,false,false);
+				if(!bHasHandWeapon)
+					SetActorRotation(direction.GetSafeNormal().Rotation());
+
+				if (Role != ROLE_Authority)
+				{
+					if (direction != FVector::ZeroVector)
+						ServerBoost(direction.GetSafeNormal(), bBoosting);
+				}
+			}
 		}
 	}
-
-	if (Role != ROLE_Authority)
-	{
-		if (direction != FVector::ZeroVector)
-			ServerBoost(direction.GetSafeNormal());
-	}
 }
-void AGOLMCharacter::ServerBoost_Implementation(FVector LaunchDirection)
+void AGOLMCharacter::ServerBoost_Implementation(FVector LaunchDirection, bool isBoosting)
 {
+	bBoosting = isBoosting;
 	LaunchCharacter(LaunchDirection * BoostSpeed, false, false);
 	if (!bHasHandWeapon)
 		SetActorRotation(LaunchDirection.Rotation());
 }
-bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection)
+bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection, bool isBoosting)
 {
 	return true;
 }
@@ -712,9 +715,13 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 	if (Role == ROLE_Authority)
 	{
 		if (EntranceLevelName == "LockerRoom")
+		{
 			ToggleNoCollisionProfile(true);
+		}
 		else
+		{
 			ToggleNoCollisionProfile(false);
+		}
 
 		CurrentLevelStream = EntranceLevelName;
 		Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GotoSpawnLocation(EntranceLevelName, this);

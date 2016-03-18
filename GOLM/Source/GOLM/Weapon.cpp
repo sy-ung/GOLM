@@ -75,8 +75,6 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
 
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream.ToString());
-
 		if (!bProjectileCollisionPossible)
 		{
 			projectile->ToggleNoPawnCollision();

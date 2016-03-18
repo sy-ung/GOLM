@@ -195,9 +195,10 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 	FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
 	Alive = false;
+	
 	if(Role == ROLE_Authority)
 	{	
-		
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "I HIT SOMETHING " + Other->GetName());
 		auto *HitPlayer = Cast<AGOLMCharacter>(Other);
 		if (HitPlayer)
 		{

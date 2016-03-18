@@ -191,9 +191,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
 		void Boost();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerBoost(FVector LaunchDirection);
-		void ServerBoost_Implementation(FVector LaunchDirection);
-		bool ServerBoost_Validate(FVector LaunchDirection);
+		void ServerBoost(FVector LaunchDirection,bool isBoosting);
+		void ServerBoost_Implementation(FVector LaunchDirection, bool isBoosting);
+		bool ServerBoost_Validate(FVector LaunchDirection, bool isBoosting);
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
@@ -243,6 +243,7 @@ public:
 		void ServerRecieveDamage_Implementation(float damage);
 		bool ServerRecieveDamage_Validate(float damage);
 
-	void ToggleNoCollisionProfile(bool ToggleOn);
+	UFUNCTION()
+		void ToggleNoCollisionProfile(bool ToggleOn);
 };
 
