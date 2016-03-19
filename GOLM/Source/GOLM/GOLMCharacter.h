@@ -81,6 +81,8 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeForward;
 	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeRight;
+
+
 	UPROPERTY(BlueprintReadOnly, Replicated)		float WeaponAimPitch;
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, Replicated)		AWeapon *CurrentWeapon;
@@ -155,6 +157,7 @@ public:
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void CalculateRelativeDirectionScale();
+
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerUpdateRelativeDirectionScale(float relativeforwardscale, float relativerightscale);
 		void ServerUpdateRelativeDirectionScale_Implementation(float relativeforwardscale, float relativerightscale);

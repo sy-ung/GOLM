@@ -107,7 +107,6 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, bAlive);
 	DOREPLIFETIME(AGOLMCharacter, TimeUntilRespawn);
 	DOREPLIFETIME(AGOLMCharacter, bHasHandWeapon);
-
 }
 
 void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker)
@@ -163,8 +162,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			MoveCheck();
 			UpdateAim();
 
-			if (bMoving)
-				CalculateRelativeDirectionScale();
+			
 		}
 
 
@@ -211,6 +209,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		}
 	}
 
+	//if (Role == ROLE_Authority)
 	if(bAlive)
 	{ 
 		if (bMoving)
@@ -226,9 +225,13 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			}
 		
 		}
+
+		CalculateRelativeDirectionScale();
 	
 		if (bBoosting)
 			Boost();
+
+
 	}
 }
 
@@ -441,8 +444,9 @@ void AGOLMCharacter::MoveCheck()
 			}
 			OverallDirection.Z = 0;
 			OverallDirection.Normalize();
+			FinalOrientation = OverallDirection.Rotation();
 		}
-		FinalOrientation = OverallDirection.Rotation();
+		
 
 		if(Role != ROLE_Authority)
 			ServerMove(FinalOrientation,bMoving);
@@ -819,22 +823,32 @@ void AGOLMCharacter::CalculateRelativeDirectionScale()
 {
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
-		
-		FVector FacingVec = GetActorForwardVector();
-		FacingVec.Z = 0;
-		FVector MovementVec = FinalOrientation.Vector();
-		MovementVec.Z = 0;
-		FVector RightFacingVec = GetActorRightVector();
-		RightFacingVec.Z = 0;
 
-		RelativeForward = FVector::DotProduct(FacingVec, MovementVec);
-		RelativeRight = FVector::DotProduct(RightFacingVec, MovementVec);
+		if (bMoving)
+		{
+			FVector FacingVec = GetActorForwardVector();
+			FacingVec.Z = 0;
+			FVector MovementVec = FinalOrientation.Vector();
+			MovementVec.Z = 0;
+			FVector RightFacingVec = GetActorRightVector();
+			RightFacingVec.Z = 0;
 
+			RelativeForward = FVector::DotProduct(FacingVec, MovementVec);
+			RelativeRight = FVector::DotProduct(RightFacingVec, MovementVec);
+		}
+		else
+		{
 
-		if(Role!=ROLE_Authority)
+			RelativeForward = 0;
+			RelativeRight = 0;
+		}
+
+		if (Role != ROLE_Authority)
 			ServerUpdateRelativeDirectionScale(RelativeForward, RelativeRight);
+
 	}
 }
+
 
 void AGOLMCharacter::ServerUpdateRelativeDirectionScale_Implementation(float relativeforwardscale, float relativerightscale)
 {
