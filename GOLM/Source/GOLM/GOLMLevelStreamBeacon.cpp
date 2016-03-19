@@ -42,7 +42,7 @@ void AGOLMLevelStreamBeacon::NotifyHit(
 		AGOLMCharacter *Player = Cast<AGOLMCharacter>(Other);
 		if (Player != NULL)
 		{
-			Player->LoadEntranceLevel(EntranceLevelName, ExitLevelName);
+			Player->LoadEntranceLevel(EntranceLevelName);
 		}
 	}
 }

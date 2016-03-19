@@ -46,21 +46,20 @@ void AGOLMPlayerController::Aim()
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
-	if(CheckIsNotServer())
+	
 	{
 		FHitResult Hit(ForceInit);
 		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
 		return Hit.ImpactPoint;
 	}
-	else
-	{
-		return FVector::ZeroVector;
-	}
+
+	return FVector::ZeroVector;
+	
 }
 
 void AGOLMPlayerController::RotatePlayerCamera(bool value)
 {
-	if(CheckIsNotServer())
+	
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
@@ -74,7 +73,7 @@ void AGOLMPlayerController::RotatePlayerCamera(bool value)
 }
 void AGOLMPlayerController::MovePlayerCamera(bool value)
 {
-	if(CheckIsNotServer())
+	
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
@@ -120,37 +119,38 @@ void AGOLMPlayerController::MovePlayerRight(bool value)
 }
 void AGOLMPlayerController::BoostPlayer(bool value)
 {
+	if (Role == ROLE_Authority)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
 			PlayerChar->bBoosting = value;
 	}
+	else
+		ServerBoostPlayer(value);
 }
-
+void AGOLMPlayerController::ServerBoostPlayer_Implementation(bool value)
+{
+	BoostPlayer(value);
+}
+bool AGOLMPlayerController::ServerBoostPlayer_Validate(bool value)
+{
+	return true;
+}
 
 
 void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 {
-	if(CheckIsNotServer())
+	
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
 			PlayerChar->ZoomCamera(deltaZoom);
 	}
 }
-void AGOLMPlayerController::Boost(bool value)
-{
-	//if (CheckIsNotServer())
-	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->bBoosting = value;
-	}
-}
 
 void AGOLMPlayerController::GotoLockerRoom()
 {
-	if (CheckIsNotServer())
+	
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
@@ -249,15 +249,3 @@ void AGOLMPlayerController::KillCharacter()
 }
 
 
-bool AGOLMPlayerController::CheckIsNotServer()
-{
-
-	return GetCharacter()->IsLocallyControlled();
-		
-
-	if (Role != ROLE_Authority)
-		return true;
-	else
-		return false;
-
-}

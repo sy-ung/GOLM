@@ -159,7 +159,5 @@ void AWeapon::SetRagDoll(bool value)
 
 void AWeapon::ToggleProjectileCollision(bool CollisionPossible)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Toggling no collision for projectile");
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "CollisionPossible: "+ FString::FromInt(CollisionPossible));
 	bProjectileCollisionPossible = CollisionPossible;
 }

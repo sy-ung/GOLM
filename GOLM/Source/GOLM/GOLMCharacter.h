@@ -194,9 +194,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
 		void Boost();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerBoost(FVector LaunchDirection,bool isBoosting);
-		void ServerBoost_Implementation(FVector LaunchDirection, bool isBoosting);
-		bool ServerBoost_Validate(FVector LaunchDirection, bool isBoosting);
+		void ServerBoost(FVector LaunchDirection);
+		void ServerBoost_Implementation(FVector LaunchDirection);
+		bool ServerBoost_Validate(FVector LaunchDirection);
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
@@ -214,11 +214,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = PlayerData)
 		FName GetCurrentLevelStream();
 
-		void LoadEntranceLevel(FName EntranceLevelName, FName ExitLevelName);
+		void LoadEntranceLevel(FName EntranceLevelName);
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientLoadEntranceLevel(FName EntranceLevelName, FName ExitLevelName);
-		void ClientLoadEntranceLevel_Implementation(FName EntranceLevelName, FName ExitLevelName);
-		bool ClientLoadEntranceLevel_Validate(FName EntranceLevelName, FName ExitLevelName);
+		void ClientLoadEntranceLevel(FName EntranceLevelName);
+		void ClientLoadEntranceLevel_Implementation(FName EntranceLevelName);
+		bool ClientLoadEntranceLevel_Validate(FName EntranceLevelName);
 
 
 		void MoveToEntrance(FName EntranceLevelName);
@@ -248,7 +248,7 @@ public:
 
 
 		void TurnOnNoCollisionProfile(bool ToggleOn);
-	UFUNCTION(Client, Reliable)
+	UFUNCTION(Client, Reliable, NetMultiCast)
 		void ClientTurnOnNoCollisionProfile(bool value);
 		void ClientTurnOnNoCollisionProfile_Implementation(bool value);
 			

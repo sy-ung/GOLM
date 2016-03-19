@@ -42,15 +42,17 @@ public:
 		void MovePlayerLeft(bool value);
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void MovePlayerRight(bool value);
+
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void BoostPlayer(bool value);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerBoostPlayer(bool value);
+		void ServerBoostPlayer_Implementation(bool value);
+		bool ServerBoostPlayer_Validate(bool value);
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void ZoomPlayerCamera(float deltaZoom);
-
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void Boost(bool value);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		FVector GetMouseHit();
@@ -82,8 +84,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = DebugStuffICanDo)
 		void KillCharacter();
 
-
-	bool CheckIsNotServer();
 
 
 	UFUNCTION(BlueprintCallable, Category = Debug)

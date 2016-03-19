@@ -53,7 +53,6 @@ void AGOLMCharacter::InitLevels()
 		UGameplayStatics::GetStreamingLevel(World, "LockerRoom")->bShouldBeVisible = false;
 		UGameplayStatics::GetStreamingLevel(World, "GameLevel")->bShouldBeVisible = false;
 		UGameplayStatics::GetStreamingLevel(World, "Bottomworld")->bShouldBeVisible = false;
-
 	}
 
 }
@@ -96,7 +95,6 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-
 	DOREPLIFETIME(AGOLMCharacter, WeaponAimPitch);
 	DOREPLIFETIME(AGOLMCharacter, RelativeForward);
 	DOREPLIFETIME(AGOLMCharacter, RelativeRight);
@@ -125,49 +123,58 @@ bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* Vi
 
 	if (TargetCharacter == this)
 		return true;
-	if (TargetCharacter->CurrentLevelStream == "LockerRoom")
+	else if (TargetCharacter->CurrentLevelStream == "LockerRoom")
 		return false;
-	if (TargetCharacter->CurrentLevelStream == CurrentLevelStream)
-		if (TargetCharacter->bAlive)
-			return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
-
-	return false;
-
-
-	if (TargetCharacter->CurrentLevelStream == "LockerRoom")
-	{
-		if (TargetCharacter == this)
-			return true;
-		else
-		{
-			return false;
-		}
-	}
 	else if (TargetCharacter->CurrentLevelStream == CurrentLevelStream)
-	{
-		
-		//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "IS RELEVENT");
-		if(TargetCharacter->bAlive)
-			return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
-		else
-		{
-			if (TargetCharacter == this)
+		if (TargetCharacter->bAlive)
+			if (Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation))
+			{
+				//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "IS RELEVANT");
 				return true;
-			else
-				return false;
-		}
-	}
-	else
-	{
-		//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "IS NOT RELEVENT");
-		return false;
-	}
+			}
+
+
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "IS NOT RELEVANT");
+	return false;
 }
 
 
 void AGOLMCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+
+
+	if (Role != ROLE_Authority || IsLocallyControlled())
+	{
+
+		if(bAlive)
+		{
+			if (bStartShooting)
+			{
+				if (bAbleToShoot)
+				{
+					FireWeapon();
+				}
+			}
+			bAimPitchable = GetMovementComponent()->IsFalling();
+
+
+			MoveCheck();
+			UpdateAim();
+
+			if (bMoving)
+				CalculateRelativeDirectionScale();
+		}
+
+
+		if (bRotatingCamera)
+			RotateCamera();
+
+		if (bMovingCamera)
+			MoveCamera();
+	}
+
 
 	if (Role == ROLE_Authority)
 	{
@@ -189,6 +196,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 						TimeBeforeNextShot -= DeltaSeconds;
 				}
 			}
+			
 		}
 		else
 		{
@@ -196,54 +204,18 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			TimeUntilRespawn = deathTimer - RespawnTimeCheck;
 			if (RespawnTimeCheck > deathTimer)
 			{
-				RespawnTimeCheck = 0;
-				Respawn();
-				SetRagDoll(false);
-			}
-		}
-	}
-	if(Role != ROLE_Authority || IsLocallyControlled())
-	{
-
-		if (bStartShooting)
-		{
-			if (bAbleToShoot)
-			{
-				FireWeapon();
-			}
-		}
-		if (bRotatingCamera)
-			RotateCamera();
-
-		if (bMovingCamera)
-			MoveCamera();
-
-		bAimPitchable = GetMovementComponent()->IsFalling();
 				
-
-		MoveCheck();
-		UpdateAim();
-		CalculateRelativeDirectionScale();
+				Respawn();
+				
+			}
+		}
 	}
-	//SetActorRelativeRotation(FinalOrientation);
-
-	//Everything here is ticked on the server as well as the client
-	//Variables must be changed from client to server to see the effect
-
-
-	GEngine->ClearOnScreenDebugMessages();
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Current: " + GetCapsuleComponent()->GetCollisionProfileName().ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Original: " + OriginalCollisionProfile.ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "No Collision: " + NoPawnCollisionProfile.ToString());
-
 
 	if(bAlive)
-	{
-
-
-		if(bMoving)
+	{ 
+		if (bMoving)
 		{
-			if(!bHasHandWeapon)
+			if (!bHasHandWeapon)
 			{
 				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
 				GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
@@ -251,9 +223,12 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			else if (bHasHandWeapon)
 			{
 				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
-			}	
+			}
+		
 		}
-		//Boost();
+	
+		if (bBoosting)
+			Boost();
 	}
 }
 
@@ -340,7 +315,10 @@ void AGOLMCharacter::Equip(EGetWeapon NewWeapon, EEquipSlot In)
 				CurrentWeapon = SpawnedWeapon;
 			}
 			else
+			{
 				bHasHandWeapon = false;
+				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "NO HAND WEAPON");
+			}
 			break;
 		default:
 			break;
@@ -460,14 +438,13 @@ void AGOLMCharacter::MoveCheck()
 			if (bMovingLeft)
 			{
 				OverallDirection += -PlayerCamera->GetRightVector();
-				
 			}
 			OverallDirection.Z = 0;
 			OverallDirection.Normalize();
 		}
 		FinalOrientation = OverallDirection.Rotation();
 
-		if(Role!= ROLE_Authority)
+		if(Role != ROLE_Authority)
 			ServerMove(FinalOrientation,bMoving);
 	}
 }
@@ -489,7 +466,6 @@ void AGOLMCharacter::Boost()
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
 		FVector direction = FVector::ZeroVector;
-		if(bBoosting)
 		{
 			if (bMovingUp)
 				direction += PlayerCamera->GetForwardVector();
@@ -502,29 +478,29 @@ void AGOLMCharacter::Boost()
 
 			direction.Z = 0;
 
-			if(direction != FVector::ZeroVector)
+			if (direction != FVector::ZeroVector)
 			{
-				LaunchCharacter(direction.GetSafeNormal() * BoostSpeed,false,false);
-				if(!bHasHandWeapon)
+				LaunchCharacter(direction.GetSafeNormal() * BoostSpeed, false, false);
+				if (!bHasHandWeapon)
 					SetActorRotation(direction.GetSafeNormal().Rotation());
 
 				if (Role != ROLE_Authority)
 				{
 					if (direction != FVector::ZeroVector)
-						ServerBoost(direction.GetSafeNormal(), bBoosting);
+						ServerBoost(direction.GetSafeNormal());
 				}
 			}
 		}
 	}
 }
-void AGOLMCharacter::ServerBoost_Implementation(FVector LaunchDirection, bool isBoosting)
+void AGOLMCharacter::ServerBoost_Implementation(FVector LaunchDirection)
 {
-	bBoosting = isBoosting;
 	LaunchCharacter(LaunchDirection * BoostSpeed, false, false);
 	if (!bHasHandWeapon)
-		SetActorRotation(LaunchDirection.Rotation());
+		SetActorRotation((LaunchDirection).Rotation());
+
 }
-bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection, bool isBoosting)
+bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection)
 {
 	return true;
 }
@@ -556,23 +532,23 @@ bool AGOLMCharacter::ServerDeath_Validate()
 }
 void AGOLMCharacter::Respawn()
 {
-	
-	//ClientRespawn();
 	//Equip(EGetWeapon::RIFLE, EEquipSlot::HAND_SLOT);
+	if(!bAlive)
+	{
+		bAlive = true;
+		SetRagDoll(false);
+	}
 	GetEquippedWeapons();
-	bAlive = true;
 	RespawnTimeCheck = 0;
 	Health = 100;
-	LoadEntranceLevel("LockerRoom", CurrentLevelStream);
-	
-
+	LoadEntranceLevel("LockerRoom");
 }
 
 void AGOLMCharacter::ClientRespawn_Implementation()
 {
 	if(Role != ROLE_Authority)
 	{
-		TurnOnNoCollisionProfile(false);
+		MoveToEntrance("LockerRoom");
 	}
 }
 bool AGOLMCharacter::ClientRespawn_Validate()
@@ -585,7 +561,7 @@ void AGOLMCharacter::GotoLockerRoom()
 	if(CurrentLevelStream != "LockerRoom")
 	{
 		//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Going To locker Room");
-		LoadEntranceLevel("LockerRoom", CurrentLevelStream);
+		LoadEntranceLevel("LockerRoom");
 	}
 }
 
@@ -602,7 +578,10 @@ bool AGOLMCharacter::ServerRespawn_Validate()
 void AGOLMCharacter::ClientDeath_Implementation()
 {
 	if(Role != ROLE_Authority)
+	{
+		bAlive = false;
 		Death();
+	}
 	//SetRagDoll(true);
 }
 
@@ -676,37 +655,33 @@ FName AGOLMCharacter::GetCurrentLevelStream()
 	return CurrentLevelStream;
 }
 
-void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName, FName ExitLevelName)
+void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName)
 {
-
-	//FLatentActionInfo LatInfo;
-	//UGameplayStatics::LoadStreamLevel(GetWorld(), EntranceLevelName, true, true, LatInfo);
-	
-	
 	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
-
 		UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
-		if (ExitLevelName != "None" && ExitLevelName != EntranceLevelName)
-		{
-			UGameplayStatics::GetStreamingLevel(GetWorld(), ExitLevelName)->bShouldBeVisible = false;
-		}
+
+		if (CurrentLevelStream != "None" && CurrentLevelStream != EntranceLevelName)
+			UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
 		
 	}
-	else
-		ClientLoadEntranceLevel(EntranceLevelName, ExitLevelName);
 
-	MoveToEntrance(EntranceLevelName);
-	
+	if(IsLocallyControlled() || Role!= ROLE_Authority)
+		MoveToEntrance(EntranceLevelName);
+
+	if(Role == ROLE_Authority)
+	{
+		ClientLoadEntranceLevel(EntranceLevelName);
+	}
 	
 }
 
-void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(FName EntranceLevelName, FName ExitLevelName)
+void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(FName EntranceLevelName)
 {
 	if(Role!= ROLE_Authority)
-		LoadEntranceLevel(EntranceLevelName, ExitLevelName);
+		LoadEntranceLevel(EntranceLevelName);
 }
-bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(FName EntranceLevelName, FName ExitLevelName)
+bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(FName EntranceLevelName)
 {
 	return true;
 }
@@ -716,23 +691,35 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 {
 	if (EntranceLevelName == "LockerRoom")
 	{
-		//TurnOnNoCollisionProfile(true);
-		if (CurrentWeapon != NULL)
-			CurrentWeapon->ToggleProjectileCollision(false);
-		GetCapsuleComponent()->SetCollisionProfileName(NoPawnCollisionProfile);
+		TurnOnNoCollisionProfile(true);
+
 	}
 	else
 	{
-		//TurnOnNoCollisionProfile(false);
-		if (CurrentWeapon != NULL)
-			CurrentWeapon->ToggleProjectileCollision(true);
-		GetCapsuleComponent()->SetCollisionProfileName(OriginalCollisionProfile);
+		TurnOnNoCollisionProfile(false);
 	}
 
 	if (Role == ROLE_Authority)
 	{
 		CurrentLevelStream = EntranceLevelName;
-		Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GotoSpawnLocation(EntranceLevelName, this);
+		TArray<AActor*, FDefaultAllocator> SpawnLocs;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), SpawnLocs);
+
+		//Looking for a start location to teleport to
+		if (SpawnLocs.Num() != 0)
+		{
+			for (int32 i = 0; i < SpawnLocs.Num(); i++)
+			{
+				if (Cast<APlayerStart>(SpawnLocs[i])->PlayerStartTag == EntranceLevelName)
+				{
+					SetActorLocation(SpawnLocs[i]->GetActorLocation());
+					break;
+				}
+			}
+		}
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+		//Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GotoSpawnLocation(EntranceLevelName, this);
 	}
 	else if (Role != ROLE_Authority)
 	{
@@ -832,6 +819,7 @@ void AGOLMCharacter::CalculateRelativeDirectionScale()
 {
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
+		
 		FVector FacingVec = GetActorForwardVector();
 		FacingVec.Z = 0;
 		FVector MovementVec = FinalOrientation.Vector();
@@ -841,7 +829,10 @@ void AGOLMCharacter::CalculateRelativeDirectionScale()
 
 		RelativeForward = FVector::DotProduct(FacingVec, MovementVec);
 		RelativeRight = FVector::DotProduct(RightFacingVec, MovementVec);
-		ServerUpdateRelativeDirectionScale(RelativeForward, RelativeRight);
+
+
+		if(Role!=ROLE_Authority)
+			ServerUpdateRelativeDirectionScale(RelativeForward, RelativeRight);
 	}
 }
 
