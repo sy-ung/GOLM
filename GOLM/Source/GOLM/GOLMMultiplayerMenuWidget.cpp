@@ -20,7 +20,6 @@ void UGOLMMultiplayerMenuWidget::AddServer(FOnlineSessionSearchResult *NewSessio
 					if (ServerScrollBox != NULL)
 					{
 						ServerScrollBox->AddChild(NewServerWidget);
-						GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, NewServerWidget->GetName() + " has been added to scroll box");
 					}
 					else
 					{
@@ -48,14 +47,11 @@ void UGOLMMultiplayerMenuWidget::AddServer(FOnlineSessionSearchResult *NewSessio
 
 TArray<FServerListItemWidget> UGOLMMultiplayerMenuWidget::GetServers()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Getting Servers. There is " + FString::FromInt(Servers.Num()) + " servers.");
 	return Servers;
 }
 
 void UGOLMMultiplayerMenuWidget::SetServerScrollBox(UScrollBox *ServerScrollBox)
 {
 	this->ServerScrollBox = ServerScrollBox;
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Setting ServerScrollBox to " + ServerScrollBox->GetName() + " for "+ this->GetName());
-
 }
 
