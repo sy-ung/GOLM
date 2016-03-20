@@ -6,15 +6,28 @@
 #include "GameFramework/PlayerController.h"
 #include "GOLMPlayerController.generated.h"
 
+UENUM(BlueprintType)
+enum class  EPlayerCursorType
+{
+	CROSSHAIR	UMETA(DisplayName = "Crosshair"),
+	MENU		UMETA(DisplayName = "Menu Cursor")
+};
 
 UCLASS()
 class AGOLMPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+private:
+	class UUserWidget *CursorWidgetReference;
+
 public:
 	AGOLMPlayerController();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> CursorWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *Crosshair;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *MenuCursor;
+	
 
 	UFUNCTION()												virtual void BeginPlay() override;
 
@@ -82,9 +95,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = DebugStuffICanDo)
 															void KillCharacter();
 
-
-
 	UFUNCTION(BlueprintCallable, Category = Debug)			void DoDamage(float damage);
+
+	UFUNCTION(BlueprintCallable, Category = Cursor)			void ChangeCursor(EPlayerCursorType NewCursor);
+
+//Non Unreal Engine 4 Application
+public:
+	EPlayerCursorType CurrentCursorType;
 
 protected:
 

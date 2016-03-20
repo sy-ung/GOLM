@@ -3,14 +3,14 @@
 #include "GOLM.h"
 #include "GOLMPlayerController.h"
 #include "GOLMGameMode.h"
+#include "GOLMMouseWidget.h"
 #include "Engine.h"
 #include "AI/Navigation/NavigationSystem.h"
 
 AGOLMPlayerController::AGOLMPlayerController()
 {
-	
-	//DefaultMouseCursor = EMouseCursor::Crosshairs;
-	
+	DefaultMouseCursor = EMouseCursor::Crosshairs;
+	bShowMouseCursor = true;
 }
 
 
@@ -19,6 +19,14 @@ void AGOLMPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	PlayerCharacter = Cast<AGOLMCharacter>(GetPawn());
+	CursorWidgetReference = CreateWidget<UUserWidget>(this, CursorWidget.GetDefaultObject()->GetClass());
+	if (CursorWidgetReference != NULL)
+	{
+		CursorWidgetReference->AddToViewport(3);
+		ChangeCursor(EPlayerCursorType::MENU);
+	}
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "CURSOR WIDGET IS NULL");
 	//bShowMouseCursor = true;
 }
 
@@ -30,24 +38,17 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 
 void AGOLMPlayerController::FireWeapon(bool value)
 {
-	//if(CheckIsNotServer())
-	//{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->bStartShooting = value;
-	//}
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+	if (PlayerChar)
+		PlayerChar->bStartShooting = value;
 }
 
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
-	
-	{
-		FHitResult Hit(ForceInit);
-		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
-		return Hit.ImpactPoint;
-	}
-
+	FHitResult Hit(ForceInit);
+	GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
+	return Hit.ImpactPoint;
 	return FVector::ZeroVector;
 	
 }
@@ -244,6 +245,27 @@ void AGOLMPlayerController::KillCharacter()
 		if (PlayerChar)
 			PlayerChar->Death();
 	}
+}
+
+void AGOLMPlayerController::ChangeCursor(EPlayerCursorType NewCursor)
+{
+	UImage *MouseImage = Cast<UGOLMMouseWidget>(CursorWidgetReference)->GetMouseReference();
+	if (MouseImage != NULL)
+	{
+		switch (NewCursor)
+		{
+		case EPlayerCursorType::CROSSHAIR:
+			MouseImage->SetBrushFromTexture(Crosshair);
+			break;
+		case EPlayerCursorType::MENU:
+			MouseImage->SetBrushFromTexture(MenuCursor);
+		default:break;
+		}
+
+	}
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "MOUSE IS NULL");
+	CurrentCursorType = NewCursor;
 }
 
 
