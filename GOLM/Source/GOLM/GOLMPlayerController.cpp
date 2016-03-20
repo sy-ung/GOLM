@@ -38,11 +38,6 @@ void AGOLMPlayerController::FireWeapon(bool value)
 	//}
 }
 
-void AGOLMPlayerController::Aim()
-{
-
-}
-
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
@@ -83,40 +78,43 @@ void AGOLMPlayerController::MovePlayerCamera(bool value)
 
 void AGOLMPlayerController::MovePlayerUp(bool value)
 {
-	//if (CheckIsNotServer())
-	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->bMovingUp = value;
-	}
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+		if (PlayerChar)	PlayerChar->bMovingUp = value;
+	if (Role != ROLE_Authority)	ServerMovePlayerUp(value);
 }
+void AGOLMPlayerController::ServerMovePlayerUp_Implementation(bool value){ MovePlayerUp(value); }
+bool AGOLMPlayerController::ServerMovePlayerUp_Validate(bool value){ return true; }
+
 void AGOLMPlayerController::MovePlayerDown(bool value)
 {
-	//if (CheckIsNotServer())
-	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->bMovingDown = value;
-	}
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+	if (PlayerChar)	PlayerChar->bMovingDown = value;
+	if (Role != ROLE_Authority)	ServerMovePlayerDown(value);
 }
+void AGOLMPlayerController::ServerMovePlayerDown_Implementation(bool value) { MovePlayerDown(value); }
+bool AGOLMPlayerController::ServerMovePlayerDown_Validate(bool value) { return true; }
+
+
 void AGOLMPlayerController::MovePlayerLeft(bool value)
 {
-	//if (CheckIsNotServer())
-	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->bMovingLeft = value;
-	}
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+	if (PlayerChar) PlayerChar->bMovingLeft = value;
+	if (Role != ROLE_Authority)	ServerMovePlayerLeft(value);
 }
+void AGOLMPlayerController::ServerMovePlayerLeft_Implementation(bool value) { MovePlayerLeft(value); }
+bool AGOLMPlayerController::ServerMovePlayerLeft_Validate(bool value) { return true; }
+
+
 void AGOLMPlayerController::MovePlayerRight(bool value)
 {
-	//if (CheckIsNotServer())
-	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->bMovingRight = value;
-	}
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+	if (PlayerChar)	PlayerChar->bMovingRight = value;
+	if (Role != ROLE_Authority)	ServerMovePlayerRight(value);
 }
+void AGOLMPlayerController::ServerMovePlayerRight_Implementation(bool value) { MovePlayerRight(value); }
+bool AGOLMPlayerController::ServerMovePlayerRight_Validate(bool value) { return true; }
+
+
 void AGOLMPlayerController::BoostPlayer(bool value)
 {
 	if (Role == ROLE_Authority)

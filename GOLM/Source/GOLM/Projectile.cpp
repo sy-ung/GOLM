@@ -50,7 +50,8 @@ void AProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifet
 void AProjectile::BeginPlay()
 {
 	Super::BeginPlay();
-	NoPawnCollisionProfile = "NoPawn";
+	CollisionBox->SetCollisionProfileName("Projectile");
+	ProjectileMesh->SetCollisionProfileName("NoCollision");
 
 	//MovementComponent->InitialSpeed = GetInstigator()->GetVelocity().Size() + Speed;
 	if(Role == ROLE_Authority)
@@ -58,11 +59,6 @@ void AProjectile::BeginPlay()
 		Alive = true;
 		BeginParticle();
 	}
-	//if(bExplosive)
-	//{
-	//	ExplosiveSphere->OnComponentBeginOverlap.AddDynamic(this, &AProjectile::ExplosiveOverLap);
-	//	ExplosiveSphere->OnComponentEndOverlap.AddDynamic(this, &AProjectile::ExplosionNoOverLap);
-	//}
 }
 
 //***RealViewer refers to player controller and ViewTarget refers to Character
@@ -90,7 +86,7 @@ void AProjectile::BeginParticle()
 	{
 		if (RearParticle != NULL)
 		{
-			UGameplayStatics::SpawnEmitterAttached(RearParticle->Template, ProjectileMesh, "Tail");
+			UGameplayStatics::SpawnEmitterAttached(RearParticle->Template, CollisionBox);
 		}
 		if (MoveSounds->Sound != NULL)
 			MoveSounds->Play();
@@ -209,5 +205,5 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 
 void AProjectile::ToggleNoPawnCollision()
 {
-	CollisionBox->SetCollisionProfileName(NoPawnCollisionProfile);
+	CollisionBox->SetCollisionProfileName("Projectile");
 }

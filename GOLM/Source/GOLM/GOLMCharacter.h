@@ -5,6 +5,14 @@
 #include "GameFramework/Character.h"
 #include "GOLMCharacter.generated.h"
 
+UENUM(BlueprintType)
+enum class EPlayerCollisionProfile : uint8
+{
+	LOCKER			UMETA(DisplayName = "Locker Room Profile Collision"),
+	DEATH			UMETA(DisplayName = "Death profile collision"),
+	REGULAR			UMETA(DisplayName = "Collision As Pawn")
+
+};
 
 
 UCLASS(Blueprintable)
@@ -145,15 +153,10 @@ public:
 		void ServerRespawn_Implementation();
 		bool ServerRespawn_Validate();
 
-	UFUNCTION(Client, Reliable, WithValidation,NetMulticast)
+	UFUNCTION(Client, Reliable, WithValidation)
 		void ClientDeath();
 		void ClientDeath_Implementation();
 		bool ClientDeath_Validate();
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerDeath();
-		void ServerDeath_Implementation();
-		bool ServerDeath_Validate();
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void CalculateRelativeDirectionScale();
@@ -190,9 +193,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MyMovements)
 		void MoveCheck();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerMove(FRotator direction,bool status);
-		void ServerMove_Implementation(FRotator direction,bool status);
-		bool ServerMove_Validate(FRotator direction,bool status);
+		void ServerMove(FRotator direction);
+		void ServerMove_Implementation(FRotator direction);
+		bool ServerMove_Validate(FRotator direction);
 
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
 		void Boost();
@@ -230,14 +233,14 @@ public:
 		void ServerMoveToEntrance_Implementation(FName EntranceLevelName);
 		bool ServerMoveToEntrance_Validate(FName EntranceLevelName);
 
-		void InitLevels();
+		void Init();
 	UFUNCTION(Client,Reliable,WithValidation)
-		void ClientInitLevels();
-		void ClientInitLevels_Implementation();
-		bool ClientInitLevels_Validate();
+		void ClientInit();
+		void ClientInit_Implementation();
+		bool ClientInit_Validate();
 
 		void SetRagDoll(bool value);
-	UFUNCTION(Client, Reliable, NetMulticast)
+	UFUNCTION(Client, Reliable,NetMulticast)
 		void ClientSetRagDoll(bool value);
 		void ClientSetRagDoll_Implementation(bool value);
 
@@ -249,11 +252,13 @@ public:
 		void ServerRecieveDamage_Implementation(float damage);
 		bool ServerRecieveDamage_Validate(float damage);
 
-
-		void TurnOnNoCollisionProfile(bool ToggleOn);
-	UFUNCTION(Client, Reliable, NetMultiCast)
-		void ClientTurnOnNoCollisionProfile(bool value);
-		void ClientTurnOnNoCollisionProfile_Implementation(bool value);
-			
+		void SetPawnCollisionType(EPlayerCollisionProfile NewCollision);
+		UFUNCTION(Server, Reliable, WithValidation)
+			void ServerSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
+			void ServerSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
+			bool ServerSetPawnCollisionType_Validate(EPlayerCollisionProfile NewCollisionType);
+		UFUNCTION(Client,Reliable, NetMulticast)
+			void ClientSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
+			void ClientSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
 };
 

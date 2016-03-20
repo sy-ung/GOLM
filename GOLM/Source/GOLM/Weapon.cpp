@@ -31,6 +31,8 @@ AWeapon::AWeapon()
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
+	WeaponMesh->SetCollisionProfileName("NoCollision");
+	CollisionComp->SetCollisionProfileName("NoCollision");
 }
 
 // Called every frame
@@ -74,12 +76,6 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileBP,MuzzleLocation,MuzzleRotation,spawnParams);
 
 		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
-
-		if (!bProjectileCollisionPossible)
-		{
-			projectile->ToggleNoPawnCollision();
-		}
-
 		projectile->SetActorScale3D(this->GetActorScale3D());
 		//Instigator->MoveIgnoreActorAdd(projectile);	
 		//Instigator->MoveIgnoreActorAdd(GetOwner());
@@ -152,7 +148,7 @@ void AWeapon::SetRagDoll(bool value)
 	}
 	else
 	{
-		WeaponMesh->SetCollisionProfileName("WeaponCollision");
+		WeaponMesh->SetCollisionProfileName("NoCollision");
 		//WeaponMesh->PutAllRigidBodiesToSleep();
 	}
 }
