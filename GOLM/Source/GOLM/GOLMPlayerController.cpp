@@ -11,7 +11,7 @@
 AGOLMPlayerController::AGOLMPlayerController()
 {
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
-	bShowMouseCursor = true;
+	bShowMouseCursor = false;
 }
 
 
@@ -19,6 +19,7 @@ AGOLMPlayerController::AGOLMPlayerController()
 void AGOLMPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
+	MovePlayerCamera(true);
 	PlayerCharacter = Cast<AGOLMCharacter>(GetPawn());
 	CursorWidgetReference = CreateWidget<UUserWidget>(this, CursorWidget.GetDefaultObject()->GetClass());
 	if (CursorWidgetReference != NULL)
@@ -34,7 +35,8 @@ void AGOLMPlayerController::BeginPlay()
 void AGOLMPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	if(CursorWidgetReference != NULL)
+		Cast<UGOLMMouseWidget>(CursorWidgetReference)->MoveMouseCursor(this);
 }
 
 void AGOLMPlayerController::FireWeapon(bool value)
@@ -47,7 +49,7 @@ void AGOLMPlayerController::FireWeapon(bool value)
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
-	if (!bIsInMenu)
+	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		FHitResult Hit(ForceInit);
 		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
@@ -83,7 +85,7 @@ void AGOLMPlayerController::MovePlayerCamera(bool value)
 
 void AGOLMPlayerController::MovePlayerUp(bool value)
 {
-	if(!bIsInMenu)
+	if(!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 			if (PlayerChar)	PlayerChar->bMovingUp = value;
@@ -95,7 +97,7 @@ bool AGOLMPlayerController::ServerMovePlayerUp_Validate(bool value){ return true
 
 void AGOLMPlayerController::MovePlayerDown(bool value)
 {
-	if (!bIsInMenu)
+	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)	PlayerChar->bMovingDown = value;
@@ -108,7 +110,7 @@ bool AGOLMPlayerController::ServerMovePlayerDown_Validate(bool value) { return t
 
 void AGOLMPlayerController::MovePlayerLeft(bool value)
 {
-	if (!bIsInMenu)
+	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar) PlayerChar->bMovingLeft = value;
@@ -121,7 +123,7 @@ bool AGOLMPlayerController::ServerMovePlayerLeft_Validate(bool value) { return t
 
 void AGOLMPlayerController::MovePlayerRight(bool value)
 {
-	if (!bIsInMenu)
+	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)	PlayerChar->bMovingRight = value;
@@ -140,7 +142,7 @@ void AGOLMPlayerController::BoostPlayer(bool value)
 		if (PlayerChar)
 			PlayerChar->bBoosting = value;
 	}
-	else if (!bIsInMenu)
+	else if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		ServerBoostPlayer(value);
 	}
@@ -157,7 +159,7 @@ bool AGOLMPlayerController::ServerBoostPlayer_Validate(bool value)
 
 void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 {
-	if (!bIsInMenu)
+	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
@@ -318,27 +320,30 @@ void AGOLMPlayerController::ShowEquipmentMenu()
 {
 	if(IsLocalController())
 	{
-		if(Cast<AGOLMCharacter>(GetCharacter())->CurrentLevelStream == "LockerRoom")
+		if(!bIsInEquipmentMenu && !bIsInSettingsMenu)
 		{
-			if (EquipmentMenuReference == NULL)
+			if(Cast<AGOLMCharacter>(GetCharacter())->CurrentLevelStream == "LockerRoom")
 			{
-				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "CREATING MENU");
-				EquipmentMenuReference = CreateWidget<UUserWidget>(this, EquipmentMenu.GetDefaultObject()->GetClass());
+				if (EquipmentMenuReference == NULL)
+				{
+					GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "CREATING MENU");
+					EquipmentMenuReference = CreateWidget<UUserWidget>(this, EquipmentMenu.GetDefaultObject()->GetClass());
 		
-			}
+				}
 
-			if (EquipmentMenuReference != NULL)
-			{
-				FInputModeGameAndUI UI;
-				UI.SetWidgetToFocus(EquipmentMenuReference->GetCachedWidget());
-				SetInputMode(UI);
-				ChangeCursor(EPlayerCursorType::MENU);
+				if (EquipmentMenuReference != NULL)
+				{
+					FInputModeGameAndUI UI;
+					UI.SetWidgetToFocus(EquipmentMenuReference->GetCachedWidget());
+					SetInputMode(UI);
+					ChangeCursor(EPlayerCursorType::MENU);
 			
-				EquipmentMenuReference->AddToViewport(1);
-				bIsInMenu = true;
+					EquipmentMenuReference->AddToViewport(1);
+					bIsInEquipmentMenu = true;
+				}
+				else
+					GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "EquipmentMenuReference is NULL");
 			}
-			else
-				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "EquipmentMenuReference is NULL");
 		}
 	}
 }
@@ -346,12 +351,53 @@ void AGOLMPlayerController::HideEquipmentMenu()
 {
 	if(IsLocalController())
 	{
-		FInputModeGameOnly GI;
+		if(bIsInEquipmentMenu && !bIsInSettingsMenu)
+		{
+			FInputModeGameAndUI GI;
+			GI.SetHideCursorDuringCapture(false);
+			SetInputMode(GI);
+			ChangeCursor(EPlayerCursorType::CROSSHAIR);
+			EquipmentMenuReference->RemoveFromParent();
+			bIsInEquipmentMenu = false;
+			GotoPlayerCamera();
+		}
+	}
+}
+
+void AGOLMPlayerController::ShowInGameSettingsMenu()
+{
+	if (IsLocalController())
+	{
+		if(!bIsInSettingsMenu)
+		{
+			if (InGameSettingsMenuReference == NULL)
+			{
+				InGameSettingsMenuReference = CreateWidget<UUserWidget>(this, InGameSettingsMenu.GetDefaultObject()->GetClass());
+			}
+
+			if (InGameSettingsMenuReference != NULL)
+			{
+				FInputModeGameAndUI UI;
+				UI.SetWidgetToFocus(InGameSettingsMenuReference->GetCachedWidget());
+				SetInputMode(UI);
+				ChangeCursor(EPlayerCursorType::MENU);
+				InGameSettingsMenuReference->AddToViewport(2);
+				bIsInSettingsMenu = true;
+			}
+		}
+	}
+}
+
+void AGOLMPlayerController::HideInGameSettingsMenu()
+{
+	if(bIsInSettingsMenu)
+	{
+		FInputModeGameAndUI GI;
+		GI.SetHideCursorDuringCapture(false);
 		SetInputMode(GI);
 		ChangeCursor(EPlayerCursorType::CROSSHAIR);
-		EquipmentMenuReference->RemoveFromParent();
-		bIsInMenu = false;
-		GotoPlayerCamera();
+		InGameSettingsMenuReference->RemoveFromParent();
+		bIsInSettingsMenu = false;
 	}
 }
 

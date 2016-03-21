@@ -8,34 +8,39 @@
 void UGOLMMouseWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	PlayerController = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	
 
 }
 
 void UGOLMMouseWidget::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+}
 
-	float MouseX, MouseY;
-	PlayerController->GetMousePosition(MouseX, MouseY);
-	FVector2D MouseSize = MouseCursor->Brush.ImageSize / 2;
-
-	switch (PlayerController->CurrentCursorType)
+void UGOLMMouseWidget::MoveMouseCursor(class AGOLMPlayerController *PlayerController)
+{
+	if(PlayerController != NULL)
 	{
+		float MouseX, MouseY;
+		PlayerController->GetMousePosition(MouseX, MouseY);
+		FVector2D MouseSize = FVector2D::ZeroVector;
+		if(IsValid(MouseCursor))
+			MouseSize = MouseCursor->Brush.ImageSize / 2;
 
-	case EPlayerCursorType::CROSSHAIR:
-		SetPositionInViewport(FVector2D(MouseX - MouseSize.X, MouseY - MouseSize.Y));
-		break;
-	case EPlayerCursorType::MENU:
-		SetPositionInViewport(FVector2D(MouseX, MouseY));
-		break;
+		switch (PlayerController->CurrentCursorType)
+		{
 
-	default:
-		break;
+		case EPlayerCursorType::CROSSHAIR:
+			SetPositionInViewport(FVector2D(MouseX - MouseSize.X, MouseY - MouseSize.Y));
+			break;
+		case EPlayerCursorType::MENU:
+			SetPositionInViewport(FVector2D(MouseX, MouseY));
+			break;
+
+		default:
+			break;
+		}
 	}
-
-	
-
 }
 
 void UGOLMMouseWidget::SetMouseReference(UImage *MouseReference)

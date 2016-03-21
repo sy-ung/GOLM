@@ -197,7 +197,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			}
 			bAimPitchable = GetMovementComponent()->IsFalling();
 			if(bHasHandWeapon)
-				UpdateAim();
+				UpdateAim(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
 		}
 		
 
@@ -205,8 +205,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		if (bRotatingCamera)
 			RotateCamera();
 
-		if (bMovingCamera)
-			MoveCamera();
+		//if (bMovingCamera)
+			//MoveCamera();
 	}
 
 
@@ -293,7 +293,7 @@ void AGOLMCharacter::NotifyHit
 
 
 
-void AGOLMCharacter::UpdateAim()
+void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
@@ -307,8 +307,8 @@ void AGOLMCharacter::UpdateAim()
 				WeaponMuzzleRotation = CurrentWeapon->WeaponMesh->GetSocketRotation("MuzzleFlash");
 				WeaponMuzzleLocation = CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash");
 
-				FVector mouseHit = playerController->GetMouseHit();
-				FRotator aim = (mouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
+				
+				FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
 	
 				SetActorRotation(FRotator(0, aim.Yaw, 0));
 				WeaponAimPitch = aim.Pitch;
@@ -602,7 +602,7 @@ bool AGOLMCharacter::ClientDeath_Validate()
 
 void AGOLMCharacter::RotateCamera()
 {
-	AGOLMPlayerController *CharacterController = Cast<AGOLMPlayerController>(Controller);
+	AGOLMPlayerController *CharacterController = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	float x;
 	float y;
 	CharacterController->GetInputMouseDelta(x, y);
@@ -612,7 +612,7 @@ void AGOLMCharacter::RotateCamera()
 
 void AGOLMCharacter::MoveCamera()
 {
-	AGOLMPlayerController *CharacterController = Cast<AGOLMPlayerController>(Controller);
+	AGOLMPlayerController *CharacterController = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	float x;
 	float y;
 	CharacterController->GetInputMouseDelta(x, y);
@@ -624,9 +624,35 @@ void AGOLMCharacter::MoveCamera()
 	CameraRht *= (x * CameraMovementSensitivity);
 	CameraFwd *= (y * CameraMovementSensitivity);
 
-	FVector deltaMovement = CameraFwd + CameraRht;
+	FVector PreviousPOS = PlayerCameraBoom->TargetOffset;
 
+
+
+	FVector deltaMovement = CameraFwd + CameraRht;
 	PlayerCameraBoom->TargetOffset += deltaMovement;
+	PlayerCameraBoom->TargetArmLength = PlayerCameraBoom->TargetOffset.Size();
+	
+	//if (bRotatingCamera)
+	//{
+	//	FRotator deltaROT = FRotator(0, CameraRotationSensitivity * x, 0);
+	//	PlayerCameraBoom->AddWorldRotation(deltaROT);
+	//}
+	
+
+	GEngine->ClearOnScreenDebugMessages();
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, PlayerCameraBoom->TargetOffset.ToString());
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, FString::SanitizeFloat(PlayerCameraBoom->TargetOffset.Size()));
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "ArmLength " + FString::SanitizeFloat(PlayerCameraBoom->TargetArmLength));
+
+	
+
+
+
+
+	
+
+
+
 
 }
 

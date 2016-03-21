@@ -24,7 +24,7 @@ class GOLM_API UGOLMMouseWidget : public UUserWidget
 private:
 
 	UImage *MouseCursor;
-	class AGOLMPlayerController *PlayerController;
+	
 
 public:
 	
@@ -35,6 +35,7 @@ public:
 	UFUNCTION(BlueprintCallable,Category = MouseStuff)
 	UImage *GetMouseReference();
 
+	void MoveMouseCursor(class AGOLMPlayerController *PlayerController);
 
 	virtual void NativeConstruct() override;
 	

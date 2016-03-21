@@ -26,11 +26,13 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> CursorWidget;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> EquipmentMenu;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> InGameSettingsMenu;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *Crosshair;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *MenuCursor;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInMenu;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInEquipmentMenu;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInSettingsMenu;
 	
 
 	UFUNCTION()												virtual void BeginPlay() override;
@@ -111,6 +113,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
 															void HideEquipmentMenu();
 
+	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
+															void ShowInGameSettingsMenu();
+
+	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
+															void HideInGameSettingsMenu();
+
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoPlayerCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoFrontCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoLeftShoulderCamera();
@@ -129,6 +137,8 @@ public:
 private:
 	class UUserWidget *CursorWidgetReference;
 	class UUserWidget *EquipmentMenuReference;
+	class UUserWidget *InGameSettingsMenuReference;
+
 	EEquipSlot MenuSlotChoice;
 protected:
 	AGOLMCharacter *PlayerCharacter;

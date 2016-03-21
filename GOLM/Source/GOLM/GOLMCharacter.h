@@ -25,7 +25,7 @@ class AGOLMCharacter : public ACharacter
 
 	FVector Direction;
 
-	void UpdateAim();
+	void UpdateAim(FVector MouseHit);
 	UFUNCTION(Server, Reliable, WithValidation)
 		void UpdateAim_ServerUpdate(float NewWeaponAimPitch, float NewActorYaw);
 		void UpdateAim_ServerUpdate_Implementation(float NewWeaponAimPitch, float NewActorYaw);
