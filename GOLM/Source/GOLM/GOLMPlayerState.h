@@ -3,15 +3,16 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
+#include "Weapon.h"
 #include "GOLMPlayerState.generated.h"
 
-UENUM(BlueprintType)
-enum class EGetWeapon :uint8
-{
-	NONE				UMETA(DisplayName = "NONE"),
-	ROCKET_LAUNCHER		UMETA(DisplayName = "RocketLauncher"),
-	RIFLE				UMETA(DisplayName = "Rifle")
-};
+//UENUM(BlueprintType)
+//enum class EGetWeapon :uint8
+//{
+//	NONE				UMETA(DisplayName = "NONE"),
+//	ROCKET_LAUNCHER		UMETA(DisplayName = "RocketLauncher"),
+//	RIFLE				UMETA(DisplayName = "Rifle")
+//};
 
 UENUM(BlueprintType)
 enum class EEquipSlot :uint8
@@ -45,13 +46,19 @@ public:
 		virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
-		EGetWeapon GetWeaponFor(EEquipSlot slot);
-	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
-		void SetWeaponFor(EGetWeapon Weapon, EEquipSlot Slot);
+		AWeapon *GetWeaponFor(EEquipSlot slot);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "PlayerStateDefault")
-	EGetWeapon HandWeapon;
+	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
+		void SetWeaponFor(AWeapon *Weapon, EEquipSlot Slot);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ListOfWeapons)
+		TArray<TSubclassOf<AWeapon>> WeaponsList;
 
 private:
-	
+
+	AWeapon *HandWeapon;
+	AWeapon *RightShoulder;
+	AWeapon *LeftShoulder;
+
+
 };

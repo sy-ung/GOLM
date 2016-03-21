@@ -3,6 +3,7 @@
 #include "GOLMCharacter.h"
 #include "GOLMPlayerState.h"
 #include "GOLMGameState.h"
+
 #include "GameFramework/PlayerController.h"
 #include "GOLMPlayerController.generated.h"
 
@@ -18,15 +19,18 @@ class AGOLMPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-private:
-	class UUserWidget *CursorWidgetReference;
+
 
 public:
 	AGOLMPlayerController();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> CursorWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> EquipmentMenu;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *Crosshair;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *MenuCursor;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInMenu;
 	
 
 	UFUNCTION()												virtual void BeginPlay() override;
@@ -72,7 +76,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseHit();
 
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ChangeWeapon(EGetWeapon NewWeapon, EEquipSlot Slot);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot);
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void GetEquippedWeapons();
 
@@ -98,13 +102,35 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Debug)			void DoDamage(float damage);
 
 	UFUNCTION(BlueprintCallable, Category = Cursor)			void ChangeCursor(EPlayerCursorType NewCursor);
+	
+	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
+															void MenuSetWeaponSlotChoice(EEquipSlot Choice);
+
+	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
+															void ShowEquipmentMenu();
+	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
+															void HideEquipmentMenu();
+
+	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoPlayerCamera();
+	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoFrontCamera();
+	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoLeftShoulderCamera();
+	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoRightShoulderCamera();
+
+															
+
 
 //Non Unreal Engine 4 Application
 public:
 	EPlayerCursorType CurrentCursorType;
+	EEquipSlot GetMenuWeaponSlotChoice();
 
+	
+
+private:
+	class UUserWidget *CursorWidgetReference;
+	class UUserWidget *EquipmentMenuReference;
+	EEquipSlot MenuSlotChoice;
 protected:
-
 	AGOLMCharacter *PlayerCharacter;
 };
 

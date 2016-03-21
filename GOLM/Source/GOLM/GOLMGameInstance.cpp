@@ -179,7 +179,6 @@ void UGOLMGameInstance::SetActiveWidget(TSubclassOf<UUserWidget> NewWidget)
 		FInputModeUIOnly UI;
 		UI.SetWidgetToFocus(CurrentWidget->GetCachedWidget());
 		PlayerCon->SetInputMode(UI);
-		PlayerCon->bShowMouseCursor = true;
 		CurrentWidget->AddToViewport(0);
 	}
 	else
@@ -194,8 +193,6 @@ void UGOLMGameInstance::ToggleGameInput()
 	APlayerController *PlayerCon = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	FInputModeGameOnly GI;
 	PlayerCon->SetInputMode(GI);
-	PlayerCon->bShowMouseCursor = true;
-
 }
 
 void UGOLMGameInstance::HostAGame(bool bAsLan, int32 MaxPlayers)

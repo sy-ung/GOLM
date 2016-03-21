@@ -31,6 +31,24 @@ AGOLMCharacter::AGOLMCharacter()
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	PlayerCamera->AttachTo(PlayerCameraBoom, USpringArmComponent::SocketName);
 
+
+	
+	EquipmentCameraFrontBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("FrontCameraBoom"));
+	EquipmentCameraFrontBoom->AttachTo(RootComponent);
+	EquipmentCameraFront = CreateDefaultSubobject<UCameraComponent>(TEXT("FrontCamera"));
+	EquipmentCameraFront->AttachTo(EquipmentCameraFrontBoom, USpringArmComponent::SocketName);
+
+
+	EquipmentCameraLeftShoulder = CreateDefaultSubobject<UCameraComponent>(TEXT("LeftShoulderCamera"));
+	EquipmentCameraLeftShoulderBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("LeftShoulderCameraBoom"));
+	EquipmentCameraLeftShoulder->AttachTo(EquipmentCameraLeftShoulderBoom, USpringArmComponent::SocketName);
+	EquipmentCameraLeftShoulderBoom->AttachTo(RootComponent);
+
+	EquipmentCameraRightShoulder = CreateDefaultSubobject<UCameraComponent>(TEXT("RightShoulderCamera"));
+	EquipmentCameraRightShoulderBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("RightShoulderCameraBoom"));
+	EquipmentCameraRightShoulder->AttachTo(EquipmentCameraRightShoulderBoom, USpringArmComponent::SocketName);
+	EquipmentCameraRightShoulderBoom->AttachTo(RootComponent);
+
 	PrimaryActorTick.bCanEverTick = true;
 	
 	Health = 100.0f;
@@ -81,6 +99,19 @@ void AGOLMCharacter::BeginPlay()
 	GetCharacterMovement()->RotationRate.Yaw = TurnSpeed;
 	PlayerCameraBoom->TargetArmLength = MinCameraHeight;
 
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.Owner = this;
+	SpawnParams.Instigator = this;
+	
+	PlayerCameraActor = GetWorld()->SpawnActor<ACameraActor>(SpawnParams);
+	FrontCameraActor = GetWorld()->SpawnActor<ACameraActor>(SpawnParams);
+	LeftShoulderCameraActor = GetWorld()->SpawnActor<ACameraActor>(SpawnParams);
+	RightShoulderCameraActor = GetWorld()->SpawnActor<ACameraActor>(SpawnParams);
+
+	PlayerCameraActor->CameraComponent = PlayerCamera;
+	FrontCameraActor->CameraComponent = EquipmentCameraFront;
+	LeftShoulderCameraActor->CameraComponent = EquipmentCameraLeftShoulder;
+	RightShoulderCameraActor->CameraComponent = EquipmentCameraRightShoulder;
 	
 	RespawnTimeCheck = 0;
 
@@ -145,11 +176,11 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (IsLocallyControlled())
-	{
-		GEngine->ClearOnScreenDebugMessages();
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
-	}
+	//if (IsLocallyControlled())
+	//{
+	//	GEngine->ClearOnScreenDebugMessages();
+	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
+	//}
 
 
 	if (Role != ROLE_Authority || IsLocallyControlled())
@@ -304,7 +335,7 @@ bool AGOLMCharacter::UpdateAim_ServerUpdate_Validate(float NewWeaponAimPitch, fl
 	return true;
 }
 
-void AGOLMCharacter::Equip(EGetWeapon NewWeapon, EEquipSlot In)
+void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 {
 	if(Role == ROLE_Authority)
 	{
@@ -312,17 +343,15 @@ void AGOLMCharacter::Equip(EGetWeapon NewWeapon, EEquipSlot In)
 		{
 			CurrentWeapon->Destroy();
 		}
+	
 		FActorSpawnParameters spawnParams;
 		spawnParams.Owner = this;
 		AWeapon *SpawnedWeapon = NULL;
-		
-		switch (NewWeapon)
+		//SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon, spawnParams);
+		if (NewWeapon != NULL)
 		{
-			case EGetWeapon::ROCKET_LAUNCHER: SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(RocketLauncher, spawnParams);	break;
-			case EGetWeapon::RIFLE: SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(Rifle, spawnParams); break;
-			default: break;
+			SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
 		}
-
 		switch (In)
 		{
 		case EEquipSlot::HAND_SLOT:
@@ -374,11 +403,11 @@ void AGOLMCharacter::ClientGetEquippedWeapons_Implementation()
 	if(Role != ROLE_Authority)
 		GetEquippedWeapons();
 }
-void AGOLMCharacter::ServerEquip_Implementation(EGetWeapon NewWeapon, EEquipSlot In)
+void AGOLMCharacter::ServerEquip_Implementation(AWeapon *NewWeapon, EEquipSlot In)
 {
 	Equip(NewWeapon, In);
 }
-bool AGOLMCharacter::ServerEquip_Validate(EGetWeapon NewWeapon, EEquipSlot In)
+bool AGOLMCharacter::ServerEquip_Validate(AWeapon *NewWeapon, EEquipSlot In)
 {
 	return true;
 }

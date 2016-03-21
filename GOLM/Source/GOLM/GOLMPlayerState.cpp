@@ -32,7 +32,7 @@ void AGOLMPlayerState::ResetPlayer()
 
 }
 
-EGetWeapon AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
+AWeapon *AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
 {
 	switch (slot)
 	{
@@ -41,10 +41,10 @@ EGetWeapon AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
 	default:
 		break;
 	}
-	return EGetWeapon::NONE;
+	return NULL;
 }
 
-void AGOLMPlayerState::SetWeaponFor(EGetWeapon Weapon, EEquipSlot Slot)
+void AGOLMPlayerState::SetWeaponFor(AWeapon* Weapon, EEquipSlot Slot)
 {
 	switch (Slot)
 	{

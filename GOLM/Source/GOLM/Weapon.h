@@ -53,6 +53,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Config)	USoundBase *WeaponAutoMaticEnd;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	bool bAutomatic;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	float FiringRate;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	FName Name;
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)		
 		void WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation);

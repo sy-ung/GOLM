@@ -52,9 +52,22 @@ public:
 	virtual void PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker);
 	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	ACameraActor *PlayerCameraActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	ACameraActor *FrontCameraActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	ACameraActor *LeftShoulderCameraActor;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	ACameraActor *RightShoulderCameraActor;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *PlayerCamera;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* PlayerCameraBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraFront;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraFrontBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraLeftShoulder;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraLeftShoulderBoom;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraRightShoulder;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraRightShoulderBoom;
 
 
 	
@@ -177,7 +190,7 @@ public:
 		bool ServerFireWeapon_Validate();
 
 	UFUNCTION(BlueprintCallable, Category = StuffIMustDo)
-		void Equip(EGetWeapon NewWeapon, EEquipSlot In);
+		void Equip(AWeapon *NewWeapon, EEquipSlot In);
 
 		void GetEquippedWeapons();
 	UFUNCTION(Client, Reliable)
@@ -185,9 +198,9 @@ public:
 		void ClientGetEquippedWeapons_Implementation();
 
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerEquip(EGetWeapon NewWeapon, EEquipSlot In);
-		void ServerEquip_Implementation(EGetWeapon NewWeapon, EEquipSlot In);
-		bool ServerEquip_Validate(EGetWeapon NewWeapon, EEquipSlot In);
+		void ServerEquip(AWeapon *NewWeapon, EEquipSlot In);
+		void ServerEquip_Implementation(AWeapon *NewWeapon, EEquipSlot In);
+		bool ServerEquip_Validate(AWeapon *NewWeapon, EEquipSlot In);
 
 	//*****-1 to move backwards, 1 to move forwards, 0 to not move
 	UFUNCTION(BlueprintCallable, Category = MyMovements)

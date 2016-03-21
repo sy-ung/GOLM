@@ -4,6 +4,7 @@
 #include "GOLMPlayerController.h"
 #include "GOLMGameMode.h"
 #include "GOLMMouseWidget.h"
+#include "GOLMEquipmentMenuWidget.h"
 #include "Engine.h"
 #include "AI/Navigation/NavigationSystem.h"
 
@@ -181,7 +182,7 @@ bool AGOLMPlayerController::ServerRespawn_Validate()
 	return true;
 }
 
-void AGOLMPlayerController::ChangeWeapon(EGetWeapon NewWeapon, EEquipSlot Slot)
+void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 {
 	//if (CheckIsNotServer())
 	{
@@ -268,4 +269,94 @@ void AGOLMPlayerController::ChangeCursor(EPlayerCursorType NewCursor)
 	CurrentCursorType = NewCursor;
 }
 
+
+void AGOLMPlayerController::MenuSetWeaponSlotChoice(EEquipSlot Choice)
+{
+	if(IsLocalController())
+	{
+		MenuSlotChoice = Choice;
+		switch (Choice)
+		{
+		case EEquipSlot::HAND_SLOT:
+			GotoFrontCamera();
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			GotoLeftShoulderCamera();
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			GotoRightShoulderCamera();
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+EEquipSlot AGOLMPlayerController::GetMenuWeaponSlotChoice()
+{
+	return MenuSlotChoice;
+}
+
+void AGOLMPlayerController::ShowEquipmentMenu()
+{
+	if(IsLocalController())
+	{
+		if(Cast<AGOLMCharacter>(GetCharacter())->CurrentLevelStream == "LockerRoom")
+		{
+			if (EquipmentMenuReference == NULL)
+			{
+				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "CREATING MENU");
+				EquipmentMenuReference = CreateWidget<UUserWidget>(this, EquipmentMenu.GetDefaultObject()->GetClass());
+		
+			}
+
+			if (EquipmentMenuReference != NULL)
+			{
+				FInputModeGameAndUI UI;
+				UI.SetWidgetToFocus(EquipmentMenuReference->GetCachedWidget());
+				SetInputMode(UI);
+				ChangeCursor(EPlayerCursorType::MENU);
+			
+				EquipmentMenuReference->AddToViewport(1);
+				bIsInMenu = true;
+			}
+			else
+				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "EquipmentMenuReference is NULL");
+		}
+	}
+}
+void AGOLMPlayerController::HideEquipmentMenu()
+{
+	if(IsLocalController())
+	{
+		FInputModeGameOnly GI;
+		SetInputMode(GI);
+		ChangeCursor(EPlayerCursorType::CROSSHAIR);
+		EquipmentMenuReference->RemoveFromParent();
+		bIsInMenu = false;
+		GotoPlayerCamera();
+	}
+}
+
+void AGOLMPlayerController::GotoPlayerCamera()
+{
+	if (IsLocalController())
+		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->PlayerCameraActor, 0.5f);
+}
+void AGOLMPlayerController::GotoFrontCamera()
+{
+	if (IsLocalController())
+		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->FrontCameraActor, 0.5f);
+}
+
+void AGOLMPlayerController::GotoLeftShoulderCamera()
+{
+	if (IsLocalController())
+		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->LeftShoulderCameraActor, 0.5f);
+}
+void AGOLMPlayerController::GotoRightShoulderCamera()
+{
+	if (IsLocalController())
+		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->RightShoulderCameraActor, 0.5f);
+}
 
