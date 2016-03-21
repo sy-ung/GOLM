@@ -47,9 +47,12 @@ void AGOLMPlayerController::FireWeapon(bool value)
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
-	FHitResult Hit(ForceInit);
-	GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
-	return Hit.ImpactPoint;
+	if (!bIsInMenu)
+	{
+		FHitResult Hit(ForceInit);
+		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
+		return Hit.ImpactPoint;
+	}
 	return FVector::ZeroVector;
 	
 }
@@ -80,18 +83,24 @@ void AGOLMPlayerController::MovePlayerCamera(bool value)
 
 void AGOLMPlayerController::MovePlayerUp(bool value)
 {
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)	PlayerChar->bMovingUp = value;
-	if (Role != ROLE_Authority)	ServerMovePlayerUp(value);
+	if(!bIsInMenu)
+	{
+		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+			if (PlayerChar)	PlayerChar->bMovingUp = value;
+		if (Role != ROLE_Authority)	ServerMovePlayerUp(value);
+	}
 }
 void AGOLMPlayerController::ServerMovePlayerUp_Implementation(bool value){ MovePlayerUp(value); }
 bool AGOLMPlayerController::ServerMovePlayerUp_Validate(bool value){ return true; }
 
 void AGOLMPlayerController::MovePlayerDown(bool value)
 {
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-	if (PlayerChar)	PlayerChar->bMovingDown = value;
-	if (Role != ROLE_Authority)	ServerMovePlayerDown(value);
+	if (!bIsInMenu)
+	{
+		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+		if (PlayerChar)	PlayerChar->bMovingDown = value;
+		if (Role != ROLE_Authority)	ServerMovePlayerDown(value);
+	}
 }
 void AGOLMPlayerController::ServerMovePlayerDown_Implementation(bool value) { MovePlayerDown(value); }
 bool AGOLMPlayerController::ServerMovePlayerDown_Validate(bool value) { return true; }
@@ -99,9 +108,12 @@ bool AGOLMPlayerController::ServerMovePlayerDown_Validate(bool value) { return t
 
 void AGOLMPlayerController::MovePlayerLeft(bool value)
 {
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-	if (PlayerChar) PlayerChar->bMovingLeft = value;
-	if (Role != ROLE_Authority)	ServerMovePlayerLeft(value);
+	if (!bIsInMenu)
+	{
+		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+		if (PlayerChar) PlayerChar->bMovingLeft = value;
+		if (Role != ROLE_Authority)	ServerMovePlayerLeft(value);
+	}
 }
 void AGOLMPlayerController::ServerMovePlayerLeft_Implementation(bool value) { MovePlayerLeft(value); }
 bool AGOLMPlayerController::ServerMovePlayerLeft_Validate(bool value) { return true; }
@@ -109,9 +121,12 @@ bool AGOLMPlayerController::ServerMovePlayerLeft_Validate(bool value) { return t
 
 void AGOLMPlayerController::MovePlayerRight(bool value)
 {
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-	if (PlayerChar)	PlayerChar->bMovingRight = value;
-	if (Role != ROLE_Authority)	ServerMovePlayerRight(value);
+	if (!bIsInMenu)
+	{
+		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+		if (PlayerChar)	PlayerChar->bMovingRight = value;
+		if (Role != ROLE_Authority)	ServerMovePlayerRight(value);
+	}
 }
 void AGOLMPlayerController::ServerMovePlayerRight_Implementation(bool value) { MovePlayerRight(value); }
 bool AGOLMPlayerController::ServerMovePlayerRight_Validate(bool value) { return true; }
@@ -125,8 +140,10 @@ void AGOLMPlayerController::BoostPlayer(bool value)
 		if (PlayerChar)
 			PlayerChar->bBoosting = value;
 	}
-	else
+	else if (!bIsInMenu)
+	{
 		ServerBoostPlayer(value);
+	}
 }
 void AGOLMPlayerController::ServerBoostPlayer_Implementation(bool value)
 {
@@ -140,7 +157,7 @@ bool AGOLMPlayerController::ServerBoostPlayer_Validate(bool value)
 
 void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 {
-	
+	if (!bIsInMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
@@ -340,23 +357,19 @@ void AGOLMPlayerController::HideEquipmentMenu()
 
 void AGOLMPlayerController::GotoPlayerCamera()
 {
-	if (IsLocalController())
-		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->PlayerCameraActor, 0.5f);
+	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->PlayerCameraActor, 0.5f);
 }
 void AGOLMPlayerController::GotoFrontCamera()
 {
-	if (IsLocalController())
-		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->FrontCameraActor, 0.5f);
+	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->FrontCameraActor, 0.5f);
 }
 
 void AGOLMPlayerController::GotoLeftShoulderCamera()
 {
-	if (IsLocalController())
-		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->LeftShoulderCameraActor, 0.5f);
+	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->LeftShoulderCameraActor, 0.5f);
 }
 void AGOLMPlayerController::GotoRightShoulderCamera()
 {
-	if (IsLocalController())
-		SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->RightShoulderCameraActor, 0.5f);
+	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->RightShoulderCameraActor, 0.5f);
 }
 

@@ -288,7 +288,7 @@ void UGOLMGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 {
 	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red,
 	//	FString::Printf(TEXT("OnFindSessionsComplete bSuccess: %d"), bWasSuccessful));
-
+	bCanSearchAgain = true;
 	//***Get Online SubSystem to work with
 	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
 	if (OnlineSubSys)
@@ -304,7 +304,7 @@ void UGOLMGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			if (SessionSearch->SearchResults.Num() > 0)
 			{
 				SessionSearch->SortSearchResults();
-
+				
 				//**********FOR LOOP TO ADD SERVER LIST WIDGET***************
 				for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
 				{
@@ -315,7 +315,7 @@ void UGOLMGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 						&SessionSearch->SearchResults[i],GetWorld()
 						);
 				}
-
+				
 			}
 			else
 				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "There are no games available");
@@ -396,6 +396,7 @@ void UGOLMGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 void UGOLMGameInstance::LookForGames()
 {
 	ULocalPlayer *const Player = GetFirstGamePlayer();
+	bCanSearchAgain = false;
 	FindSessions(Player->GetPreferredUniqueNetId(), GameSessionName, true, true);
 
 
