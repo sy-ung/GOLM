@@ -12,11 +12,16 @@ void UGOLMEquipmentMenuItemWeapon::SetWeapon(AWeapon *SavedWeapon)
 }
 void UGOLMEquipmentMenuItemWeapon::GetWeapon()
 {	
+
 	AGOLMPlayerController *PlayerCon = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	PlayerCon->ChangeWeapon(Weapon, PlayerCon->GetMenuWeaponSlotChoice());
+	
 }
 
 FName UGOLMEquipmentMenuItemWeapon::GetWeaponName()
 {
-	return Weapon->Name;
+	if (Weapon != NULL)
+		return Weapon->Name;
+	else
+		return "None";
 }
