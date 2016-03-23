@@ -2,8 +2,10 @@
 #include "GOLM.h"
 #include "GOLMCharacter.h"
 #include "GOLMGameMode.h"
+#include "GOLMLevelStreamBeacon.h"
 #include "GOLMPlayerController.h"
-#include "Kismet/KismetMathLibrary.h"
+
+
 
 
 
@@ -692,67 +694,91 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName)
 {
 	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
-		UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
 
+		UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
 		if (CurrentLevelStream != "None" && CurrentLevelStream != EntranceLevelName)
 			UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
-		
+
 	}
 
-	if(IsLocallyControlled() || Role!= ROLE_Authority)
+	if (IsLocallyControlled() || Role != ROLE_Authority)
 		MoveToEntrance(EntranceLevelName);
 
-	if(Role == ROLE_Authority)
+	if (Role == ROLE_Authority)
 	{
-		ClientLoadEntranceLevel(EntranceLevelName);
+		ClientLoadEntranceLevelNameOnly(EntranceLevelName);
 	}
-	
 }
 
-void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(FName EntranceLevelName)
+void AGOLMCharacter::ClientLoadEntranceLevelNameOnly_Implementation(FName EntranceLevelName)
 {
-	if(Role!= ROLE_Authority)
+	if (Role != ROLE_Authority)
 		LoadEntranceLevel(EntranceLevelName);
 }
-bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(FName EntranceLevelName)
+bool AGOLMCharacter::ClientLoadEntranceLevelNameOnly_Validate(FName EntranceLevelName)
 {
 	return true;
 }
 
 
-void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
+void AGOLMCharacter::LoadEntranceLevel(AGOLMLevelStreamBeacon *LevelBeacon)
+{
+	if (IsLocallyControlled() && Role != ROLE_Authority)
+	{
+		
+		UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
+		if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
+			UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
+
+	}
+
+	if (IsLocallyControlled() || Role != ROLE_Authority)
+		MoveToEntrance(LevelBeacon);
+
+	if (Role == ROLE_Authority)
+	{
+		ClientLoadEntranceLevel(LevelBeacon);
+	}
+}
+
+void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(AGOLMLevelStreamBeacon *LevelBeacon)
+{
+	if(Role!= ROLE_Authority)
+		LoadEntranceLevel(LevelBeacon);
+}
+bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(AGOLMLevelStreamBeacon *LevelBeacon)
+{
+	return true;
+}
+
+
+void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 {
 	if (Role == ROLE_Authority)
 	{
-		if (EntranceLevelName == "LockerRoom")
+		if (EntranceLevelNameTag == "LockerRoom")
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
 			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
 
-		FString LevelName = EntranceLevelName.ToString();
-		bool isGameLevel = LevelName.Contains(TEXT("Level"),ESearchCase::CaseSensitive,ESearchDir::FromEnd);
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "IS GAME LEVEL?" + FString::FromInt(isGameLevel));
-		//Check it EntranceLevelName has a _random in it
-		//if it does split the name to Load the Level
-		//Do a random spawn location
 
-
-		CurrentLevelStream = EntranceLevelName;
 		TArray<AActor*, FDefaultAllocator> SpawnLocs;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), SpawnLocs);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
 		
 		//Looking for a start location to teleport to
 		if (SpawnLocs.Num() != 0)
 		{
 			for (int32 i = 0; i < SpawnLocs.Num(); i++)
 			{
-				if (Cast<APlayerStart>(SpawnLocs[i])->PlayerStartTag == EntranceLevelName)
+				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
+				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
 				{
 					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
-					TeleportTo(SpawnLocs[i]->GetActorLocation(), GetActorRotation());
+					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					break;
 				}
 			}
+			CurrentLevelStream = EntranceLevelNameTag;
 		}
 		else
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
@@ -761,17 +787,66 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 	if (Role != ROLE_Authority)
 	{
 		if (Role != ROLE_Authority)
-			ServerMoveToEntrance(EntranceLevelName);
+			ServerMoveToEntranceTagOnly(EntranceLevelNameTag);
 	}
 }
-void AGOLMCharacter::ServerMoveToEntrance_Implementation(FName EntranceLevelName)
+void AGOLMCharacter::ServerMoveToEntranceTagOnly_Implementation(FName EntranceLevelName)
 {
 	MoveToEntrance(EntranceLevelName);
 }
-bool AGOLMCharacter::ServerMoveToEntrance_Validate(FName EntranceLevelName)
+bool AGOLMCharacter::ServerMoveToEntranceTagOnly_Validate(FName EntranceLevelName)
 {
 	return true;
 }
+
+
+void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
+{
+	if (Role == ROLE_Authority)
+	{
+		if (LevelBeacon->NameOfLevelToLoad == "LockerRoom")
+			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
+		else
+			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
+
+
+		TArray<AActor*, FDefaultAllocator> SpawnLocs;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
+
+		//Looking for a start location to teleport to
+		if (SpawnLocs.Num() != 0)
+		{
+			for (int32 i = 0; i < SpawnLocs.Num(); i++)
+			{
+				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
+				if (StartLocation->PlayerStartTag == LevelBeacon->PlayStartLocationTag)
+				{
+					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
+					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+					break;
+				}
+			}
+			CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
+		}
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+	}
+
+	if (Role != ROLE_Authority)
+	{
+		if (Role != ROLE_Authority)
+			ServerMoveToEntrance(LevelBeacon);
+	}
+}
+void AGOLMCharacter::ServerMoveToEntrance_Implementation(AGOLMLevelStreamBeacon *LevelBeacon)
+{
+	MoveToEntrance(LevelBeacon);
+}
+bool AGOLMCharacter::ServerMoveToEntrance_Validate(AGOLMLevelStreamBeacon *LevelBeacon)
+{
+	return true;
+}
+
 
 
 void AGOLMCharacter::SetRagDoll(bool value)

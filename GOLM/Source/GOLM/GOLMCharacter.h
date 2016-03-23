@@ -2,6 +2,7 @@
 #pragma once
 #include "Weapon.h"
 #include "GOLMPlayerState.h"
+#include "GOLMPlayerStart.h"
 #include "GameFramework/Character.h"
 #include "GOLMCharacter.generated.h"
 
@@ -39,6 +40,7 @@ class AGOLMCharacter : public ACharacter
 	FRotator WeaponMuzzleRotation;
 	FVector WeaponMuzzleLocation;
 
+	class AGOLMLevelStreamBeacon *LockerRoomBeaconReference;
 
 
 	bool bAimPitchable;
@@ -233,18 +235,31 @@ public:
 	UFUNCTION(BlueprintCallable, Category = PlayerData)
 		FName GetCurrentLevelStream();
 
+		void LoadEntranceLevel(class AGOLMLevelStreamBeacon *LevelBeacon);
+	UFUNCTION(Client, Reliable, WithValidation)
+		void ClientLoadEntranceLevel(class AGOLMLevelStreamBeacon *LevelBeacon);
+		void ClientLoadEntranceLevel_Implementation(class AGOLMLevelStreamBeacon *LevelBeacon);
+		bool ClientLoadEntranceLevel_Validate(class AGOLMLevelStreamBeacon *LevelBeacon);
+
 		void LoadEntranceLevel(FName EntranceLevelName);
 	UFUNCTION(Client, Reliable, WithValidation)
-		void ClientLoadEntranceLevel(FName EntranceLevelName);
-		void ClientLoadEntranceLevel_Implementation(FName EntranceLevelName);
-		bool ClientLoadEntranceLevel_Validate(FName EntranceLevelName);
+		void ClientLoadEntranceLevelNameOnly(FName EntranceLevelName);
+		void ClientLoadEntranceLevel_ImplementationNameOnly(FName EntranceLevelNamen);
+		bool ClientLoadEntranceLevel_ValidateNameOnly(FName EntranceLevelName);
 
 
-		void MoveToEntrance(FName EntranceLevelName);
+		
+		void MoveToEntrance(FName EntranceLevelNameTag);
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerMoveToEntrance(FName EntranceLevelName);
-		void ServerMoveToEntrance_Implementation(FName EntranceLevelName);
-		bool ServerMoveToEntrance_Validate(FName EntranceLevelName);
+		void ServerMoveToEntranceTagOnly(FName EntranceLevelNameTag);
+		void ServerMoveToEntranceTagOnly_Implementation(FName EntranceLevelNameTag);
+		bool ServerMoveToEntranceTagOnly_Validate(FName EntranceLevelNameTag);
+
+		void MoveToEntrance(class AGOLMLevelStreamBeacon *LevelBeacon);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerMoveToEntrance(class AGOLMLevelStreamBeacon *LevelBeacon);
+		void ServerMoveToEntrance_Implementation(class AGOLMLevelStreamBeacon *LevelBeacon);
+		bool ServerMoveToEntrance_Validate(class AGOLMLevelStreamBeacon *LevelBeacon);
 
 		void Init();
 	UFUNCTION(Client,Reliable,WithValidation)

@@ -27,18 +27,15 @@ public:
 		FVector HitLocation,FVector HitNormal,FVector NormalImpulse,const FHitResult & Hit);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerStartLocations)
-		FName EntranceLevelName;
+		FName NameOfLevelToLoad;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerStartLocations)
-		FName ExitLevelName;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = SpawnLocation)
+		FName PlayStartLocationTag;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Aesthetics)
 		UParticleSystemComponent *GlowingEffect;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Collision)
-		UBoxComponent *CollisionBox;
-
-
-
+		UBoxComponent *BeaconCollisionBox;
 
 };
