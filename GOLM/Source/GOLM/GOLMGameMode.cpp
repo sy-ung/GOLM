@@ -13,6 +13,7 @@ AGOLMGameMode::AGOLMGameMode()
 void AGOLMGameMode::BeginPlay()
 {
 	//StartDedicatedServer();
+	//GEngine->AddOnScreenStart
 }
 
 void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)

@@ -181,8 +181,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	//	GEngine->ClearOnScreenDebugMessages();
 	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
 	//}
-
-
+	
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
 
@@ -208,8 +207,6 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		//if (bMovingCamera)
 			//MoveCamera();
 	}
-
-
 	if (Role == ROLE_Authority)
 	{
 		if (bAlive)
@@ -732,10 +729,18 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 		else
 			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
 
+		FString LevelName = EntranceLevelName.ToString();
+		bool isGameLevel = LevelName.Contains(TEXT("Level"),ESearchCase::CaseSensitive,ESearchDir::FromEnd);
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "IS GAME LEVEL?" + FString::FromInt(isGameLevel));
+		//Check it EntranceLevelName has a _random in it
+		//if it does split the name to Load the Level
+		//Do a random spawn location
+
+
 		CurrentLevelStream = EntranceLevelName;
 		TArray<AActor*, FDefaultAllocator> SpawnLocs;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), SpawnLocs);
-
+		
 		//Looking for a start location to teleport to
 		if (SpawnLocs.Num() != 0)
 		{
@@ -743,7 +748,8 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 			{
 				if (Cast<APlayerStart>(SpawnLocs[i])->PlayerStartTag == EntranceLevelName)
 				{
-					SetActorLocation(SpawnLocs[i]->GetActorLocation());
+					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
+					TeleportTo(SpawnLocs[i]->GetActorLocation(), GetActorRotation());
 					break;
 				}
 			}
@@ -752,7 +758,7 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelName)
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
 	}
 	
-	if (Role != ROLE_Authority || IsLocallyControlled())
+	if (Role != ROLE_Authority)
 	{
 		if (Role != ROLE_Authority)
 			ServerMoveToEntrance(EntranceLevelName);

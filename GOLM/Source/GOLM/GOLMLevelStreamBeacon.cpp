@@ -37,7 +37,7 @@ void AGOLMLevelStreamBeacon::NotifyHit(
 	class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp,
 	bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
-	if (Role == ROLE_Authority)
+	//if (Role == ROLE_Authority)
 	{
 		AGOLMCharacter *Player = Cast<AGOLMCharacter>(Other);
 		if (Player != NULL)

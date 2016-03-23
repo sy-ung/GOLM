@@ -390,6 +390,7 @@ void UGOLMGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 
 		}
 	}
+	
 
 }
 
