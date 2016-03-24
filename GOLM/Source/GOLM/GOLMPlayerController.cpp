@@ -37,6 +37,7 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if(CursorWidgetReference != NULL)
 		Cast<UGOLMMouseWidget>(CursorWidgetReference)->MoveMouseCursor(this);
+
 }
 
 void AGOLMPlayerController::FireWeapon(bool value)
@@ -49,12 +50,16 @@ void AGOLMPlayerController::FireWeapon(bool value)
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
+	
 	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
+		
 		FHitResult Hit(ForceInit);
 		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
 		return Hit.ImpactPoint;
+
 	}
+	
 	return FVector::ZeroVector;
 	
 }
@@ -210,7 +215,10 @@ void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 		if (PlayerChar)
 		{
 			if (PlayerChar->CurrentLevelStream == "LockerRoom")
+			{
 				PlayerChar->Equip(NewWeapon, Slot);
+				Cast<UGOLMEquipmentMenuWidget>(EquipmentMenuReference)->SetupWeaponProjectileSelection();
+			}
 		}
 		else
 		{

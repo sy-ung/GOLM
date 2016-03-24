@@ -26,11 +26,7 @@ class AGOLMCharacter : public ACharacter
 
 	FVector Direction;
 
-	void UpdateAim(FVector MouseHit);
-	UFUNCTION(Server, Reliable, WithValidation)
-		void UpdateAim_ServerUpdate(float NewWeaponAimPitch, float NewActorYaw);
-		void UpdateAim_ServerUpdate_Implementation(float NewWeaponAimPitch, float NewActorYaw);
-		bool UpdateAim_ServerUpdate_Validate(float NewWeaponAimPitch, float NewActorYaw);
+
 
 
 	void TracePath(FVector &start, FVector &finish);
@@ -113,7 +109,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	FRotator FinalOrientation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bHasHandWeapon;
 
@@ -123,6 +119,12 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingRight;
 	
 	
+		void UpdateAim();
+	UFUNCTION(Server, Reliable, WithValidation)
+		void UpdateAim_ServerUpdate(FRotator NewAim);
+		void UpdateAim_ServerUpdate_Implementation(FRotator NewAim);
+		bool UpdateAim_ServerUpdate_Validate(FRotator NewAim);
+
 	UFUNCTION()
 		virtual void BeginPlay() override;
 

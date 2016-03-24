@@ -4,6 +4,7 @@
 
 #include "Blueprint/UserWidget.h"
 #include "GOLMEquipmentMenuItemWeapon.h"
+#include "GOLMEquipmentMenuItemProjectile.h"
 #include "GOLMPlayerState.h"
 
 #include "Weapon.h"
@@ -28,14 +29,18 @@ class GOLM_API UGOLMEquipmentMenuWidget : public UUserWidget
 private:
 	AGOLMPlayerController *PlayerCon;
 	UScrollBox *WeaponScrollBox;
-
-	TArray<UGOLMEquipmentMenuItemWeapon*> WeaponListItems;
+	UScrollBox *ProjectileScrollBox;
 
 	bool bListCreated;
 
 public:
-	UFUNCTION(BlueprintCallable, Category = Init)	void SetScrollBox(UScrollBox *WeaponListScollBox);
-	UFUNCTION(BlueprintCallable, Category = Init)	void SetupWeaponSelection();
+	UFUNCTION(BlueprintCallable, Category = Init)	void SetWeaponScrollBox(UScrollBox *WeaponListScollBox);
+	UFUNCTION(BlueprintCallable, Category = Init)	void SetProjectileScrollBox(UScrollBox *ProjectileListScollBox);
+
+	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupWeaponSelection();
+	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupWeaponProjectileSelection();
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = WeaponItemWidget)	TSubclassOf<UUserWidget> WeaponItemWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = WeaponItemWidget)	TSubclassOf<UUserWidget> ProjectileItemWidget;
 
 };

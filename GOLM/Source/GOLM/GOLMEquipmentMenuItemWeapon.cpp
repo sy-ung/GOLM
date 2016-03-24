@@ -2,20 +2,20 @@
 
 #include "GOLM.h"
 #include "GOLMEquipmentMenuItemWeapon.h"
+#include "GOLMEquipmentMenuWidget.h"
 
 
 
 
 void UGOLMEquipmentMenuItemWeapon::SetWeapon(AWeapon *SavedWeapon)
 {
-	Weapon = SavedWeapon;
+	if(SavedWeapon!=NULL)
+		Weapon = SavedWeapon;
 }
 void UGOLMEquipmentMenuItemWeapon::GetWeapon()
 {	
-
 	AGOLMPlayerController *PlayerCon = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 	PlayerCon->ChangeWeapon(Weapon, PlayerCon->GetMenuWeaponSlotChoice());
-	
 }
 
 FName UGOLMEquipmentMenuItemWeapon::GetWeaponName()

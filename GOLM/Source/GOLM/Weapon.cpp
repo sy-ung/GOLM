@@ -33,6 +33,8 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 	WeaponMesh->SetCollisionProfileName("NoCollision");
 	CollisionComp->SetCollisionProfileName("NoCollision");
+	if(Role == ROLE_Authority)
+		CurrentProjectile = CompatibleProjectiles[0].GetDefaultObject();
 }
 
 // Called every frame
@@ -58,6 +60,7 @@ void AWeapon::Tick(float DeltaSeconds)
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AWeapon, CurrentProjectile);
 }
 
 void AWeapon::WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation)
@@ -73,7 +76,7 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 		FActorSpawnParameters spawnParams;
 		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
 		
-		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(ProjectileBP,MuzzleLocation,MuzzleRotation,spawnParams);
+		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
 
 		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
 		projectile->SetActorScale3D(this->GetActorScale3D());
@@ -156,4 +159,22 @@ void AWeapon::SetRagDoll(bool value)
 void AWeapon::ToggleProjectileCollision(bool CollisionPossible)
 {
 	bProjectileCollisionPossible = CollisionPossible;
+}
+
+void AWeapon::SetNewProjectile(AProjectile *NewProjectile)
+{
+	if (Role == ROLE_Authority)
+		CurrentProjectile = NewProjectile;
+	else
+		ServerSetNewProjectile(NewProjectile);
+}
+
+void AWeapon::ServerSetNewProjectile_Implementation(AProjectile *NewProjectile)
+{
+	SetNewProjectile(NewProjectile);
+}
+
+bool AWeapon::ServerSetNewProjectile_Validate(AProjectile *NewProjectile)
+{
+	return true;
 }

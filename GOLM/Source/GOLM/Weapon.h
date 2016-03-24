@@ -48,7 +48,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision)	UBoxComponent *CollisionComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	USkeletalMeshComponent *WeaponMesh;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UParticleSystemComponent *WeaponMuzzle;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	TSubclassOf<class AProjectile> ProjectileBP;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config, Replicated)	AProjectile *CurrentProjectile;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = CompatibleProjectiles)
+		TArray<TSubclassOf<AProjectile>> CompatibleProjectiles;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UAudioComponent *WeaponAudio;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Config)	USoundBase *WeaponAutoMaticEnd;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	bool bAutomatic;
@@ -69,6 +73,15 @@ public:
 		void SetRagDoll(bool value);
 
 	void LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation);
+
+	UFUNCTION(BlueprintCallable, Category = Changes)
+		void SetNewProjectile(AProjectile *NewProjectile);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetNewProjectile(AProjectile *NewProjectile);
+		void ServerSetNewProjectile_Implementation(AProjectile *NewProjectile);
+		bool ServerSetNewProjectile_Validate(AProjectile *NewProjectile);
+
+
 
 	void ToggleProjectileCollision(bool CollisionPossible);
 

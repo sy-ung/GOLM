@@ -53,6 +53,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *RearParticle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *DeathParticle;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		bool bExplosive;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		FName Name;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileMovement)	class UProjectileMovementComponent *MovementComponent;
 
