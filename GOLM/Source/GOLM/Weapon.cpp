@@ -63,6 +63,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeP
 	DOREPLIFETIME(AWeapon, CurrentProjectile);
 }
 
+
 void AWeapon::WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
 	LaunchProjectile(MuzzleLocation,MuzzleRotation);

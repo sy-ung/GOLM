@@ -119,11 +119,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingRight;
 	
 	
-		void UpdateAim();
+		void UpdateAim(FVector MouseHit);
 	UFUNCTION(Server, Reliable, WithValidation)
-		void UpdateAim_ServerUpdate(FRotator NewAim);
-		void UpdateAim_ServerUpdate_Implementation(FRotator NewAim);
-		bool UpdateAim_ServerUpdate_Validate(FRotator NewAim);
+		void ServerUpdateAim(float NewPitch, float NewYaw);
+		void ServerUpdateAim_Implementation(float NewPitch, float NewYaw);
+		bool ServerUpdateAim_Validate(float NewPitch, float NewYaw);
 
 	UFUNCTION()
 		virtual void BeginPlay() override;
@@ -283,12 +283,15 @@ public:
 		bool ServerRecieveDamage_Validate(float damage);
 
 		void SetPawnCollisionType(EPlayerCollisionProfile NewCollision);
-		UFUNCTION(Server, Reliable, WithValidation)
-			void ServerSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
-			void ServerSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
-			bool ServerSetPawnCollisionType_Validate(EPlayerCollisionProfile NewCollisionType);
-		UFUNCTION(Client,Reliable, NetMulticast)
-			void ClientSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
-			void ClientSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
+		void ServerSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
+		bool ServerSetPawnCollisionType_Validate(EPlayerCollisionProfile NewCollisionType);
+	UFUNCTION(Client,Reliable, NetMulticast)
+		void ClientSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
+		void ClientSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
+
+
+		void OnRep_Test();
 };
 

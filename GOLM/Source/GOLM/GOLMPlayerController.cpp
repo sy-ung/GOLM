@@ -174,7 +174,7 @@ void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 
 void AGOLMPlayerController::GotoLockerRoom()
 {
-	
+	if(IsLocalController())
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)

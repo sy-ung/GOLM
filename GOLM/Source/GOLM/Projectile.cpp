@@ -64,17 +64,20 @@ void AProjectile::BeginPlay()
 //***RealViewer refers to player controller and ViewTarget refers to Character
 bool AProjectile::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
+	
+
 	const AGOLMCharacter *TargetCharacter = Cast<AGOLMCharacter>(ViewTarget);
 
-	if (TargetCharacter == Cast<AGOLMCharacter>(Instigator))
-		return true;
-
 	if (TargetCharacter->CurrentLevelStream == "LockerRoom")
-		return false;
-	
-	if (TargetCharacter->CurrentLevelStream == Cast<AGOLMCharacter>(Instigator)->CurrentLevelStream)
+	{
+		if (TargetCharacter == Cast<AGOLMCharacter>(Instigator))
+			return true;
+		else
+			return false;
+	}
+	else if (TargetCharacter->CurrentLevelStream == Cast<AGOLMCharacter>(Instigator)->CurrentLevelStream)
 		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
-
+	
 	return false;
 
 }

@@ -128,6 +128,8 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
+	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
+
 	DOREPLIFETIME(AGOLMCharacter, WeaponAimPitch);
 
 	DOREPLIFETIME(AGOLMCharacter, RelativeForward);
@@ -136,7 +138,7 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, bMoving);
 
 	DOREPLIFETIME(AGOLMCharacter, CurrentWeapon);
-	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
+	
 	DOREPLIFETIME(AGOLMCharacter, bBoosting);
 	DOREPLIFETIME(AGOLMCharacter, bAbleToShoot);
 	DOREPLIFETIME(AGOLMCharacter, Health);
@@ -153,28 +155,24 @@ void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyT
 
 //***RealViewer refers to player controller and ViewTarget refers to Character
 bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
-{
-	const AGOLMCharacter *TargetCharacter = Cast<AGOLMCharacter>(ViewTarget);
-	const AGOLMPlayerController *RealController = Cast<AGOLMPlayerController>(RealViewer);
+{	
+	const AGOLMCharacter *TargetChar = Cast<AGOLMCharacter>(ViewTarget);
 
-	if (TargetCharacter == this)
-		return true;
-
-	if (RealController == Cast<AGOLMPlayerController>(GetController()))
-		return true;
-
-	if (TargetCharacter->CurrentLevelStream == "LockerRoom")
-		return false;
-	else if (TargetCharacter->CurrentLevelStream == CurrentLevelStream)
+	if (TargetChar->CurrentLevelStream == "LockerRoom")
 	{
-		if (TargetCharacter->bAlive)
-			if (Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation))
-			{
-				return true;
-			}
+		if (TargetChar == this)
+		{
+			return true;
+		}
+		else
+			return false;
 	}
+	else if (TargetChar->CurrentLevelStream == CurrentLevelStream)
+		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 
+	
 	return false;
+
 }
 
 
@@ -187,7 +185,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	//	GEngine->ClearOnScreenDebugMessages();
 	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
 	//}
-
+	//if(IsLocallyControlled())
+	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, CurrentLevelStream.ToString());
 	
 	
 	if (Role != ROLE_Authority || IsLocallyControlled())
@@ -202,7 +201,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 				}
 			}
 			bAimPitchable = GetMovementComponent()->IsFalling();
-			
+
+
 
 		}
 
@@ -250,8 +250,12 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 	if (bAlive)
 	{
+
 		if (bHasHandWeapon)
-			UpdateAim();
+		{
+			if(IsLocallyControlled())
+				UpdateAim(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
+		}
 
 		if (!bMovingUp && !bMovingDown && !bMovingLeft && !bMovingRight)
 		{
@@ -289,31 +293,29 @@ void AGOLMCharacter::NotifyHit
 
 
 
-void AGOLMCharacter::UpdateAim()
+void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
-	if(Role!=ROLE_Authority || IsLocallyControlled())
-	{
-		FVector MouseHit = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
-		FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
-		SetActorRotation(FRotator(0, aim.Yaw, 0));
-		WeaponAimPitch = aim.Pitch;
-
-		if(Role!=ROLE_Authority)
-			UpdateAim_ServerUpdate(aim);
-	}
+	FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
+	SetActorRotation(FRotator(0, aim.Yaw, 0));
+	WeaponAimPitch = aim.Pitch;
+	if(Role!=ROLE_Authority)
+		ServerUpdateAim(aim.Pitch,aim.Yaw);
+	
 }
 
 
-void AGOLMCharacter::UpdateAim_ServerUpdate_Implementation(FRotator NewAim)
+void AGOLMCharacter::ServerUpdateAim_Implementation(float NewPitch, float NewYaw)
 {
-	//UpdateAim(NewAim);
-	WeaponAimPitch = NewAim.Pitch;
-	SetActorRotation(FRotator(0, NewAim.Yaw, 0));
+	WeaponAimPitch = NewPitch;
+	SetActorRotation(FRotator(0, NewYaw, 0));
 }
-bool AGOLMCharacter::UpdateAim_ServerUpdate_Validate(FRotator NewAim)
+bool AGOLMCharacter::ServerUpdateAim_Validate(float NewPitch, float NewYaw)
 {
 	return true;
 }
+
+
+
 
 void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 {
@@ -747,7 +749,7 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 		else
 			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
 
-
+		
 		TArray<AActor*, FDefaultAllocator> SpawnLocs;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
 		
@@ -759,9 +761,10 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
 				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
 				{
-					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
-					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+					//SetActorLocation(StartLocation->GetSpawnLocation());
 					CurrentLevelStream = EntranceLevelNameTag;
+					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+					
 					break;
 				}
 			}
@@ -970,4 +973,9 @@ void AGOLMCharacter::ClientSetPawnCollisionType_Implementation(EPlayerCollisionP
 {
 	if (Role != ROLE_Authority)
 		SetPawnCollisionType(NewCollisionType);
+}
+
+void AGOLMCharacter::OnRep_Test()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, FString::SanitizeFloat(WeaponAimPitch));
 }
