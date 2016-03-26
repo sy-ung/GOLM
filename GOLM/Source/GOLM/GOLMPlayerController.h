@@ -33,6 +33,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInEquipmentMenu;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInSettingsMenu;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CharacterMode)	
+																	bool bIsArcFireOn;
 	
 
 	UFUNCTION()												virtual void BeginPlay() override;
@@ -123,6 +126,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoFrontCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoLeftShoulderCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoRightShoulderCamera();
+	UFUNCTION(BlueprintCallable, Category = FireMode)		void SetArcFire(bool value);
+
 
 															
 
@@ -132,13 +137,11 @@ public:
 	EPlayerCursorType CurrentCursorType;
 	EEquipSlot GetMenuWeaponSlotChoice();
 
-	
-
-private:
 	class UUserWidget *CursorWidgetReference;
 	class UUserWidget *EquipmentMenuReference;
 	class UUserWidget *InGameSettingsMenuReference;
 
+private:
 	EEquipSlot MenuSlotChoice;
 protected:
 	AGOLMCharacter *PlayerCharacter;

@@ -6,17 +6,6 @@
 
 #define TRACE_WEAPON ECC_GameTraceChannel1
 
-USTRUCT()
-struct FWeaponData
-{
-	GENERATED_USTRUCT_BODY()
-	UPROPERTY(EditDefaultsOnly, Category = Ammo)	int32 MaxAmmo;
-	UPROPERTY(EditDefaultsOnly, Category = Ammo)	int32 ShotCost;
-	UPROPERTY(EditDefaultsOnly, Category = Config)	float TimeBetweenShots;
-	UPROPERTY(EditDefaultsOnly, Category = Config)	float WeaponRange;
-	UPROPERTY(EditDefaultsOnly, Category = Config)	float WeaponSpread;
-};
-
 UCLASS()
 class GOLM_API AWeapon : public AActor
 {
@@ -44,10 +33,12 @@ public:
 
 	bool bProjectileCollisionPossible;
 
-	UPROPERTY(EditDefaultsOnly, Category = Config)						FWeaponData WeaponConfig;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision)	UBoxComponent *CollisionComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	USkeletalMeshComponent *WeaponMesh;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UParticleSystemComponent *WeaponMuzzle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UParticleSystemComponent *WeaponProjectileTraceImpact;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config, Replicated)	AProjectile *CurrentProjectile;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = CompatibleProjectiles)
@@ -74,6 +65,13 @@ public:
 
 	void LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation);
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Config) bool bIsSpread;
+	//The Length of spread in degrees
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Config) float SpreadAmount;
+	//Number of projectile for each shot
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Config) float NumberOfSpread;
+	void LaunchSpreadProjectile(FVector MuzzleLocation, FRotator MuzzleRotation);
+
 	UFUNCTION(BlueprintCallable, Category = Changes)
 		void SetNewProjectile(AProjectile *NewProjectile);
 	UFUNCTION(Server, Reliable, WithValidation)
@@ -81,10 +79,12 @@ public:
 		void ServerSetNewProjectile_Implementation(AProjectile *NewProjectile);
 		bool ServerSetNewProjectile_Validate(AProjectile *NewProjectile);
 
+		float CalculateProjectilePath(FVector TargetPoint);
+		void DrawProjectilePath();
 
+		void ToggleProjectileCollision(bool CollisionPossible);
 
-	void ToggleProjectileCollision(bool CollisionPossible);
-
+		bool bArcFire;
 
 protected:
 

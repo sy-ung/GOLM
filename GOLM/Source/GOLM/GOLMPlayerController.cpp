@@ -334,20 +334,24 @@ void AGOLMPlayerController::ShowEquipmentMenu()
 			{
 				if (EquipmentMenuReference == NULL)
 				{
-					GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "CREATING MENU");
 					EquipmentMenuReference = CreateWidget<UUserWidget>(this, EquipmentMenu.GetDefaultObject()->GetClass());
+					EquipmentMenuReference->AddToRoot();
 		
 				}
 
 				if (EquipmentMenuReference != NULL)
 				{
+				
+					
 					FInputModeGameAndUI UI;
-					UI.SetWidgetToFocus(EquipmentMenuReference->GetCachedWidget());
+
 					SetInputMode(UI);
 					ChangeCursor(EPlayerCursorType::MENU);
-			
 					EquipmentMenuReference->AddToViewport(1);
+					UI.SetWidgetToFocus(EquipmentMenuReference->GetCachedWidget());
 					bIsInEquipmentMenu = true;
+					Cast<AGOLMCharacter>(GetCharacter())->bIsInMenu = true;
+					
 				}
 				else
 					GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "EquipmentMenuReference is NULL");
@@ -361,12 +365,13 @@ void AGOLMPlayerController::HideEquipmentMenu()
 	{
 		if(bIsInEquipmentMenu && !bIsInSettingsMenu)
 		{
+			EquipmentMenuReference->RemoveFromParent();
 			FInputModeGameAndUI GI;
 			GI.SetHideCursorDuringCapture(false);
 			SetInputMode(GI);
 			ChangeCursor(EPlayerCursorType::CROSSHAIR);
-			EquipmentMenuReference->RemoveFromParent();
 			bIsInEquipmentMenu = false;
+			Cast<AGOLMCharacter>(GetCharacter())->bIsInMenu = false;
 			GotoPlayerCamera();
 		}
 	}
@@ -381,6 +386,7 @@ void AGOLMPlayerController::ShowInGameSettingsMenu()
 			if (InGameSettingsMenuReference == NULL)
 			{
 				InGameSettingsMenuReference = CreateWidget<UUserWidget>(this, InGameSettingsMenu.GetDefaultObject()->GetClass());
+				InGameSettingsMenuReference->AddToRoot();
 			}
 
 			if (InGameSettingsMenuReference != NULL)
@@ -427,3 +433,12 @@ void AGOLMPlayerController::GotoRightShoulderCamera()
 	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->RightShoulderCameraActor, 0.5f);
 }
 
+void AGOLMPlayerController::SetArcFire(bool value)
+{
+	AGOLMCharacter *ConChar = Cast<AGOLMCharacter>(GetCharacter());
+	if (ConChar != NULL)
+	{
+		ConChar->CurrentWeapon->bArcFire = value;
+		bIsArcFireOn = value;
+	}
+}

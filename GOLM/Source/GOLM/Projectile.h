@@ -57,7 +57,6 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileMovement)	class UProjectileMovementComponent *MovementComponent;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float Speed;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float Damage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float LifeTime;
 
@@ -68,6 +67,15 @@ public:
 	
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = ProjectileData)		FName CurrentLevelStream;
 	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileCluster) TSubclassOf<AProjectile> ClusterProjectile;
+	//Set this to false if this is a Cluster Projectile
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup) bool bIsClusterProjectile;
+	//The Spread in degress
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup) float ClusterSpreadAmount;
+	//The number of cluster items
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup) float NumberInCluster;
+	void FireCluster();
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void OnDeath();

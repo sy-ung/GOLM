@@ -59,6 +59,7 @@ void AProjectile::BeginPlay()
 		Alive = true;
 		BeginParticle();
 	}
+	CollisionBox->IgnoreActorWhenMoving(GetInstigator(), true);
 }
 
 //***RealViewer refers to player controller and ViewTarget refers to Character
@@ -126,6 +127,11 @@ void AProjectile::Tick(float DeltaSeconds)
 			OnDeath();
 		}
 	}
+
+	if (GetInstigator() != NULL)
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, GetInstigator()->GetName());
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "NO INSTIGATOR");
 	
 }
 
@@ -135,7 +141,7 @@ void AProjectile::OnDeath()
 
 	if(!IsRunningDedicatedServer())
 	{
-		if (DeathParticle != NULL)
+		if (DeathParticle != NULL && !bIsClusterProjectile)
 			UGameplayStatics::SpawnEmitterAtLocation(CollisionBox, DeathParticle->Template, this->GetActorLocation(), this->GetActorRotation());
 
 		if (DeathSounds->Sound != NULL)
@@ -150,7 +156,11 @@ void AProjectile::OnDeath()
 
 	if (Role == ROLE_Authority)
 	{
+		if (bIsClusterProjectile)
+			FireCluster();
+
 		InflictDamage();
+		
 		DestroyMe();
 	}
 	
@@ -177,7 +187,7 @@ void AProjectile::InflictDamage()
 
 void AProjectile::DestroyMe()
 {
-	Destroy(true);
+		Destroy(true);
 }
 
 void AProjectile::ServerDestroyMe_Implementation()
@@ -198,9 +208,10 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 	if(Role == ROLE_Authority)
 	{	
 		auto *HitPlayer = Cast<AGOLMCharacter>(Other);
-		if (HitPlayer)
+		if (HitPlayer != GetInstigator())
 		{
-			HitPlayer->Health -= 33;
+			if(HitPlayer != NULL)
+				HitPlayer->Health -= 33;
 		}
 	}
 }
@@ -209,4 +220,23 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 void AProjectile::ToggleNoPawnCollision()
 {
 	CollisionBox->SetCollisionProfileName("Projectile");
+}
+void AProjectile::FireCluster()
+{
+	if(Role == ROLE_Authority)
+	{
+		for (int32 i = 0; i < NumberInCluster; i++)
+		{
+			int32 RandomSeed = FMath::Rand();
+			FRandomStream SpreadRandom(RandomSeed);
+			float SpreadCone = FMath::DegreesToRadians(ClusterSpreadAmount * 0.5);
+			FVector Direction = SpreadRandom.VRandCone(GetActorRotation().Vector(), SpreadCone, SpreadCone);
+			FActorSpawnParameters spawnParams;
+			spawnParams.Instigator = Cast<AGOLMCharacter>(GetInstigator());
+			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(ClusterProjectile.GetDefaultObject()->GetClass(), GetActorLocation(), Direction.Rotation(), spawnParams);
+			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream;
+			projectile->SetActorScale3D(this->GetActorScale3D());
+
+		}
+	}
 }

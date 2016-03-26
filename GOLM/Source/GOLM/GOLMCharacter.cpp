@@ -3,6 +3,7 @@
 #include "GOLMCharacter.h"
 #include "GOLMGameMode.h"
 #include "GOLMLevelStreamBeacon.h"
+#include "GOLMEquipmentMenuWidget.h"
 #include "GOLMPlayerController.h"
 
 
@@ -114,7 +115,7 @@ void AGOLMCharacter::BeginPlay()
 	FrontCameraActor->CameraComponent = EquipmentCameraFront;
 	LeftShoulderCameraActor->CameraComponent = EquipmentCameraLeftShoulder;
 	RightShoulderCameraActor->CameraComponent = EquipmentCameraRightShoulder;
-	
+
 	RespawnTimeCheck = 0;
 
 	
@@ -253,8 +254,16 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 		if (bHasHandWeapon)
 		{
-			if(IsLocallyControlled())
-				UpdateAim(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
+			if (IsLocallyControlled())
+			{
+				if(CurrentWeapon != NULL)
+				{
+					FVector MouseHit = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
+					CurrentWeapon->DrawProjectilePath();
+					UpdateAim(MouseHit);
+				}
+			}
+
 		}
 
 		if (!bMovingUp && !bMovingDown && !bMovingLeft && !bMovingRight)
@@ -295,11 +304,21 @@ void AGOLMCharacter::NotifyHit
 
 void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
+
+
 	FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
+	//FRotator aim = MouseHit.Rotation();
 	SetActorRotation(FRotator(0, aim.Yaw, 0));
-	WeaponAimPitch = aim.Pitch;
+	float NewPitch = CurrentWeapon->CalculateProjectilePath(MouseHit);
+
+	if (NewPitch != 0)
+		WeaponAimPitch = NewPitch;
+
+	if (bIsInMenu)
+		WeaponAimPitch = 0;
+
 	if(Role!=ROLE_Authority)
-		ServerUpdateAim(aim.Pitch,aim.Yaw);
+		ServerUpdateAim(WeaponAimPitch,aim.Yaw);
 	
 }
 
@@ -975,7 +994,15 @@ void AGOLMCharacter::ClientSetPawnCollisionType_Implementation(EPlayerCollisionP
 		SetPawnCollisionType(NewCollisionType);
 }
 
-void AGOLMCharacter::OnRep_Test()
+void AGOLMCharacter::OnRep_ShowCompatibleProjectiles()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, FString::SanitizeFloat(WeaponAimPitch));
+	if (IsLocallyControlled())
+	{
+		AGOLMPlayerController *PlayerCon = Cast<AGOLMPlayerController>(GetController());
+		if(PlayerCon != NULL)
+			if (PlayerCon->bIsInEquipmentMenu)
+			{
+				Cast<UGOLMEquipmentMenuWidget>(PlayerCon->EquipmentMenuReference)->SetupWeaponProjectileSelection();
+			}
+	}
 }

@@ -18,6 +18,9 @@ AWeapon::AWeapon()
 
 	WeaponMuzzle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("WeaponMuzzle"));
 	WeaponMuzzle->AttachTo(RootComponent);
+
+	WeaponProjectileTraceImpact = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("WeaponProjectileTraceImpact"));
+	WeaponProjectileTraceImpact->AttachTo(WeaponMesh,"MuzzleFlash");
 	
 	WeaponAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("WeaponAudio"));
 	WeaponAudio->AttachTo(RootComponent);
@@ -35,6 +38,7 @@ void AWeapon::BeginPlay()
 	CollisionComp->SetCollisionProfileName("NoCollision");
 	if(Role == ROLE_Authority)
 		CurrentProjectile = CompatibleProjectiles[0].GetDefaultObject();
+	//UGameplayStatics::SpawnEmitterAttached(WeaponProjectileTraceImpact->Template, WeaponMesh, "MuzzleFlash");
 }
 
 // Called every frame
@@ -51,9 +55,9 @@ void AWeapon::Tick(float DeltaSeconds)
 				UGameplayStatics::SpawnSoundAtLocation(WeaponMesh, WeaponAutoMaticEnd, WeaponMesh->GetSocketLocation("MuzzleFlash"));
 			}
 		}
-		//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, FString::FromInt(Cast<AGOLMCharacter>(GetOwner())->bStartShooting));
 	}
 	
+
 
 }
 
@@ -77,10 +81,15 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 		FActorSpawnParameters spawnParams;
 		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
 		
-		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
+		if (bIsSpread)
+			LaunchSpreadProjectile(MuzzleLocation, MuzzleRotation);
+		else
+		{
+			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
 
-		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
-		projectile->SetActorScale3D(this->GetActorScale3D());
+			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
+			projectile->SetActorScale3D(this->GetActorScale3D());
+		}
 		//Instigator->MoveIgnoreActorAdd(projectile);	
 		//Instigator->MoveIgnoreActorAdd(GetOwner());
 		
@@ -101,6 +110,26 @@ void AWeapon::ServerLaunchProjectile_Implementation(FVector MuzzleLocation, FRot
 bool AWeapon::ServerLaunchProjectile_Validate(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
 	return true;
+}
+
+void AWeapon::LaunchSpreadProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
+{
+	
+	for (int32 i = 0; i < NumberOfSpread;i++)
+	{
+		
+		int32 RandomSeed = FMath::Rand();
+		FRandomStream SpreadRandom(RandomSeed);
+		float SpreadCone = FMath::DegreesToRadians(SpreadAmount * 0.5);
+		FVector Direction = SpreadRandom.VRandCone(MuzzleRotation.Vector(), SpreadCone, SpreadCone);
+		FActorSpawnParameters spawnParams;
+		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
+		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, Direction.Rotation(), spawnParams);
+		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
+		projectile->SetActorScale3D(this->GetActorScale3D());
+
+	}
+
 }
 
 void AWeapon::PlayLaunchEffects()
@@ -178,4 +207,40 @@ void AWeapon::ServerSetNewProjectile_Implementation(AProjectile *NewProjectile)
 bool AWeapon::ServerSetNewProjectile_Validate(AProjectile *NewProjectile)
 {
 	return true;
+}
+
+float AWeapon::CalculateProjectilePath(FVector TargetPoint)
+{
+	FVector SockLoc = WeaponMesh->GetSocketLocation("MuzzleFlash");
+	float Speed = CurrentProjectile->MovementComponent->InitialSpeed;
+	float Gravity = 980;
+	float HorizontalDistance = FVector2D(FVector2D(TargetPoint.X, TargetPoint.Y) - FVector2D(SockLoc.X, SockLoc.Y)).Size();
+	float Height = TargetPoint.Z - SockLoc.Z;
+
+	float calculation = (Speed * Speed * Speed * Speed) - (Gravity * (Gravity * (HorizontalDistance * HorizontalDistance) + (2 * Height * (Speed * Speed))));
+	if (calculation <= 0)
+		return 0;
+	else
+	{
+		
+		float NewCalculation = FMath::Sqrt(calculation);
+
+		if(bArcFire)
+		{ 
+			float Result1 = UKismetMathLibrary::DegAtan(((Speed * Speed) + NewCalculation) / (Gravity * HorizontalDistance));
+			return Result1;
+		}
+		else
+		{
+			float Result2 = UKismetMathLibrary::DegAtan(((Speed * Speed) - NewCalculation) / (Gravity * HorizontalDistance));
+			return Result2;
+		}
+	}
+
+	return 0;
+}
+
+void AWeapon::DrawProjectilePath()
+{
+
 }

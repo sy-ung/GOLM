@@ -41,11 +41,13 @@ class AGOLMCharacter : public ACharacter
 
 	bool bAimPitchable;
 
+
 	float DefaultNetCullDistanceSquared;
 
 public:
 	AGOLMCharacter();
 
+	bool bIsInMenu;
 
 	virtual void PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker);
 	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
@@ -104,7 +106,7 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Replicated)		float WeaponAimPitch;
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
-	UPROPERTY(BlueprintReadOnly, Replicated)		AWeapon *CurrentWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentWeapon;
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
@@ -291,7 +293,7 @@ public:
 		void ClientSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
 		void ClientSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
 
-
-		void OnRep_Test();
+	UFUNCTION()
+		void OnRep_ShowCompatibleProjectiles();
 };
 
