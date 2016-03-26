@@ -128,10 +128,10 @@ void AProjectile::Tick(float DeltaSeconds)
 		}
 	}
 
-	if (GetInstigator() != NULL)
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, GetInstigator()->GetName());
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "NO INSTIGATOR");
+	//if (GetInstigator() != NULL)
+	//	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, GetInstigator()->GetName());
+	//else
+	//	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "NO INSTIGATOR");
 	
 }
 
@@ -210,8 +210,21 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 		auto *HitPlayer = Cast<AGOLMCharacter>(Other);
 		if (HitPlayer != GetInstigator())
 		{
-			if(HitPlayer != NULL)
-				HitPlayer->Health -= 33;
+			if (HitPlayer != NULL)
+			{
+				
+				if (Role == ROLE_Authority)
+				{
+					
+					TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+					AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
+					UGameplayStatics::ApplyDamage(HitPlayer, 30, ConInstigator, GetInstigator(), DamageType);
+				}
+				//FDamageEvent DamageEvent(DamageType);
+				//AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
+				//HitPlayer->TakeDamage(-30, DamageEvent, ConInstigator, GetInstigator());
+			}
+				
 		}
 	}
 }

@@ -76,6 +76,8 @@ void AWeapon::WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation)
 void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
 	PlayLaunchEffects();
+
+
 	if(Role == ROLE_Authority)
 	{
 		FActorSpawnParameters spawnParams;
@@ -97,6 +99,11 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 	if (Role != ROLE_Authority)
 	{
+		if (CurrentProjectile != NULL)
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, CurrentProjectile->Name.ToString());
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "CurrentProjectile is NULL");
+
 		ServerLaunchProjectile(MuzzleLocation, MuzzleRotation);
 	}
 		

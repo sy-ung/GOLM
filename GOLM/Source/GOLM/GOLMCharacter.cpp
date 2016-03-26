@@ -1006,3 +1006,35 @@ void AGOLMCharacter::OnRep_ShowCompatibleProjectiles()
 			}
 	}
 }
+
+//***Done on server side
+float AGOLMCharacter::TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController *EventInstigator, AActor *DamageCauser)
+{
+	float Damage = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+	if (Damage > 0.0f)
+	{
+
+		UDamageType *DamageType = Cast<UDamageType>(DamageEvent.DamageTypeClass->GetDefaultObject());
+
+
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "DAMAGE TYPE: " + DamageType->GetName());
+
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), GetName() + " I AM TAKING DAMAGE");
+		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), " IT IS POINT DAMAGE");
+		}
+
+		if (DamageEvent.IsOfType(FDamageEvent::ClassID))
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), " IT IS DAMAGE");
+		}
+
+		if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "IT IS RADIAL DAMAGE");
+		}
+	}
+	return Damage;
+}

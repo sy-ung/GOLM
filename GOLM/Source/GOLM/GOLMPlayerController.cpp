@@ -355,6 +355,8 @@ void AGOLMPlayerController::ShowEquipmentMenu()
 				}
 				else
 					GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "EquipmentMenuReference is NULL");
+
+				
 			}
 		}
 	}
