@@ -71,12 +71,16 @@ bool AProjectile::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewT
 
 	if (TargetCharacter->CurrentLevelStream == "LockerRoom")
 	{
-		if (TargetCharacter == Cast<AGOLMCharacter>(Instigator))
+		if (TargetCharacter == Cast<AGOLMCharacter>(GetInstigator()))
 			return true;
 		else
+		{
+
 			return false;
+		}
+			
 	}
-	else if (TargetCharacter->CurrentLevelStream == Cast<AGOLMCharacter>(Instigator)->CurrentLevelStream)
+	else if (TargetCharacter->CurrentLevelStream == Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream)
 		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 	
 	return false;
@@ -127,12 +131,6 @@ void AProjectile::Tick(float DeltaSeconds)
 			OnDeath();
 		}
 	}
-
-	//if (GetInstigator() != NULL)
-	//	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Green, GetInstigator()->GetName());
-	//else
-	//	GEngine->AddOnScreenDebugMessage(-1, 1.0f, FColor::Red, "NO INSTIGATOR");
-	
 }
 
 void AProjectile::OnDeath()
@@ -141,11 +139,17 @@ void AProjectile::OnDeath()
 
 	if(!IsRunningDedicatedServer())
 	{
+
 		if (DeathParticle != NULL && !bIsClusterProjectile)
 			UGameplayStatics::SpawnEmitterAtLocation(CollisionBox, DeathParticle->Template, this->GetActorLocation(), this->GetActorRotation());
 
 		if (DeathSounds->Sound != NULL)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), DeathSounds->Sound->GetName());
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSounds->Sound, GetActorLocation());
+		}
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "Death sound is NULL");
 
 		if (ProjectileMesh != NULL)
 			ProjectileMesh->DestroyComponent();
@@ -158,12 +162,14 @@ void AProjectile::OnDeath()
 	{
 		if (bIsClusterProjectile)
 			FireCluster();
-
-		InflictDamage();
-		
-		DestroyMe();
+		else
+			InflictDamage();
 	}
-	
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "I HAVE DIED");
+	}
+	DestroyMe();
 }
 
 void AProjectile::ClientOnDeath_Implementation()
@@ -187,7 +193,7 @@ void AProjectile::InflictDamage()
 
 void AProjectile::DestroyMe()
 {
-		Destroy(true);
+	Destroy();
 }
 
 void AProjectile::ServerDestroyMe_Implementation()
