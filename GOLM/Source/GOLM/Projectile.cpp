@@ -123,14 +123,16 @@ void AProjectile::Tick(float DeltaSeconds)
 				Alive = false;
 			}
 		}
-	}
 
-	if (!Alive)
-	{
+		if (!Alive)
 		{
-			OnDeath();
+			{
+				OnDeath();
+			}
 		}
 	}
+
+
 }
 
 void AProjectile::OnDeath()
@@ -145,7 +147,6 @@ void AProjectile::OnDeath()
 
 		if (DeathSounds->Sound != NULL)
 		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), DeathSounds->Sound->GetName());
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSounds->Sound, GetActorLocation());
 		}
 		else
@@ -164,12 +165,12 @@ void AProjectile::OnDeath()
 			FireCluster();
 		else
 			InflictDamage();
+
+		ClientOnDeath();
+
+		DestroyMe();
 	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "I HAVE DIED");
-	}
-	DestroyMe();
+	
 }
 
 void AProjectile::ClientOnDeath_Implementation()
@@ -212,25 +213,36 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 	Alive = false;
 	
 	if(Role == ROLE_Authority)
-	{	
-		auto *HitPlayer = Cast<AGOLMCharacter>(Other);
-		if (HitPlayer != GetInstigator())
+	{
+		TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+		AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
+		if (bExplosive)
 		{
-			if (HitPlayer != NULL)
-			{
-				
-				if (Role == ROLE_Authority)
-				{
-					
-					TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-					AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
-					UGameplayStatics::ApplyDamage(HitPlayer, 30, ConInstigator, GetInstigator(), DamageType);
-				}
-				//FDamageEvent DamageEvent(DamageType);
-				//AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
-				//HitPlayer->TakeDamage(-30, DamageEvent, ConInstigator, GetInstigator());
-			}
-				
+			TArray<AActor*> OverlappedActors;
+			UGameplayStatics::ApplyRadialDamage(GetWorld(), 500, Hit.Location, 50, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
+
+		}
+		else
+		{
+			UGameplayStatics::ApplyPointDamage(Other, 500, GetActorForwardVector(),Hit, ConInstigator,GetInstigator(), DamageType);
+			//auto *HitPlayer = Cast<UDestructibleMesh>(Other);
+			//if (HitPlayer != NULL)
+			//{
+			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "I AM DESTRUCTIBLE");
+			//	UGameplayStatics::ApplyDamage(Other, 30, ConInstigator, GetInstigator(), DamageType);
+			//}
+			//auto *HitPlayer2 = Cast<AGOLMCharacter>(Other);
+			//if (HitPlayer2 != GetInstigator())
+			//{
+			//	if (HitPlayer2 != NULL)
+			//	{
+			//		UGameplayStatics::ApplyDamage(Other, 30, ConInstigator, GetInstigator(), DamageType);
+
+			//		//FDamageEvent DamageEvent(DamageType);
+			//		//AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
+			//		//HitPlayer->TakeDamage(-30, DamageEvent, ConInstigator, GetInstigator());
+			//	}
+			//}
 		}
 	}
 }

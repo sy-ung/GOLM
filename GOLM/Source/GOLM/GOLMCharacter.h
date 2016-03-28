@@ -111,6 +111,9 @@ public:
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
 
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector HandSupportLocation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector LeftPalmLocation;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bHasHandWeapon;
@@ -299,5 +302,6 @@ public:
 	UFUNCTION()
 		virtual float TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController *EventInstigator, AActor *DamageCauser) override;
 
+	
 };
 

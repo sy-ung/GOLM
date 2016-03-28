@@ -38,6 +38,7 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 	if(CursorWidgetReference != NULL)
 		Cast<UGOLMMouseWidget>(CursorWidgetReference)->MoveMouseCursor(this);
 
+
 }
 
 void AGOLMPlayerController::FireWeapon(bool value)

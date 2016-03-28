@@ -80,7 +80,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void OnDeath();
 
-	UFUNCTION(Client, Unreliable, NetMulticast)
+	UFUNCTION(Client, Reliable, NetMulticast)
 		void ClientOnDeath();
 		void ClientOnDeath_Implementation();
 

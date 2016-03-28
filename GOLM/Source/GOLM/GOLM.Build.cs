@@ -6,7 +6,7 @@ public class GOLM : ModuleRules
 {
 	public GOLM(TargetInfo Target)
 	{
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "OnlineSubsystem", "OnlineSubsystemUtils" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "UMG", "OnlineSubsystem", "OnlineSubsystemUtils", "PhysX", "APEX" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore"   });
 		

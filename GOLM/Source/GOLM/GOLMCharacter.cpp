@@ -306,10 +306,14 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
 
 
-	FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("HeadSocket")).Rotation();
+	FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("SpineSocket")).Rotation();
+	//FRotator aim = (MouseHit - CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
 	//FRotator aim = MouseHit.Rotation();
 	SetActorRotation(FRotator(0, aim.Yaw, 0));
 	float NewPitch = CurrentWeapon->CalculateProjectilePath(MouseHit);
+
+	HandSupportLocation = CurrentWeapon->WeaponMesh->GetSocketLocation("HandSupport");
+	LeftPalmLocation = GetMesh()->GetSocketLocation("LeftPalmSocket");
 
 	if (NewPitch != 0)
 		WeaponAimPitch = NewPitch;
