@@ -113,6 +113,8 @@ public:
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector HandSupportLocation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector GripBoneLocation;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector LeftPalmLocation;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;

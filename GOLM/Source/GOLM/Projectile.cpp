@@ -210,10 +210,21 @@ bool AProjectile::ServerDestroyMe_Validate()
 void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved,
 	FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
-	Alive = false;
-	
+	if (MovementComponent->bShouldBounce)
+	{
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), MoveSounds->Sound, GetActorLocation());
+	}
+
 	if(Role == ROLE_Authority)
 	{
+		
+
+		if (!MovementComponent->bShouldBounce)
+		{
+			Alive = false;
+		}
+		
+
 		TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 		AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
 		if (bExplosive)

@@ -306,13 +306,15 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
 
 
-	FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("SpineSocket")).Rotation();
-	//FRotator aim = (MouseHit - CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
+	//FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("SpineSocket")).Rotation();
+	FRotator aim = (MouseHit - CurrentWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
 	//FRotator aim = MouseHit.Rotation();
 	SetActorRotation(FRotator(0, aim.Yaw, 0));
 	float NewPitch = CurrentWeapon->CalculateProjectilePath(MouseHit);
 
+
 	HandSupportLocation = CurrentWeapon->WeaponMesh->GetSocketLocation("HandSupport");
+	GripBoneLocation = CurrentWeapon->WeaponMesh->GetBoneLocation("Grip_Bone");
 	LeftPalmLocation = GetMesh()->GetSocketLocation("LeftPalmSocket");
 
 	if (NewPitch != 0)
@@ -362,7 +364,7 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 		case EEquipSlot::HAND_SLOT:
 			if (SpawnedWeapon != NULL)
 			{
-				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "RightHandWeaponSocket", EAttachLocation::SnapToTarget);
+				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
 				bHasHandWeapon = true;
 				CurrentWeapon = SpawnedWeapon;
 			}

@@ -218,6 +218,7 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 {
 	FVector SockLoc = WeaponMesh->GetSocketLocation("MuzzleFlash");
 	
+
 	float Speed = 0;
 	bool isCluster = CurrentProjectile->bIsClusterProjectile;
 
@@ -252,17 +253,16 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 	{
 		
 		float NewCalculation = FMath::Sqrt(calculation);
-
+		float Result = 0;
 		if(bArcFire)
 		{ 
-			float Result1 = UKismetMathLibrary::DegAtan(((Speed * Speed) + NewCalculation) / (Gravity * HorizontalDistance));
-			return Result1;
+			 Result = UKismetMathLibrary::DegAtan(((Speed * Speed) + NewCalculation) / (Gravity * HorizontalDistance));
 		}
 		else
 		{
-			float Result2 = UKismetMathLibrary::DegAtan(((Speed * Speed) - NewCalculation) / (Gravity * HorizontalDistance));
-			return Result2;
+			Result = UKismetMathLibrary::DegAtan(((Speed * Speed) - NewCalculation) / (Gravity * HorizontalDistance));
 		}
+		return Result;
 	}
 
 	return 0;
@@ -270,5 +270,5 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 
 void AWeapon::DrawProjectilePath()
 {
-
+	
 }

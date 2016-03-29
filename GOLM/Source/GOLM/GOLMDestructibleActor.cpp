@@ -17,21 +17,21 @@ void AGOLMDestructibleActor::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 #if WITH_PHYSX
-	GEngine->ClearOnScreenDebugMessages();
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "I GOT PHYSX BITCH");
+	//GEngine->ClearOnScreenDebugMessages();
+	//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "I GOT PHYSX BITCH");
 
-	uint32 ChunkCount = DestructibleComponent->ApexDestructibleActor->getNumVisibleChunks();
-	const uint16 *ChunkIndices = DestructibleComponent->ApexDestructibleActor->getVisibleChunks();
-	for (uint32 i = 0; i < ChunkCount; i++)
-	{
-		PxRigidDynamic *PxActor = DestructibleComponent->ApexDestructibleActor->getChunkPhysXActor(ChunkIndices[i]);
-		check(PxActor);
-		PxTransform Transform = PxActor->getGlobalPose();
-		PxVec3 &PxLocation = Transform.p;
+	//uint32 ChunkCount = DestructibleComponent->ApexDestructibleActor->getNumVisibleChunks();
+	//const uint16 *ChunkIndices = DestructibleComponent->ApexDestructibleActor->getVisibleChunks();
+	//for (uint32 i = 0; i < ChunkCount; i++)
+	//{
+	//	PxRigidDynamic *PxActor = DestructibleComponent->ApexDestructibleActor->getChunkPhysXActor(ChunkIndices[i]);
+	//	check(PxActor);
+	//	PxTransform Transform = PxActor->getGlobalPose();
+	//	PxVec3 &PxLocation = Transform.p;
 
-		FVector Location(PxLocation.x, PxLocation.y, PxLocation.z);
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Chunk Location: " + Location.ToString());
-	}
+	//	FVector Location(PxLocation.x, PxLocation.y, PxLocation.z);
+	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Chunk Location: " + Location.ToString());
+	//}
 
 #endif
 }
