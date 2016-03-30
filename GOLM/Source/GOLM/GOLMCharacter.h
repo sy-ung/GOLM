@@ -75,6 +75,11 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Available Weapons")	TSubclassOf<class AWeapon> RocketLauncher;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Available Weapons")	TSubclassOf<class AWeapon> Rifle;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "MiniMapCamera")		TSubclassOf<class AGOLMMiniMapCamera> MiniMapCamera;
+	class AGOLMMiniMapCamera *MiniMapCameraReference;
+
+	void ZoomMiniMapCamera(float value);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyMovements)			float MovingSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyMovements)			float TurnSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = MyMovements)			float BoostSpeed;

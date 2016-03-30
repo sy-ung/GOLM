@@ -27,6 +27,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> CursorWidget;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> EquipmentMenu;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> InGameSettingsMenu;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> InGameHUD;
+
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *Crosshair;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *MenuCursor;
@@ -122,6 +124,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
 															void HideInGameSettingsMenu();
 
+	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
+															void HideInGameHud();
+	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
+															void ShowInGameHud();
+
+	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
+															void ZoomMiniMap(float value);
+
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoPlayerCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoFrontCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoLeftShoulderCamera();
@@ -140,6 +150,7 @@ public:
 	class UUserWidget *CursorWidgetReference;
 	class UUserWidget *EquipmentMenuReference;
 	class UUserWidget *InGameSettingsMenuReference;
+	class UUserWidget *InGameHUDReference;
 
 private:
 	EEquipSlot MenuSlotChoice;

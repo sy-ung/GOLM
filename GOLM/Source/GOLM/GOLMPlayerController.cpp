@@ -5,6 +5,7 @@
 #include "GOLMGameMode.h"
 #include "GOLMMouseWidget.h"
 #include "GOLMEquipmentMenuWidget.h"
+#include "GOLMInGameHUDWidget.h"
 #include "Engine.h"
 #include "AI/Navigation/NavigationSystem.h"
 
@@ -416,6 +417,38 @@ void AGOLMPlayerController::HideInGameSettingsMenu()
 		InGameSettingsMenuReference->RemoveFromParent();
 		bIsInSettingsMenu = false;
 	}
+}
+
+void AGOLMPlayerController::ShowInGameHud()
+{
+	if (IsLocalController())
+	{
+		if (InGameHUDReference == NULL)
+		{
+			InGameHUDReference = CreateWidget<UUserWidget>(this, InGameHUD.GetDefaultObject()->GetClass());
+			InGameHUDReference->AddToRoot();
+		}
+
+		if (InGameHUDReference != NULL)
+		{
+			InGameHUDReference->AddToViewport();
+		}
+	}
+}
+
+void AGOLMPlayerController::HideInGameHud()
+{
+	if (InGameHUDReference != NULL)
+		InGameHUDReference->RemoveFromParent();
+}
+void AGOLMPlayerController::ZoomMiniMap(float value)
+{
+	if (InGameHUDReference != NULL)
+	{
+		Cast<AGOLMCharacter>(GetCharacter())->ZoomMiniMapCamera(value);
+	}
+	else
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "IN GAME HUD IS NULL");
 }
 
 void AGOLMPlayerController::GotoPlayerCamera()

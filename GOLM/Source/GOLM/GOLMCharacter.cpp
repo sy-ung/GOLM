@@ -5,7 +5,7 @@
 #include "GOLMLevelStreamBeacon.h"
 #include "GOLMEquipmentMenuWidget.h"
 #include "GOLMPlayerController.h"
-
+#include "GOLMMiniMapCamera.h"
 
 
 
@@ -118,11 +118,19 @@ void AGOLMCharacter::BeginPlay()
 
 	RespawnTimeCheck = 0;
 
+	if (GetController() != NULL)
+	{
+		Cast<AGOLMPlayerController>(GetController())->ShowInGameHud();
+	}
 	
 	DefaultNetCullDistanceSquared = NetCullDistanceSquared;
 	bAlive = true;
 	Health = 100;
 	deathTimer = 5.0f;
+
+
+	MiniMapCameraReference = GetWorld()->SpawnActor<AGOLMMiniMapCamera>(MiniMapCamera.GetDefaultObject()->GetClass(), SpawnParams);
+	MiniMapCameraReference->SetPlayerCharacter(this);
 }
 
 void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -181,6 +189,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	if (MiniMapCameraReference != NULL)
+		MiniMapCameraReference->UpdateCamera();
 	//if (IsLocallyControlled())
 	//{
 	//	GEngine->ClearOnScreenDebugMessages();
@@ -428,6 +438,14 @@ void AGOLMCharacter::ZoomCamera(float deltaZoom)
 		);
 }
 
+void AGOLMCharacter::ZoomMiniMapCamera(float value)
+{
+	if (MiniMapCameraReference != NULL)
+	{
+		MiniMapCameraReference->Zoom(value);
+	}
+}
+
 void AGOLMCharacter::FireWeapon()
 {
 	if (CurrentWeapon != NULL)
@@ -655,16 +673,6 @@ void AGOLMCharacter::MoveCamera()
 	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, PlayerCameraBoom->TargetOffset.ToString());
 	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, FString::SanitizeFloat(PlayerCameraBoom->TargetOffset.Size()));
 	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "ArmLength " + FString::SanitizeFloat(PlayerCameraBoom->TargetArmLength));
-
-	
-
-
-
-
-	
-
-
-
 
 }
 
