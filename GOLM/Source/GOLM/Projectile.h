@@ -60,6 +60,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float Damage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float LifeTime;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		bool bVTOL;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLSpeed;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLTime;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		FVector HomingLocation;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UAudioComponent *MoveSounds;
@@ -88,6 +92,7 @@ public:
 		void InflictDamage();
 
 	void ToggleNoPawnCollision();
+	void SetHomingPosition(FVector Location);
 
 private:
 

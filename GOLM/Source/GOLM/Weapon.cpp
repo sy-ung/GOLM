@@ -89,6 +89,10 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
 			projectile->SetActorScale3D(this->GetActorScale3D());
+			if (projectile->bVTOL)
+			{
+				
+			}
 		}
 		//Instigator->MoveIgnoreActorAdd(projectile);	
 		//Instigator->MoveIgnoreActorAdd(GetOwner());

@@ -132,6 +132,15 @@ void AProjectile::Tick(float DeltaSeconds)
 		}
 	}
 
+	if (bVTOL)
+	{
+		if (VTOLTime <= 0)
+			bVTOL = false;
+
+		MovementComponent->Velocity = GetActorForwardVector() * VTOLSpeed;
+		MovementComponent->UpdateComponentVelocity();
+		VTOLTime -= DeltaSeconds;
+	}
 
 }
 
@@ -200,6 +209,11 @@ void AProjectile::DestroyMe()
 void AProjectile::ServerDestroyMe_Implementation()
 {
 	DestroyMe();
+}
+
+void AProjectile::SetHomingPosition(FVector Location)
+{
+	HomingLocation = Location;
 }
 
 bool AProjectile::ServerDestroyMe_Validate()
