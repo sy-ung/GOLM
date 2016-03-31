@@ -14,7 +14,7 @@ void AGOLMMiniMapCamera::UpdateCamera()
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "PlayerChar is NULL");
 
-	GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::SanitizeFloat(Height));
+	//GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, FString::SanitizeFloat(Height));
 }
 
 void AGOLMMiniMapCamera::SetPlayerCharacter(AGOLMCharacter *Player)

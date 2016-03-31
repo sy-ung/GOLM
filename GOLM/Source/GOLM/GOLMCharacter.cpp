@@ -129,8 +129,11 @@ void AGOLMCharacter::BeginPlay()
 	deathTimer = 5.0f;
 
 
-	MiniMapCameraReference = GetWorld()->SpawnActor<AGOLMMiniMapCamera>(MiniMapCamera.GetDefaultObject()->GetClass(), SpawnParams);
-	MiniMapCameraReference->SetPlayerCharacter(this);
+	if(MiniMapCamera != NULL)
+	{
+		MiniMapCameraReference = GetWorld()->SpawnActor<AGOLMMiniMapCamera>(MiniMapCamera.GetDefaultObject()->GetClass(), SpawnParams);
+		MiniMapCameraReference->SetPlayerCharacter(this);
+	}
 }
 
 void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -191,11 +194,20 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 	if (MiniMapCameraReference != NULL)
 		MiniMapCameraReference->UpdateCamera();
-	//if (IsLocallyControlled())
-	//{
-	//	GEngine->ClearOnScreenDebugMessages();
-	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, GetCapsuleComponent()->GetCollisionProfileName().ToString());
-	//}
+	if (IsLocallyControlled())
+	{
+		GEngine->ClearOnScreenDebugMessages();
+		if(bAlive)
+		{
+			
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
+		}
+
+	}
 	//if(IsLocallyControlled())
 	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, CurrentLevelStream.ToString());
 	
@@ -1030,25 +1042,8 @@ float AGOLMCharacter::TakeDamage(float DamageAmount, FDamageEvent const &DamageE
 	{
 
 		UDamageType *DamageType = Cast<UDamageType>(DamageEvent.DamageTypeClass->GetDefaultObject());
+		Health -= Damage;
 
-
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "DAMAGE TYPE: " + DamageType->GetName());
-
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), GetName() + " I AM TAKING DAMAGE");
-		if (DamageEvent.IsOfType(FPointDamageEvent::ClassID))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), " IT IS POINT DAMAGE");
-		}
-
-		if (DamageEvent.IsOfType(FDamageEvent::ClassID))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), " IT IS DAMAGE");
-		}
-
-		if (DamageEvent.IsOfType(FRadialDamageEvent::ClassID))
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "IT IS RADIAL DAMAGE");
-		}
 	}
 	return Damage;
 }

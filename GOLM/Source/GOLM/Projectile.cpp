@@ -42,6 +42,7 @@ void AProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifet
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AProjectile, Alive);
 	DOREPLIFETIME(AProjectile, CurrentLevelStream);
+	DOREPLIFETIME(AProjectile, TargetLocation);
 }
 
 
@@ -57,9 +58,14 @@ void AProjectile::BeginPlay()
 	if(Role == ROLE_Authority)
 	{
 		Alive = true;
-		BeginParticle();
+
+		if(!bVTOL)
+			BeginParticle();
 	}
+	bBeginVTOL = false;
 	CollisionBox->IgnoreActorWhenMoving(GetInstigator(), true);
+	bVTOLStage1Complete = bVTOLStage2Complete = bVTOLStage3Complete = false;
+	VTOLStartLocation = GetActorLocation();
 }
 
 //***RealViewer refers to player controller and ViewTarget refers to Character
@@ -130,18 +136,84 @@ void AProjectile::Tick(float DeltaSeconds)
 				OnDeath();
 			}
 		}
+		if (bIsClusterProjectile)
+		{
+			if(bVTOL)
+			{
+				if((TargetLocation - GetActorLocation()).Size() <= ClusterLaunchDistance && bVTOLStage2Complete)
+					FireCluster();
+			}
+			else
+			{
+				if ((TargetLocation - GetActorLocation()).Size() <= ClusterLaunchDistance)
+					FireCluster();
+			}
+		}
 	}
 
+
+	
+	
 	if (bVTOL)
 	{
-		if (VTOLTime <= 0)
-			bVTOL = false;
-
-		MovementComponent->Velocity = GetActorForwardVector() * VTOLSpeed;
-		MovementComponent->UpdateComponentVelocity();
-		VTOLTime -= DeltaSeconds;
+		if (bBeginVTOL)
+		{
+			VTOLMovement(DeltaSeconds);
+		}
+		else if (!bBeginVTOL)
+		{
+			if (VTOLStartTimer <= 0)
+			{
+				bBeginVTOL = true;
+				if (Role == ROLE_Authority)
+				{
+					BeginParticle();
+				}
+			}
+			VTOLStartTimer -= DeltaSeconds;
+		}
 	}
 
+}
+
+void AProjectile::VTOLMovement(float DeltaSeconds)
+{
+	GEngine->ClearOnScreenDebugMessages();
+	if(!bVTOLStage1Complete)
+	{
+		
+		if ((GetActorLocation() - VTOLStartLocation).Size() < VTOLHeight)
+		{
+			
+			FQuat ActorForwardQuat = GetActorForwardVector().Rotation().Quaternion();
+			FQuat TargetQuat = FVector(0, 0, 1).Rotation().Quaternion();
+			FQuat InterpQuat = FMath::LerpStable<FQuat>(ActorForwardQuat, TargetQuat, 0.1);
+			
+			MovementComponent->Velocity = InterpQuat.Rotator().Vector() * VTOLSpeed;
+			
+			//MovementComponent->UpdateComponentVelocity();
+			
+		}
+		else
+			bVTOLStage1Complete = true;
+	}
+	else if(!bVTOLStage2Complete)
+	{
+		FVector VTOLDropStagingLoc = FVector(TargetLocation.X, TargetLocation.Y, TargetLocation.Z + VTOLHeight);
+		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 1.0f).Vector() * VTOLSpeed;
+
+		if ((VTOLDropStagingLoc - GetActorLocation()).Size() < VTOLDropRadius)
+			bVTOLStage2Complete = true;
+
+		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, MovementComponent->Velocity.ToString());
+
+	}
+	else if (!bVTOLStage3Complete)
+	{
+		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),0.25f).Vector() * VTOLSpeed;
+		
+	}
+	MovementComponent->UpdateComponentVelocity();
 }
 
 void AProjectile::OnDeath()
@@ -170,13 +242,12 @@ void AProjectile::OnDeath()
 
 	if (Role == ROLE_Authority)
 	{
-		if (bIsClusterProjectile)
-			FireCluster();
-		else
+		if (!bIsClusterProjectile)
 			InflictDamage();
+		else
+			FireCluster();
 
 		ClientOnDeath();
-
 		DestroyMe();
 	}
 	
@@ -213,7 +284,7 @@ void AProjectile::ServerDestroyMe_Implementation()
 
 void AProjectile::SetHomingPosition(FVector Location)
 {
-	HomingLocation = Location;
+	
 }
 
 bool AProjectile::ServerDestroyMe_Validate()
@@ -244,30 +315,21 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 		if (bExplosive)
 		{
 			TArray<AActor*> OverlappedActors;
-			UGameplayStatics::ApplyRadialDamage(GetWorld(), 500, Hit.Location, 50, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
+			UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, Hit.Location, ExplosionRadius, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
 
 		}
-		else
+		else 
 		{
-			UGameplayStatics::ApplyPointDamage(Other, 500, GetActorForwardVector(),Hit, ConInstigator,GetInstigator(), DamageType);
-			//auto *HitPlayer = Cast<UDestructibleMesh>(Other);
-			//if (HitPlayer != NULL)
-			//{
-			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "I AM DESTRUCTIBLE");
-			//	UGameplayStatics::ApplyDamage(Other, 30, ConInstigator, GetInstigator(), DamageType);
-			//}
-			//auto *HitPlayer2 = Cast<AGOLMCharacter>(Other);
-			//if (HitPlayer2 != GetInstigator())
-			//{
-			//	if (HitPlayer2 != NULL)
-			//	{
-			//		UGameplayStatics::ApplyDamage(Other, 30, ConInstigator, GetInstigator(), DamageType);
+			//UGameplayStatics::ApplyPointDamage(Other, Damage, GetActorForwardVector(),Hit, ConInstigator,GetInstigator(), DamageType);
+			auto *HitPlayer2 = Cast<AGOLMCharacter>(Other);
+			if (HitPlayer2 != GetInstigator())
+			{
+				if (HitPlayer2 != NULL)
+				{
+					UGameplayStatics::ApplyDamage(Other, 30, ConInstigator, GetInstigator(), DamageType);
 
-			//		//FDamageEvent DamageEvent(DamageType);
-			//		//AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
-			//		//HitPlayer->TakeDamage(-30, DamageEvent, ConInstigator, GetInstigator());
-			//	}
-			//}
+				}
+			}
 		}
 	}
 }
@@ -290,9 +352,10 @@ void AProjectile::FireCluster()
 			FActorSpawnParameters spawnParams;
 			spawnParams.Instigator = Cast<AGOLMCharacter>(GetInstigator());
 			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(ClusterProjectile.GetDefaultObject()->GetClass(), GetActorLocation(), Direction.Rotation(), spawnParams);
+			projectile->TargetLocation = TargetLocation;
 			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream;
-			projectile->SetActorScale3D(this->GetActorScale3D());
-
+			projectile->SetActorScale3D(this->GetActorScale3D() * ClusterProjectileScale);
+			Alive = false;
 		}
 	}
 }

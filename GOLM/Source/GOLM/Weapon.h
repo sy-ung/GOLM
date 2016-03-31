@@ -50,6 +50,13 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	float FiringRate;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	FName Name;
 
+	UPROPERTY(Replicated) FVector TargetLocation;
+
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetTargetLocation(FVector NewTargetLocation);
+		void ServerSetTargetLocation_Implementation(FVector NewTargetLocation);
+		bool ServerSetTargetLocation_Validate(FVector NewTargetLocation);
+
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)		
 		void WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation);
 

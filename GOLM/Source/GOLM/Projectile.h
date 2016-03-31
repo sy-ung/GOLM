@@ -53,6 +53,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *RearParticle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *DeathParticle;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		bool bExplosive;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		float  ExplosionRadius;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		FName Name;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileMovement)	class UProjectileMovementComponent *MovementComponent;
@@ -62,8 +63,17 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		bool bVTOL;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLSpeed;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLTime;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		FVector HomingLocation;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLHeight;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLDropRadius;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLStartTimer;
+	
+	bool bBeginVTOL;
+	bool bVTOLStage1Complete;
+	bool bVTOLStage2Complete;
+	bool bVTOLStage3Complete;
+	UPROPERTY(Replicated) FVector TargetLocation;
+	FVector VTOLStartLocation;
+
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UAudioComponent *MoveSounds;
@@ -73,6 +83,8 @@ public:
 	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileCluster) TSubclassOf<AProjectile> ClusterProjectile;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileCluster) float ClusterProjectileScale;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileCluster) float ClusterLaunchDistance;
 	//Set this to false if this is a Cluster Projectile
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup) bool bIsClusterProjectile;
 	//The Spread in degress
@@ -94,6 +106,8 @@ public:
 	void ToggleNoPawnCollision();
 	void SetHomingPosition(FVector Location);
 
+
+
 private:
 
 	UPROPERTY(Replicated)	
@@ -106,5 +120,7 @@ private:
 	void ServerDestroyMe();
 	void ServerDestroyMe_Implementation();
 	bool ServerDestroyMe_Validate();
+
+	void VTOLMovement(float DeltaSeconds);
 
 };

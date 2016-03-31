@@ -63,6 +63,7 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, CurrentProjectile);
+	DOREPLIFETIME(AWeapon, TargetLocation);
 }
 
 
@@ -89,10 +90,9 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
 			projectile->SetActorScale3D(this->GetActorScale3D());
-			if (projectile->bVTOL)
-			{
-				
-			}
+			//projectile->SetActorRotation(MuzzleRotation);
+			projectile->TargetLocation = TargetLocation;
+			
 		}
 		//Instigator->MoveIgnoreActorAdd(projectile);	
 		//Instigator->MoveIgnoreActorAdd(GetOwner());
@@ -220,34 +220,35 @@ bool AWeapon::ServerSetNewProjectile_Validate(AProjectile *NewProjectile)
 
 float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 {
+	
+	if (Role != ROLE_Authority)
+	{
+		ServerSetTargetLocation(TargetPoint);
+	}
+	else
+	{
+		TargetLocation = TargetPoint;
+	}
+
+	
+
+	if (CurrentProjectile->bVTOL)
+		return 20.0f;
+
 	FVector SockLoc = WeaponMesh->GetSocketLocation("MuzzleFlash");
 	
 
 	float Speed = 0;
-	bool isCluster = CurrentProjectile->bIsClusterProjectile;
 
-	if (isCluster)
-		Speed = CurrentProjectile->ClusterProjectile.GetDefaultObject()->MovementComponent->InitialSpeed + CurrentProjectile->MovementComponent->InitialSpeed;
-	else
-		Speed = CurrentProjectile->MovementComponent->InitialSpeed;
+	Speed = CurrentProjectile->MovementComponent->InitialSpeed;
 
 	
 	float HorizontalDistance = 0;
 	FVector NewLaunchPoint;
 
-	if (isCluster)
-	{
-		NewLaunchPoint = TargetPoint + ((WeaponMesh->GetSocketRotation("MuzzleFlash").Vector() *  CurrentProjectile->MovementComponent->InitialSpeed) * CurrentProjectile->LifeTime);
-		HorizontalDistance = FVector2D(FVector2D(NewLaunchPoint.X, NewLaunchPoint.Y) - FVector2D(SockLoc.X, SockLoc.Y)).Size();
-	}
-	else
-		HorizontalDistance = FVector2D(FVector2D(TargetPoint.X, TargetPoint.Y) - FVector2D(SockLoc.X, SockLoc.Y)).Size();
+	HorizontalDistance = FVector2D(FVector2D(TargetPoint.X, TargetPoint.Y) - FVector2D(SockLoc.X, SockLoc.Y)).Size();
 
-	float Height = 0;
-	if (isCluster)
-		Height = NewLaunchPoint.Z - SockLoc.Z;
-	else
-		 Height = TargetPoint.Z - SockLoc.Z;
+	float Height = TargetPoint.Z - SockLoc.Z;
 
 	float Gravity = 980;
 	float calculation = (Speed * Speed * Speed * Speed) - (Gravity * (Gravity * (HorizontalDistance * HorizontalDistance) + (2 * Height * (Speed * Speed))));
@@ -270,6 +271,15 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 	}
 
 	return 0;
+}
+
+void AWeapon::ServerSetTargetLocation_Implementation(FVector NewTargetLocation)
+{
+	TargetLocation = NewTargetLocation;
+}
+bool AWeapon::ServerSetTargetLocation_Validate(FVector NewTargetLocation)
+{
+	return true;
 }
 
 void AWeapon::DrawProjectilePath()
