@@ -96,11 +96,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)		bool bBoosting;
 	UPROPERTY(Replicated)		bool bAlive;
-	UPROPERTY(Replicated)		bool bAbleToShoot;
 	UPROPERTY(Replicated)		float TimeUntilRespawn;
 
-	bool bStartShooting;
-	float TimeBeforeNextShot;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bRotatingCamera;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bMovingCamera;
@@ -111,7 +109,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Replicated)		float WeaponAimPitch;
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentHandWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentLeftShoulderWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentRightShoulderWeapon;
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
@@ -129,8 +129,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingDown;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingLeft;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingRight;
-	
-	
+
 		void UpdateAim(FVector MouseHit);
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerUpdateAim(float NewPitch, float NewYaw);
@@ -199,11 +198,7 @@ public:
 		void ZoomCamera(float deltaZoom);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void FireWeapon();
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerFireWeapon();
-		void ServerFireWeapon_Implementation();
-		bool ServerFireWeapon_Validate();
+		void FireHandWeapon(bool value);
 
 	UFUNCTION(BlueprintCallable, Category = StuffIMustDo)
 		void Equip(AWeapon *NewWeapon, EEquipSlot In);
@@ -226,12 +221,21 @@ public:
 		void ServerMove_Implementation(FRotator direction);
 		bool ServerMove_Validate(FRotator direction);
 
+
+
+
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
 		void Boost();
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerBoost(FVector LaunchDirection);
 		void ServerBoost_Implementation(FVector LaunchDirection);
 		bool ServerBoost_Validate(FVector LaunchDirection);
+
+
+		void BoostCharacter(FVector LaunchVelocity);
+	UFUNCTION(Client, Reliable, NetMulticast)
+		void ClientBoostCharacter(FVector NewLaunchVelocity);
+		void ClientBoostCharacter_Implementation(FVector NewLaunchVelocity);
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
@@ -308,7 +312,6 @@ public:
 
 	UFUNCTION()
 		virtual float TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController *EventInstigator, AActor *DamageCauser) override;
-
 	
 };
 

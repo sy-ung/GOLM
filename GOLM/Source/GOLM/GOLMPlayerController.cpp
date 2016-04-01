@@ -42,11 +42,11 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 
 }
 
-void AGOLMPlayerController::FireWeapon(bool value)
+void AGOLMPlayerController::FireHandWeapon(bool value)
 {
 	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 	if (PlayerChar)
-		PlayerChar->bStartShooting = value;
+		PlayerChar->FireHandWeapon(value);
 }
 
 
@@ -147,7 +147,8 @@ void AGOLMPlayerController::BoostPlayer(bool value)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
-			PlayerChar->bBoosting = value;
+			PlayerChar->Boost();
+			//PlayerChar->bBoosting = value;
 	}
 	else if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
@@ -474,7 +475,7 @@ void AGOLMPlayerController::SetArcFire(bool value)
 	AGOLMCharacter *ConChar = Cast<AGOLMCharacter>(GetCharacter());
 	if (ConChar != NULL)
 	{
-		ConChar->CurrentWeapon->bArcFire = value;
+		ConChar->CurrentHandWeapon->bArcFire = value;
 		bIsArcFireOn = value;
 	}
 }

@@ -29,7 +29,7 @@ void UGOLMEquipmentMenuWidget::SetupWeaponProjectileSelection()
 	if (PlayerCon == NULL)
 		PlayerCon = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
 
-	AWeapon *SelectedWeapon = Cast<AWeapon>(Cast<AGOLMCharacter>(PlayerCon->GetCharacter())->CurrentWeapon);
+	AWeapon *SelectedWeapon = Cast<AWeapon>(Cast<AGOLMCharacter>(PlayerCon->GetCharacter())->CurrentHandWeapon);
 
 	if(SelectedWeapon != NULL)
 	{

@@ -52,13 +52,23 @@ public:
 
 	UPROPERTY(Replicated) FVector TargetLocation;
 
+	UPROPERTY(Replicated) bool bAbleToShoot;
+	bool bStartShooting;
+	float TimeBeforeNextShot;
+
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerSetTargetLocation(FVector NewTargetLocation);
 		void ServerSetTargetLocation_Implementation(FVector NewTargetLocation);
 		bool ServerSetTargetLocation_Validate(FVector NewTargetLocation);
 
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)		
-		void WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		void FireWeapon();
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerFireWeapon();
+		void ServerFireWeapon_Implementation();
+		bool ServerFireWeapon_Validate();
+
+
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void PlayLaunchEffects();

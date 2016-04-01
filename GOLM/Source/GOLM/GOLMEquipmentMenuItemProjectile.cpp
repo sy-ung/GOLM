@@ -15,7 +15,7 @@ void UGOLMEquipmentMenuItemProjectile::SetProjectile(AProjectile *NewProjectile)
 void UGOLMEquipmentMenuItemProjectile::GetProjectile()
 {
 	
-	Cast<AGOLMCharacter>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetCharacter())->CurrentWeapon->SetNewProjectile(CurrentProjectile);
+	Cast<AGOLMCharacter>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetCharacter())->CurrentHandWeapon->SetNewProjectile(CurrentProjectile);
 }
 
 FName UGOLMEquipmentMenuItemProjectile::GetProjectileName()

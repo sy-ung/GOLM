@@ -26,6 +26,7 @@ AWeapon::AWeapon()
 	WeaponAudio->AttachTo(RootComponent);
 
 	
+	
 	bReplicates = true;
 	SetReplicates(true);
 }
@@ -36,8 +37,12 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 	WeaponMesh->SetCollisionProfileName("NoCollision");
 	CollisionComp->SetCollisionProfileName("NoCollision");
-	if(Role == ROLE_Authority)
+	if (Role == ROLE_Authority)
+	{
+		bAbleToShoot = true;
 		CurrentProjectile = CompatibleProjectiles[0].GetDefaultObject();
+	}
+		
 	//UGameplayStatics::SpawnEmitterAttached(WeaponProjectileTraceImpact->Template, WeaponMesh, "MuzzleFlash");
 }
 
@@ -45,17 +50,41 @@ void AWeapon::BeginPlay()
 void AWeapon::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if(bAutomatic)
+
+	//if(bAutomatic)
+	//{
+	//	if(WeaponAudio->IsPlaying())
+	//	{
+	//		if (bStartShooting)
+	//		{
+	//			WeaponAudio->Stop();
+	//			UGameplayStatics::SpawnSoundAtLocation(WeaponMesh, WeaponAutoMaticEnd, WeaponMesh->GetSocketLocation("MuzzleFlash"));
+	//		}
+	//	}
+	//}
+	if (!bAbleToShoot)
 	{
-		if(WeaponAudio->IsPlaying())
+		if (TimeBeforeNextShot <= 0)
 		{
-			if (!Cast<AGOLMCharacter>(GetOwner())->bStartShooting)
-			{
-				WeaponAudio->Stop();
-				UGameplayStatics::SpawnSoundAtLocation(WeaponMesh, WeaponAutoMaticEnd, WeaponMesh->GetSocketLocation("MuzzleFlash"));
-			}
+			bAbleToShoot = true;
 		}
+		else
+			TimeBeforeNextShot -= DeltaSeconds;
 	}
+
+
+	if(bStartShooting)
+	{
+		if(bAbleToShoot)
+			FireWeapon();
+	}
+	else
+	{
+		if(bAutomatic)
+			if (WeaponAudio->IsPlaying())
+				WeaponAudio->Stop();
+	}
+	
 	
 }
 
@@ -64,14 +93,50 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, CurrentProjectile);
 	DOREPLIFETIME(AWeapon, TargetLocation);
+	DOREPLIFETIME(AWeapon, bAbleToShoot);
 }
 
 
-void AWeapon::WeaponFire(FVector MuzzleLocation, FRotator MuzzleRotation)
+
+
+void AWeapon::FireWeapon()
 {
-	LaunchProjectile(MuzzleLocation,MuzzleRotation);
+	if(bAbleToShoot)
+	{
+		if (!bAutomatic)
+		{
+			bStartShooting = false;
+		}
+		FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
+		FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
+		LaunchProjectile(WeaponMuzzleLocation, WeaponMuzzleRotation);
 
+		bAbleToShoot = false;
+		if (Role != ROLE_Authority)
+			ServerFireWeapon();
+
+
+	}
+	if (Role == ROLE_Authority)
+	{
+		bAbleToShoot = false;
+		TimeBeforeNextShot = FiringRate;
+	}
+	
 }
+void AWeapon::ServerFireWeapon_Implementation()
+{
+	FireWeapon();
+}
+bool AWeapon::ServerFireWeapon_Validate()
+{
+	return true;
+}
+
+
+
+
+
 void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
 	PlayLaunchEffects();
@@ -113,7 +178,7 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 void AWeapon::ServerLaunchProjectile_Implementation(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
-	WeaponFire(MuzzleLocation, MuzzleRotation);
+	LaunchProjectile(MuzzleLocation, MuzzleRotation);
 }
 
 bool AWeapon::ServerLaunchProjectile_Validate(FVector MuzzleLocation, FRotator MuzzleRotation)
