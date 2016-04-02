@@ -47,9 +47,6 @@ void AGOLMLevelStreamBeacon::NotifyHit(
 		AGOLMCharacter *Player = Cast<AGOLMCharacter>(Other);
 		if (Player != NULL)
 		{
-			FString CompName = MyComp->GetName();
-			FString OtherName = Other->GetName();
-			FString OtherCompName = OtherComp->GetName();
 			Player->LoadEntranceLevel(this);
 		}
 	}

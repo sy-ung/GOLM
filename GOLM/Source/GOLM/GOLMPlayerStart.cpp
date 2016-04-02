@@ -7,15 +7,16 @@
 
 AGOLMPlayerStart::AGOLMPlayerStart()
 {
-	SpawnArea = CreateDefaultSubobject<UBoxComponent>("SpawnArea");
+	SpawnArea = CreateDefaultSubobject<UBoxComponent>(TEXT("SpawnArea"));
+	//SpawnArea->AttachTo(RootComponent);
 	SetRootComponent(SpawnArea);
 }
 
 FVector AGOLMPlayerStart::GetSpawnLocation()
 {
-	if(bIsRandomSpawn)
-		return UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->Bounds.Origin, SpawnArea->Bounds.BoxExtent);
+	//if(bIsRandomSpawn)
 
-	return GetActorLocation();
-
+	FVector NewLocation = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->Bounds.Origin, SpawnArea->Bounds.BoxExtent);
+	//return SpawnArea->GetComponentLocation();
+	return NewLocation;
 }

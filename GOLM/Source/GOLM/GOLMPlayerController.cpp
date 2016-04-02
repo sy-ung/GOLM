@@ -48,6 +48,14 @@ void AGOLMPlayerController::FireHandWeapon(bool value)
 	if (PlayerChar)
 		PlayerChar->FireHandWeapon(value);
 }
+void AGOLMPlayerController::FireLeftShoulderWeapon(bool value)
+{
+
+}
+void AGOLMPlayerController::FireRightShoulderWeapon(bool value)
+{
+
+}
 
 
 FVector AGOLMPlayerController::GetMouseHit()

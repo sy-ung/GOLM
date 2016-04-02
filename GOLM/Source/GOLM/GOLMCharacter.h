@@ -194,11 +194,15 @@ public:
 		void ServerUpdateRelativeDirectionScale_Implementation(float relativeforwardscale, float relativerightscale);
 		bool ServerUpdateRelativeDirectionScale_Validate(float relativeforwardscale, float relativerightscale);
 
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void ZoomCamera(float deltaZoom);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void FireHandWeapon(bool value);
+
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		void FireLeftShoulderWeapon(bool value);
+
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		void FireRightShoulderWeapon(bool value);
 
 	UFUNCTION(BlueprintCallable, Category = StuffIMustDo)
 		void Equip(AWeapon *NewWeapon, EEquipSlot In);
@@ -243,6 +247,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void MoveCamera();
+
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
+		void ZoomCamera(float DeltaHeight);
+		float NewCameraHeight;
+
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		AWeapon *GetCurrentWeapon();

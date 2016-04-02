@@ -45,6 +45,8 @@ public:
 	UFUNCTION()												virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireHandWeapon(bool value);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireLeftShoulderWeapon(bool value);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireRightShoulderWeapon(bool value);
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void RotatePlayerCamera(bool value);
 

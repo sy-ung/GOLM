@@ -100,7 +100,7 @@ void AGOLMCharacter::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = MovingSpeed;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate.Yaw = TurnSpeed;
-	PlayerCameraBoom->TargetArmLength = MinCameraHeight;
+	PlayerCameraBoom->TargetArmLength = MaxCameraHeight / 2;
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.Owner = this;
@@ -134,6 +134,8 @@ void AGOLMCharacter::BeginPlay()
 		MiniMapCameraReference = GetWorld()->SpawnActor<AGOLMMiniMapCamera>(MiniMapCamera.GetDefaultObject()->GetClass(), SpawnParams);
 		MiniMapCameraReference->SetPlayerCharacter(this);
 	}
+
+	NewCameraHeight = PlayerCameraBoom->TargetArmLength;
 }
 
 void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
@@ -210,6 +212,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		}
 
 	}
+
 	//if(IsLocallyControlled())
 	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, CurrentLevelStream.ToString());
 	
@@ -301,6 +304,13 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			Boost();
 	}
 
+	if(PlayerCameraBoom->TargetArmLength != NewCameraHeight)
+	{
+		NewCameraHeight = FMath::Clamp<float>(NewCameraHeight, MinCameraHeight, MaxCameraHeight);
+		PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1f);
+		
+	}
+	
 
 
 }
@@ -359,10 +369,8 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 {
 	if(Role == ROLE_Authority)
 	{
-		if (CurrentHandWeapon != NULL)
-		{
-			CurrentHandWeapon->Destroy();
-		}
+
+		
 	
 		FActorSpawnParameters spawnParams;
 		spawnParams.Owner = this;
@@ -377,6 +385,10 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 		case EEquipSlot::HAND_SLOT:
 			if (SpawnedWeapon != NULL)
 			{
+				if (CurrentHandWeapon != NULL)
+				{
+					CurrentHandWeapon->Destroy();
+				}
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
 				bHasHandWeapon = true;
 				CurrentHandWeapon = SpawnedWeapon;
@@ -385,6 +397,26 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			{
 				CurrentHandWeapon = NULL;
 				bHasHandWeapon = false;
+			}
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			if (SpawnedWeapon != NULL)
+			{
+				if (CurrentLeftShoulderWeapon != NULL)
+				{
+					CurrentLeftShoulderWeapon->Destroy();
+				}
+				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "LefShoulderWeaponSock", EAttachLocation::SnapToTarget);
+			}
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			if (SpawnedWeapon != NULL)
+			{
+				if (CurrentRightShoulderWeapon != NULL)
+				{
+					CurrentRightShoulderWeapon->Destroy();
+				}
+				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "RightShoulderWeaponSock", EAttachLocation::SnapToTarget);
 			}
 			break;
 		default:
@@ -433,14 +465,6 @@ bool AGOLMCharacter::ServerEquip_Validate(AWeapon *NewWeapon, EEquipSlot In)
 	return true;
 }
 
-void AGOLMCharacter::ZoomCamera(float deltaZoom)
-{
-	PlayerCameraBoom->TargetArmLength += deltaZoom;
-	PlayerCameraBoom->TargetArmLength = FMath::Clamp(
-		PlayerCameraBoom->TargetArmLength,MinCameraHeight,MaxCameraHeight
-		);
-}
-
 void AGOLMCharacter::ZoomMiniMapCamera(float value)
 {
 	if (MiniMapCameraReference != NULL)
@@ -455,6 +479,16 @@ void AGOLMCharacter::FireHandWeapon(bool value)
 		CurrentHandWeapon->bStartShooting = value;
 }
 
+void AGOLMCharacter::FireLeftShoulderWeapon(bool value)
+{
+	if (CurrentLeftShoulderWeapon != NULL)
+		CurrentLeftShoulderWeapon->bStartShooting = value;
+}
+void AGOLMCharacter::FireRightShoulderWeapon(bool value)
+{
+	if (CurrentRightShoulderWeapon != NULL)
+		CurrentRightShoulderWeapon->bStartShooting = value;
+}
 
 void AGOLMCharacter::MoveCheck()
 {
@@ -675,6 +709,11 @@ void AGOLMCharacter::MoveCamera()
 
 }
 
+void AGOLMCharacter::ZoomCamera(float DeltaHeight)
+{
+	NewCameraHeight = (PlayerCameraBoom->TargetArmLength + DeltaHeight);
+}
+
 AWeapon *AGOLMCharacter::GetCurrentWeapon()
 {
 	return CurrentHandWeapon;
@@ -795,6 +834,7 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 				{
 					//SetActorLocation(StartLocation->GetSpawnLocation());
 					CurrentLevelStream = EntranceLevelNameTag;
+					
 					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					
 					break;
@@ -844,6 +884,7 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 				if (StartLocation->PlayerStartTag == LevelBeacon->PlayStartLocationTag)
 				{
 					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
+					//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), StartLocation->GetSpawnLocation().ToString());
 					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					break;
 				}
