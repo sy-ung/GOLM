@@ -16,15 +16,11 @@ AWeapon::AWeapon()
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
 	WeaponMesh->AttachTo(RootComponent);
 
-	WeaponMuzzle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("WeaponMuzzle"));
-	WeaponMuzzle->AttachTo(RootComponent);
-
 	WeaponProjectileTraceImpact = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("WeaponProjectileTraceImpact"));
 	WeaponProjectileTraceImpact->AttachTo(WeaponMesh,"MuzzleFlash");
 	
 	WeaponAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("WeaponAudio"));
 	WeaponAudio->AttachTo(RootComponent);
-
 	
 	
 	bReplicates = true;
@@ -81,8 +77,9 @@ void AWeapon::Tick(float DeltaSeconds)
 	else
 	{
 		if(bAutomatic)
-			if (WeaponAudio->IsPlaying())
-				WeaponAudio->Stop();
+			if(WeaponAudio->Sound != NULL)
+				if (WeaponAudio->IsPlaying())
+					WeaponAudio->Stop();
 	}
 	
 	
@@ -211,10 +208,10 @@ void AWeapon::PlayLaunchEffects()
 	FVector WMFL = WeaponMesh->GetSocketLocation("MuzzleFlash");
 	FRotator WMFR = WeaponMesh->GetSocketRotation("MuzzleFlash");
 
-	if(WeaponMuzzle != NULL)
-		UGameplayStatics::SpawnEmitterAtLocation(WeaponMesh, WeaponMuzzle->Template, WMFL, WMFR);
+	if(CurrentProjectile->MuzzleParticle->Template != NULL)
+		UGameplayStatics::SpawnEmitterAtLocation(WeaponMesh, CurrentProjectile->MuzzleParticle->Template, WMFL, WMFR);
 
-	if(WeaponAudio->Sound != NULL)
+	//if(CurrentProjectile->FiringSounds != NULL)
 	{
 		if (bAutomatic)
 		{

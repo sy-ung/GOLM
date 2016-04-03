@@ -3,7 +3,7 @@
 #pragma once
 
 #include "GameFramework/PlayerState.h"
-#include "Weapon.h"
+
 #include "GOLMPlayerState.generated.h"
 
 //UENUM(BlueprintType)
@@ -17,9 +17,18 @@
 UENUM(BlueprintType)
 enum class EEquipSlot :uint8
 {
-	HAND_SLOT		UMETA(DisplayName = "Hand Weapon"),
+	HAND_SLOT		UMETA(DisplayName = "Hand"),
 	RIGHT_SHOULDER	UMETA(DisplayName = "Right Shoulder"),
-	LEFT_SHOULDER	UMETA(DisplayName = "Left Shoulder")
+	LEFT_SHOULDER	UMETA(DisplayName = "Left Shoulder"),
+	
+	//Use only on weapon config
+	ALL				UMETA(DisplayName = "All slots"),
+	//Use only on weapon config
+	HAND_LEFT		UMETA(DisplayName = "Hand and Left Shoulder weapon slots"),
+	//Use only on weapon config
+	HAND_RIGHT		UMETA(DisplayName = "Hand and Right Shoulder weapon slots"),
+	//Use only on weapon config
+	LEFT_RIGHT		UMETA(DisplayName = "Left and Right Shoulder weapon slots")
 };
 
 UCLASS()
@@ -46,19 +55,19 @@ public:
 		virtual void Tick(float DeltaSeconds) override;
 
 	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
-		AWeapon *GetWeaponFor(EEquipSlot slot);
+		class AWeapon *GetWeaponFor(EEquipSlot slot);
 
 	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
-		void SetWeaponFor(AWeapon *Weapon, EEquipSlot Slot);
+		void SetWeaponFor(class AWeapon *Weapon, EEquipSlot Slot);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ListOfWeapons)
-		TArray<TSubclassOf<AWeapon>> WeaponsList;
+		TArray<TSubclassOf<class AWeapon>> WeaponsList;
 
 private:
 
-	AWeapon *HandWeapon;
-	AWeapon *RightShoulder;
-	AWeapon *LeftShoulder;
+	class AWeapon *HandWeapon;
+	class AWeapon *RightShoulder;
+	class AWeapon *LeftShoulder;
 
 
 };

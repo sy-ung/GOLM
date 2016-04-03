@@ -38,6 +38,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = CharacterMode)	
 																	bool bIsArcFireOn;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)
+	bool bMovePlayerCamera;
 	
 
 	UFUNCTION()												virtual void BeginPlay() override;
@@ -49,8 +52,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireRightShoulderWeapon(bool value);
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void RotatePlayerCamera(bool value);
-
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerCamera(bool value);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerUp(bool value);
 	UFUNCTION(Server, Reliable, WithValidation)				void ServerMovePlayerUp(bool value);
@@ -82,6 +83,8 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ZoomPlayerCamera(float deltaZoom);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerCamera();
+
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseHit();
 
@@ -149,10 +152,10 @@ public:
 	EPlayerCursorType CurrentCursorType;
 	EEquipSlot GetMenuWeaponSlotChoice();
 
-	class UUserWidget *CursorWidgetReference;
-	class UUserWidget *EquipmentMenuReference;
+	class UGOLMMouseWidget *CursorWidgetReference;
+	class UGOLMEquipmentMenuWidget *EquipmentMenuReference;
 	class UUserWidget *InGameSettingsMenuReference;
-	class UUserWidget *InGameHUDReference;
+	class UGOLMInGameHudWidget *InGameHUDReference;
 
 private:
 	EEquipSlot MenuSlotChoice;

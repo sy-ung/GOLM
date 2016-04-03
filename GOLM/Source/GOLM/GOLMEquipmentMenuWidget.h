@@ -37,6 +37,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Init)	void SetWeaponScrollBox(UScrollBox *WeaponListScollBox);
 	UFUNCTION(BlueprintCallable, Category = Init)	void SetProjectileScrollBox(UScrollBox *ProjectileListScollBox);
 
+	UFUNCTION(BlueprintCallable, Category = InMenu)	void AddToWeaponSelection(TSubclassOf<AWeapon> NewWeapon);
+
 	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupWeaponSelection();
 	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupWeaponProjectileSelection();
 

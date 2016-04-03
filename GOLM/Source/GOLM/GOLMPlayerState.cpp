@@ -2,6 +2,7 @@
 
 #include "GOLM.h"
 #include "GOLMPlayerState.h"
+#include "Weapon.h"
 
 
 void AGOLMPlayerState::BeginPlay()
@@ -37,7 +38,17 @@ AWeapon *AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
 	switch (slot)
 	{
 	case EEquipSlot::HAND_SLOT:
-		return HandWeapon;
+		if(HandWeapon!=NULL)
+			return HandWeapon;
+		break;
+	case EEquipSlot::LEFT_SHOULDER:
+		if(LeftShoulder != NULL)
+			return LeftShoulder;
+		break;
+	case EEquipSlot::RIGHT_SHOULDER:
+		if (RightShoulder != NULL)
+			return RightShoulder;
+		break;
 	default:
 		break;
 	}
@@ -50,6 +61,12 @@ void AGOLMPlayerState::SetWeaponFor(AWeapon* Weapon, EEquipSlot Slot)
 	{
 	case EEquipSlot::HAND_SLOT:
 		HandWeapon = Weapon;
+		break;
+	case EEquipSlot::LEFT_SHOULDER:
+		LeftShoulder = Weapon;
+		break;
+	case EEquipSlot::RIGHT_SHOULDER:
+		RightShoulder = Weapon;
 		break;
 	default:
 		break;

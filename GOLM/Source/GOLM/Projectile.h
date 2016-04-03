@@ -50,6 +50,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UBoxComponent *CollisionBox;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjecitleSetyp)		USphereComponent *ExplosiveSphere;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UStaticMeshComponent *ProjectileMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *MuzzleParticle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *RearParticle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *DeathParticle;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		bool bExplosive;
@@ -73,7 +74,6 @@ public:
 	bool bVTOLStage3Complete;
 	UPROPERTY(Replicated) FVector TargetLocation;
 	FVector VTOLStartLocation;
-
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UAudioComponent *MoveSounds;

@@ -17,11 +17,52 @@ void UGOLMEquipmentMenuWidget::SetupWeaponSelection()
 		
 	for (int32 i = 0; i < WeaponList.Num(); i++)
 	{
-		UGOLMEquipmentMenuItemWeapon *NewWeaponItem = CreateWidget<UGOLMEquipmentMenuItemWeapon>(PlayerCon, WeaponItemWidget.GetDefaultObject()->GetClass());
-		NewWeaponItem->SetWeapon(WeaponList[i].GetDefaultObject());
-		WeaponScrollBox->AddChild(NewWeaponItem);
+
+		if (WeaponList[i] == NULL)
+		{
+			AddToWeaponSelection(WeaponList[i]);
+		}
+		else if(WeaponList[i].GetDefaultObject()->CompatibleWeaponSlotType == EEquipSlot::ALL)
+		{
+			AddToWeaponSelection(WeaponList[i]);
+		}
+		else if(WeaponList[i].GetDefaultObject()->CompatibleWeaponSlotType == PlayerCon->GetMenuWeaponSlotChoice())
+		{
+			AddToWeaponSelection(WeaponList[i]);
+		}
+		else if (WeaponList[i].GetDefaultObject()->CompatibleWeaponSlotType == EEquipSlot::LEFT_RIGHT)
+		{
+			if (PlayerCon->GetMenuWeaponSlotChoice() == EEquipSlot::LEFT_SHOULDER ||
+				PlayerCon->GetMenuWeaponSlotChoice() == EEquipSlot::RIGHT_SHOULDER)
+			{
+				AddToWeaponSelection(WeaponList[i]);
+			}
+		}
+		else if (WeaponList[i].GetDefaultObject()->CompatibleWeaponSlotType == EEquipSlot::HAND_LEFT)
+		{
+			if (PlayerCon->GetMenuWeaponSlotChoice() == EEquipSlot::HAND_SLOT ||
+				PlayerCon->GetMenuWeaponSlotChoice() == EEquipSlot::LEFT_SHOULDER)
+			{
+				AddToWeaponSelection(WeaponList[i]);
+			}
+		}
+		else if (WeaponList[i].GetDefaultObject()->CompatibleWeaponSlotType == EEquipSlot::HAND_RIGHT)
+		{
+			if (PlayerCon->GetMenuWeaponSlotChoice() == EEquipSlot::HAND_SLOT ||
+				PlayerCon->GetMenuWeaponSlotChoice() == EEquipSlot::RIGHT_SHOULDER)
+			{
+				AddToWeaponSelection(WeaponList[i]);
+			}
+		}
 	}
 }
+void UGOLMEquipmentMenuWidget::AddToWeaponSelection(TSubclassOf<AWeapon> NewWeapon)
+{
+	UGOLMEquipmentMenuItemWeapon *NewWeaponItem = CreateWidget<UGOLMEquipmentMenuItemWeapon>(PlayerCon, WeaponItemWidget.GetDefaultObject()->GetClass());
+	NewWeaponItem->SetWeapon(NewWeapon.GetDefaultObject());
+	WeaponScrollBox->AddChild(NewWeaponItem);
+}
+
 
 void UGOLMEquipmentMenuWidget::SetupWeaponProjectileSelection()
 {

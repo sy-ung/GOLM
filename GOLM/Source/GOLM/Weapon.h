@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #pragma once
 #include "Projectile.h"
+#include "GOLMPlayerState.h"
 #include "GameFramework/Actor.h"
 #include "Weapon.generated.h"
 
@@ -10,9 +11,6 @@ UCLASS()
 class GOLM_API AWeapon : public AActor
 {
 	GENERATED_BODY()
-
-
-	
 
 	UFUNCTION(Client, Unreliable, NetMulticast)
 		void ClientPlayLaunchEffects();
@@ -33,10 +31,11 @@ public:
 
 	bool bProjectileCollisionPossible;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	EEquipSlot CompatibleWeaponSlotType;
+	EEquipSlot CurrentSlotType;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Collision)	UBoxComponent *CollisionComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	USkeletalMeshComponent *WeaponMesh;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UParticleSystemComponent *WeaponMuzzle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UParticleSystemComponent *WeaponProjectileTraceImpact;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config, Replicated)	AProjectile *CurrentProjectile;

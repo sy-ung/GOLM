@@ -28,7 +28,7 @@ AGOLMCharacter::AGOLMCharacter()
 	PlayerCameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	PlayerCameraBoom->AttachTo(RootComponent);
 	PlayerCameraBoom->RelativeRotation = FRotator(-60.0f, 0.0f, 0.0f);
-	PlayerCameraBoom->bDoCollisionTest = false;
+	PlayerCameraBoom->bDoCollisionTest = true;
 	
 
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -200,16 +200,16 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		MiniMapCameraReference->UpdateCamera();
 	if (IsLocallyControlled())
 	{
-		GEngine->ClearOnScreenDebugMessages();
-		if(bAlive)
-		{
-			
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
-		}
+		//GEngine->ClearOnScreenDebugMessages();
+		//if(bAlive)
+		//{
+		//	
+		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
+		//}
+		//else
+		//{
+		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
+		//}
 
 	}
 
@@ -264,14 +264,14 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	if (bAlive)
 	{
 
-		if (bHasHandWeapon)
+		//if (bHasHandWeapon)
 		{
 			if (IsLocallyControlled())
 			{
-				if(CurrentHandWeapon != NULL)
+				//if(CurrentHandWeapon != NULL)
 				{
 					FVector MouseHit = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
-					CurrentHandWeapon->DrawProjectilePath();
+					
 					UpdateAim(MouseHit);
 				}
 			}
@@ -303,16 +303,18 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		if (bBoosting)
 			Boost();
 	}
-
-	if(PlayerCameraBoom->TargetArmLength != NewCameraHeight)
+	if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
 	{
-		NewCameraHeight = FMath::Clamp<float>(NewCameraHeight, MinCameraHeight, MaxCameraHeight);
-		PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1f);
-		
+		PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
 	}
-	
 
-
+	if (!bRotatingCamera)
+	{
+		if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
+		{
+			PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.1);
+		}
+	}
 }
 
 void AGOLMCharacter::NotifyHit
@@ -327,28 +329,65 @@ void AGOLMCharacter::NotifyHit
 
 void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
-
-
-	//FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("SpineSocket")).Rotation();
-	FRotator aim = (MouseHit - CurrentHandWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
-	//FRotator aim = MouseHit.Rotation();
-	SetActorRotation(FRotator(0, aim.Yaw, 0));
-	float NewPitch = CurrentHandWeapon->CalculateProjectilePath(MouseHit);
-
-
-	HandSupportLocation = CurrentHandWeapon->WeaponMesh->GetSocketLocation("HandSupport");
-	GripBoneLocation = CurrentHandWeapon->WeaponMesh->GetBoneLocation("Grip_Bone");
-	LeftPalmLocation = GetMesh()->GetSocketLocation("LeftPalmSocket");
-
-	if (NewPitch != 0)
-		WeaponAimPitch = NewPitch;
-
-	if (bIsInMenu)
-		WeaponAimPitch = 0;
-
-	if(Role!=ROLE_Authority)
-		ServerUpdateAim(WeaponAimPitch,aim.Yaw);
 	
+	if (CurrentHandWeapon != NULL)
+	{
+
+		//FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("SpineSocket")).Rotation();
+		FRotator aim = (MouseHit - CurrentHandWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
+		//FRotator aim = MouseHit.Rotation();
+		SetActorRotation(FRotator(0, aim.Yaw, 0));
+
+		FRotator WeaponRot = FRotator(WeaponAimPitch, aim.Yaw, -180);
+		CurrentHandWeapon->SetActorRotation(WeaponRot);
+
+		float NewPitch = CurrentHandWeapon->CalculateProjectilePath(MouseHit);
+
+		if (NewPitch != 0)
+			WeaponAimPitch = NewPitch;
+
+		if (bIsInMenu)
+			WeaponAimPitch = -30;
+
+
+
+
+
+
+		HandSupportLocation = CurrentHandWeapon->WeaponMesh->GetSocketLocation("HandSupport");
+		GripBoneLocation = CurrentHandWeapon->WeaponMesh->GetBoneLocation("Grip_Bone");
+		LeftPalmLocation = GetMesh()->GetSocketLocation("LeftPalmSocket");
+
+
+
+
+		if (Role != ROLE_Authority)
+			ServerUpdateAim(WeaponAimPitch, aim.Yaw);
+	}
+
+	if (CurrentLeftShoulderWeapon != NULL)
+	{
+		FRotator LSWorldRot;
+		FVector LSWorldPOS;
+		CurrentLeftShoulderWeapon->WeaponMesh->GetSocketWorldLocationAndRotation("MuzzleFlash", LSWorldPOS, LSWorldRot);
+		FRotator Direction = (MouseHit - LSWorldPOS).Rotation();
+
+		float NewPitch = CurrentLeftShoulderWeapon->CalculateProjectilePath(MouseHit);
+
+		CurrentLeftShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
+	}
+
+	if (CurrentRightShoulderWeapon != NULL)
+	{
+		FRotator LSWorldRot;
+		FVector LSWorldPOS;
+		CurrentRightShoulderWeapon->WeaponMesh->GetSocketWorldLocationAndRotation("MuzzleFlash", LSWorldPOS, LSWorldRot);
+		FRotator Direction = (MouseHit - LSWorldPOS).Rotation();
+
+		float NewPitch = CurrentRightShoulderWeapon->CalculateProjectilePath(MouseHit);
+
+		CurrentRightShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
+	}
 }
 
 
@@ -383,13 +422,16 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 		switch (In)
 		{
 		case EEquipSlot::HAND_SLOT:
+			if (CurrentHandWeapon != NULL)
+			{
+				CurrentHandWeapon->Destroy();
+			}
+
 			if (SpawnedWeapon != NULL)
 			{
-				if (CurrentHandWeapon != NULL)
-				{
-					CurrentHandWeapon->Destroy();
-				}
+				SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0, 90, -180));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
+				SpawnedWeapon->CurrentSlotType = In;
 				bHasHandWeapon = true;
 				CurrentHandWeapon = SpawnedWeapon;
 			}
@@ -400,23 +442,42 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			}
 			break;
 		case EEquipSlot::LEFT_SHOULDER:
+			if (CurrentLeftShoulderWeapon != NULL)
+			{
+				CurrentLeftShoulderWeapon->Destroy();
+			}
+
 			if (SpawnedWeapon != NULL)
 			{
-				if (CurrentLeftShoulderWeapon != NULL)
-				{
-					CurrentLeftShoulderWeapon->Destroy();
-				}
-				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "LefShoulderWeaponSock", EAttachLocation::SnapToTarget);
+
+				SpawnedWeapon->SetActorScale3D(FVector(0.5, 0.25, 0.5));
+				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "LeftShoulderWeaponSock", EAttachLocation::SnapToTarget);
+				SpawnedWeapon->CurrentSlotType = In;
+				CurrentLeftShoulderWeapon = SpawnedWeapon;
+			}
+			else
+			{
+				CurrentLeftShoulderWeapon = NULL;
 			}
 			break;
 		case EEquipSlot::RIGHT_SHOULDER:
+			if (CurrentRightShoulderWeapon != NULL)
+			{
+				CurrentRightShoulderWeapon->Destroy();
+			}
 			if (SpawnedWeapon != NULL)
 			{
-				if (CurrentRightShoulderWeapon != NULL)
-				{
-					CurrentRightShoulderWeapon->Destroy();
-				}
+
+				//SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0,0,0));
+				SpawnedWeapon->SetActorScale3D(FVector(0.25, 0.15, 0.25));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "RightShoulderWeaponSock", EAttachLocation::SnapToTarget);
+				SpawnedWeapon->CurrentSlotType = In;
+				CurrentRightShoulderWeapon = SpawnedWeapon;
+				//CurrentRightShoulderWeapon->bArcFire = true;
+			}
+			else
+			{
+				CurrentRightShoulderWeapon = NULL;
 			}
 			break;
 		default:
@@ -440,7 +501,11 @@ void AGOLMCharacter::GetEquippedWeapons()
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player Controller is NULL from Character");
 
 		if (PS!=NULL)
+		{
 			Equip(PS->GetWeaponFor(EEquipSlot::HAND_SLOT), EEquipSlot::HAND_SLOT);
+			Equip(PS->GetWeaponFor(EEquipSlot::LEFT_SHOULDER), EEquipSlot::LEFT_SHOULDER);
+			Equip(PS->GetWeaponFor(EEquipSlot::RIGHT_SHOULDER), EEquipSlot::RIGHT_SHOULDER);
+		}
 		else
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL from Character");
 	}
@@ -673,45 +738,39 @@ void AGOLMCharacter::RotateCamera()
 	PlayerCameraBoom->AddWorldRotation(deltaROT);
 }
 
-void AGOLMCharacter::MoveCamera()
+void AGOLMCharacter::MoveCamera(bool value, float MouseDeltaX, float MouseDeltaY)
 {
-	AGOLMPlayerController *CharacterController = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
-	float x;
-	float y;
-	CharacterController->GetInputMouseDelta(x, y);
-	FVector CameraFwd = PlayerCameraBoom->GetForwardVector();
-	FVector CameraRht = PlayerCameraBoom->GetRightVector();
-	CameraFwd.Z = 0;
-	CameraRht.Z = 0;
 
-	CameraRht *= (x * CameraMovementSensitivity);
-	CameraFwd *= (y * CameraMovementSensitivity);
+	if(!bRotatingCamera)
+	{
+		FVector CameraFwd = PlayerCamera->GetUpVector();
+		FVector CameraRht = PlayerCamera->GetRightVector();
+		CameraFwd.Z = 0;
+		CameraRht.Z = 0;
 
-	FVector PreviousPOS = PlayerCameraBoom->TargetOffset;
+		CameraRht *= (MouseDeltaX * CameraMovementSensitivity);
+		CameraFwd *= (MouseDeltaY * CameraMovementSensitivity);
 
+		
+		FVector deltaMovement = CameraFwd + CameraRht;
+		NewCameraOffset = PlayerCameraBoom->TargetOffset + deltaMovement;
+	}
 
+	if (!value)
+		NewCameraOffset = FVector::ZeroVector;
 
-	FVector deltaMovement = CameraFwd + CameraRht;
-	PlayerCameraBoom->TargetOffset += deltaMovement;
-	PlayerCameraBoom->TargetArmLength = PlayerCameraBoom->TargetOffset.Size();
-	
 	//if (bRotatingCamera)
 	//{
 	//	FRotator deltaROT = FRotator(0, CameraRotationSensitivity * x, 0);
 	//	PlayerCameraBoom->AddWorldRotation(deltaROT);
 	//}
-	
-
-	GEngine->ClearOnScreenDebugMessages();
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, PlayerCameraBoom->TargetOffset.ToString());
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, FString::SanitizeFloat(PlayerCameraBoom->TargetOffset.Size()));
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "ArmLength " + FString::SanitizeFloat(PlayerCameraBoom->TargetArmLength));
 
 }
 
 void AGOLMCharacter::ZoomCamera(float DeltaHeight)
 {
-	NewCameraHeight = (PlayerCameraBoom->TargetArmLength + DeltaHeight);
+	NewCameraHeight = PlayerCameraBoom->TargetArmLength + DeltaHeight;
+	NewCameraHeight = FMath::Clamp<float>(NewCameraHeight, MinCameraHeight, MaxCameraHeight);
 }
 
 AWeapon *AGOLMCharacter::GetCurrentWeapon()
@@ -741,6 +800,12 @@ void AGOLMCharacter::Destroyed()
 {
 	if (CurrentHandWeapon != NULL)
 		CurrentHandWeapon->Death();
+
+	if (CurrentLeftShoulderWeapon != NULL)
+		CurrentLeftShoulderWeapon->Death();
+
+	if (CurrentRightShoulderWeapon != NULL)
+		CurrentRightShoulderWeapon->Death();
 	Super::Destroyed();
 }
 
@@ -929,6 +994,18 @@ void AGOLMCharacter::SetRagDoll(bool value)
 					CurrentHandWeapon->SetRagDoll(value);
 					CurrentHandWeapon->DetachRootComponentFromParent(true);
 					
+				}
+				if (CurrentLeftShoulderWeapon != NULL)
+				{
+					CurrentLeftShoulderWeapon->SetRagDoll(value);
+					CurrentLeftShoulderWeapon->DetachRootComponentFromParent(true);
+
+				}
+				if (CurrentRightShoulderWeapon != NULL)
+				{
+					CurrentRightShoulderWeapon->SetRagDoll(value);
+					CurrentRightShoulderWeapon->DetachRootComponentFromParent(true);
+
 				}
 			}
 			else

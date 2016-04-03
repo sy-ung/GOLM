@@ -57,8 +57,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	ACameraActor *LeftShoulderCameraActor;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	ACameraActor *RightShoulderCameraActor;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *PlayerCamera;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* PlayerCameraBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *PlayerCamera;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* PlayerCameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraFront;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraFrontBoom;
@@ -88,6 +88,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float CameraMovementSensitivity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MaxCameraHeight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MinCameraHeight;
+																				
+																				
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float Health;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float deathTimer;
@@ -245,8 +247,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void RotateCamera();
 
+	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void MoveCamera();
+		void MoveCamera(bool value, float MouseDeltaX = 0,float MouseDeltaY = 0);
+		FVector NewCameraOffset;
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void ZoomCamera(float DeltaHeight);

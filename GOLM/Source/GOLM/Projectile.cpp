@@ -18,12 +18,14 @@ AProjectile::AProjectile()
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponStaticMesh"));
 	RearParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RearParticle"));
 	DeathParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DeathParticle"));
+	MuzzleParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MuzzleParticle"));
 	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
 
 	RootComponent = CollisionBox;
 	
 	MoveSounds = CreateDefaultSubobject<UAudioComponent>(TEXT("MovementSounds"));
 	DeathSounds = CreateDefaultSubobject<UAudioComponent>(TEXT("DeathSounds"));
+
 	ProjectileMesh->AttachTo(RootComponent);
 	MoveSounds->AttachTo(RootComponent);
 	DeathSounds->AttachTo(RootComponent);
