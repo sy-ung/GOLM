@@ -87,10 +87,6 @@ void AGOLMPlayerController::RotatePlayerCamera(bool value)
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
 			PlayerChar->bRotatingCamera = value;
-		else
-		{
-
-		}
 	}
 
 }
@@ -184,7 +180,7 @@ void AGOLMPlayerController::MovePlayerCamera()
 	if (GetCharacter() != NULL)
 	{
 
-		if (bMovePlayerCamera)
+		//if (bMovePlayerCamera)
 		{
 			FVector2D CharacterScreenPOS;
 			ProjectWorldLocationToScreen(GetCharacter()->GetActorLocation(), CharacterScreenPOS);
@@ -222,34 +218,34 @@ void AGOLMPlayerController::MovePlayerCamera()
 			float y;
 			GetInputMouseDelta(x, y);
 
-			if (CharacterScreenPOS.X < 0 + ScreenCheck.X)
-			{
-				if (x > 0)
-					x = 0;
-			}
+			//if (CharacterScreenPOS.X < 0 + ScreenCheck.X)
+			//{
+			//	if (x > 0)
+			//		x = 0;
+			//}
 
-			if (CharacterScreenPOS.X > ScreenSizeX - ScreenCheck.X)
-			{
-				if (x < 0)
-					x = 0;
-			}
+			//if (CharacterScreenPOS.X > ScreenSizeX - ScreenCheck.X)
+			//{
+			//	if (x < 0)
+			//		x = 0;
+			//}
 
-			if (CharacterScreenPOS.Y < 0 + ScreenCheck.Y)
-			{
-				if (y < 0)
-					y = 0;
-			}
+			//if (CharacterScreenPOS.Y < 0 + ScreenCheck.Y)
+			//{
+			//	if (y < 0)
+			//		y = 0;
+			//}
 
-			if (CharacterScreenPOS.Y > ScreenSizeY - ScreenCheck.Y)
-			{
-				if (y > 0)
-					y = 0;
-			}
+			//if (CharacterScreenPOS.Y > ScreenSizeY - ScreenCheck.Y)
+			//{
+			//	if (y > 0)
+			//		y = 0;
+			//}
 
-			Cast<AGOLMCharacter>(GetCharacter())->MoveCamera(bMovePlayerCamera, x, y);
+			//Cast<AGOLMCharacter>(GetCharacter())->MoveCamera(true, x, y);
 		}
-		else
-			Cast<AGOLMCharacter>(GetCharacter())->MoveCamera(bMovePlayerCamera);
+		//else
+		//	Cast<AGOLMCharacter>(GetCharacter())->MoveCamera(bMovePlayerCamera);
 	
 
 	

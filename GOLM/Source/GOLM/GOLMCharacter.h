@@ -88,6 +88,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float CameraMovementSensitivity;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MaxCameraHeight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MinCameraHeight;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MaxCameraMoveRadius;
 																				
 																				
 
@@ -249,7 +250,7 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void MoveCamera(bool value, float MouseDeltaX = 0,float MouseDeltaY = 0);
+		void MoveCamera(FVector MouseHit);
 		FVector NewCameraOffset;
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)

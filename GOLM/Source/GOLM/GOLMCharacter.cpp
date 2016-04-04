@@ -271,7 +271,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 				//if(CurrentHandWeapon != NULL)
 				{
 					FVector MouseHit = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
-					
+					MoveCamera(MouseHit);
 					UpdateAim(MouseHit);
 				}
 			}
@@ -298,7 +298,9 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
 			}
 			
+			
 		}
+		//MoveCamera(bHasHandWeapon);
 		CalculateRelativeDirectionScale();
 		if (bBoosting)
 			Boost();
@@ -308,11 +310,11 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
 	}
 
-	if (!bRotatingCamera)
+	//if (!bRotatingCamera)
 	{
 		if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
 		{
-			PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.1);
+			PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
 		}
 	}
 }
@@ -570,6 +572,7 @@ void AGOLMCharacter::MoveCheck()
 		OverallDirection.Normalize();
 
 		FinalOrientation = OverallDirection.Rotation();
+
 		
 
 		if (Role != ROLE_Authority)
@@ -738,33 +741,20 @@ void AGOLMCharacter::RotateCamera()
 	PlayerCameraBoom->AddWorldRotation(deltaROT);
 }
 
-void AGOLMCharacter::MoveCamera(bool value, float MouseDeltaX, float MouseDeltaY)
+void AGOLMCharacter::MoveCamera(FVector MouseHit)
 {
 
-	if(!bRotatingCamera)
+	FVector CameraCheck = MouseHit - GetActorLocation();
+	if (CameraCheck.Size()<MaxCameraMoveRadius)
 	{
-		FVector CameraFwd = PlayerCamera->GetUpVector();
-		FVector CameraRht = PlayerCamera->GetRightVector();
-		CameraFwd.Z = 0;
-		CameraRht.Z = 0;
-
-		CameraRht *= (MouseDeltaX * CameraMovementSensitivity);
-		CameraFwd *= (MouseDeltaY * CameraMovementSensitivity);
-
-		
-		FVector deltaMovement = CameraFwd + CameraRht;
-		NewCameraOffset = PlayerCameraBoom->TargetOffset + deltaMovement;
+		NewCameraOffset = CameraCheck;
+		NewCameraOffset.Z = 0;
 	}
-
-	if (!value)
-		NewCameraOffset = FVector::ZeroVector;
-
-	//if (bRotatingCamera)
-	//{
-	//	FRotator deltaROT = FRotator(0, CameraRotationSensitivity * x, 0);
-	//	PlayerCameraBoom->AddWorldRotation(deltaROT);
-	//}
-
+	else
+	{
+		NewCameraOffset = CameraCheck.GetSafeNormal() * MaxCameraMoveRadius;
+		NewCameraOffset.Z = 0;
+	}
 }
 
 void AGOLMCharacter::ZoomCamera(float DeltaHeight)
