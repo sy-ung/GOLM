@@ -83,7 +83,6 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ZoomPlayerCamera(float deltaZoom);
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerCamera();
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseHit();

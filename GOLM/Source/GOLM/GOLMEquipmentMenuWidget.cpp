@@ -69,18 +69,35 @@ void UGOLMEquipmentMenuWidget::SetupWeaponProjectileSelection()
 	ProjectileScrollBox->ClearChildren();
 	if (PlayerCon == NULL)
 		PlayerCon = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	AWeapon *SelectedWeapon = NULL;
 
-	AWeapon *SelectedWeapon = Cast<AWeapon>(Cast<AGOLMCharacter>(PlayerCon->GetCharacter())->CurrentHandWeapon);
-
-	if(SelectedWeapon != NULL)
+	if(PlayerCon != NULL)
 	{
-		TArray<TSubclassOf<AProjectile>> ProjectileList = SelectedWeapon->CompatibleProjectiles;
-
-		for (int32 i = 0; i < ProjectileList.Num(); i++)
+		switch (PlayerCon->GetMenuWeaponSlotChoice())
 		{
-			UGOLMEquipmentMenuItemProjectile *NewProjectileItem = CreateWidget<UGOLMEquipmentMenuItemProjectile>(PlayerCon, ProjectileItemWidget.GetDefaultObject()->GetClass());
-			NewProjectileItem->SetProjectile(ProjectileList[i].GetDefaultObject());
-			ProjectileScrollBox->AddChild(NewProjectileItem);
+		case EEquipSlot::HAND_SLOT:
+			SelectedWeapon = Cast<AWeapon>(Cast<AGOLMCharacter>(PlayerCon->GetCharacter())->CurrentHandWeapon);
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			SelectedWeapon = Cast<AWeapon>(Cast<AGOLMCharacter>(PlayerCon->GetCharacter())->CurrentLeftShoulderWeapon);
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			SelectedWeapon = Cast<AWeapon>(Cast<AGOLMCharacter>(PlayerCon->GetCharacter())->CurrentRightShoulderWeapon);
+			break;
+		default:break;
+		}
+	
+
+		if(SelectedWeapon != NULL)
+		{
+			TArray<TSubclassOf<AProjectile>> ProjectileList = SelectedWeapon->CompatibleProjectiles;
+
+			for (int32 i = 0; i < ProjectileList.Num(); i++)
+			{
+				UGOLMEquipmentMenuItemProjectile *NewProjectileItem = CreateWidget<UGOLMEquipmentMenuItemProjectile>(PlayerCon, ProjectileItemWidget.GetDefaultObject()->GetClass());
+				NewProjectileItem->SetProjectile(ProjectileList[i].GetDefaultObject());
+				ProjectileScrollBox->AddChild(NewProjectileItem);
+			}
 		}
 	}
 }

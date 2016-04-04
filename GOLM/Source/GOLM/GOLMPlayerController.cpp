@@ -37,10 +37,6 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if(CursorWidgetReference != NULL)
 		CursorWidgetReference->MoveMouseCursor(this);
-
-	MovePlayerCamera();
-
-
 }
 
 void AGOLMPlayerController::FireHandWeapon(bool value)
@@ -175,85 +171,6 @@ void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 			PlayerChar->ZoomCamera(deltaZoom);
 	}
 }
-void AGOLMPlayerController::MovePlayerCamera()
-{
-	if (GetCharacter() != NULL)
-	{
-
-		//if (bMovePlayerCamera)
-		{
-			FVector2D CharacterScreenPOS;
-			ProjectWorldLocationToScreen(GetCharacter()->GetActorLocation(), CharacterScreenPOS);
-
-			int32 ScreenSizeX;
-			int32 ScreenSizeY;
-			GetViewportSize(ScreenSizeX, ScreenSizeY);
-
-			FVector2D ScreenSize;
-			ScreenSize.X = ScreenSizeX;
-			ScreenSize.Y = ScreenSizeY;
-
-			FVector2D ScreenCheck = ScreenSize / 5;
-			FVector2D ScreenCheckMove = ScreenSize / 2;
-
-
-			//float MouseX;
-			//float MouseY;
-			//GetMousePosition(MouseX, MouseY);
-
-			//FVector2D MousePOS = FVector2D(MouseX, MouseY);
-
-			//bool CanMoveCamera = false;
-			//GEngine->ClearOnScreenDebugMessages();
-			//if (MouseX < 0 + ScreenCheckMove.X || MouseX > ScreenSizeX - ScreenCheckMove.X ||
-			//	MouseY < 0 + ScreenCheckMove.Y || MouseY > ScreenSizeY - ScreenCheckMove.Y)
-			//{
-			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "CAN MOVE");
-			//	CanMoveCamera = true;
-			//}
-			//
-
-
-			float x;
-			float y;
-			GetInputMouseDelta(x, y);
-
-			//if (CharacterScreenPOS.X < 0 + ScreenCheck.X)
-			//{
-			//	if (x > 0)
-			//		x = 0;
-			//}
-
-			//if (CharacterScreenPOS.X > ScreenSizeX - ScreenCheck.X)
-			//{
-			//	if (x < 0)
-			//		x = 0;
-			//}
-
-			//if (CharacterScreenPOS.Y < 0 + ScreenCheck.Y)
-			//{
-			//	if (y < 0)
-			//		y = 0;
-			//}
-
-			//if (CharacterScreenPOS.Y > ScreenSizeY - ScreenCheck.Y)
-			//{
-			//	if (y > 0)
-			//		y = 0;
-			//}
-
-			//Cast<AGOLMCharacter>(GetCharacter())->MoveCamera(true, x, y);
-		}
-		//else
-		//	Cast<AGOLMCharacter>(GetCharacter())->MoveCamera(bMovePlayerCamera);
-	
-
-	
-		//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, "Mouse POS: " +  MousePOS.ToString());
-		//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Check: " +  ScreenCheckMove.ToString());
-	}
-}
-
 
 void AGOLMPlayerController::GotoLockerRoom()
 {
@@ -300,7 +217,7 @@ void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 			if (PlayerChar->CurrentLevelStream == "LockerRoom")
 			{
 				PlayerChar->Equip(NewWeapon, Slot);
-				Cast<UGOLMEquipmentMenuWidget>(EquipmentMenuReference)->SetupWeaponProjectileSelection();
+				EquipmentMenuReference->SetupWeaponProjectileSelection();
 			}
 		}
 		else
