@@ -61,13 +61,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* PlayerCameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraFront;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraFrontBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraFrontBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraLeftShoulder;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraLeftShoulderBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraLeftShoulderBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraRightShoulder;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraRightShoulderBoom;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraRightShoulderBoom;
 
 
 	

@@ -454,19 +454,24 @@ void AGOLMPlayerController::ZoomMiniMap(float value)
 void AGOLMPlayerController::GotoPlayerCamera()
 {
 	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->PlayerCameraActor, 0.5f);
+	EquipmentMenuReference->SetupWeaponProjectileSelection();
+	
 }
 void AGOLMPlayerController::GotoFrontCamera()
 {
 	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->FrontCameraActor, 0.5f);
+	EquipmentMenuReference->SetupWeaponProjectileSelection();
 }
 
 void AGOLMPlayerController::GotoLeftShoulderCamera()
 {
 	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->LeftShoulderCameraActor, 0.5f);
+	EquipmentMenuReference->SetupWeaponProjectileSelection();
 }
 void AGOLMPlayerController::GotoRightShoulderCamera()
 {
 	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->RightShoulderCameraActor, 0.5f);
+	EquipmentMenuReference->SetupWeaponProjectileSelection();
 }
 
 void AGOLMPlayerController::SetArcFire(bool value)

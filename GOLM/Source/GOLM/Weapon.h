@@ -48,6 +48,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	bool bAutomatic;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	float FiringRate;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	FName Name;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	bool bArcFire;
 
 	UPROPERTY(Replicated) FVector TargetLocation;
 
@@ -100,7 +101,7 @@ public:
 
 		void ToggleProjectileCollision(bool CollisionPossible);
 
-		bool bArcFire;
+		
 
 protected:
 

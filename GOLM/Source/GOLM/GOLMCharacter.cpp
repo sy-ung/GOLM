@@ -212,10 +212,6 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		//}
 
 	}
-
-	//if(IsLocallyControlled())
-	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, CurrentLevelStream.ToString());
-	
 	
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
@@ -230,8 +226,6 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		if (bRotatingCamera)
 			RotateCamera();
 
-		//if (bMovingCamera)
-			//MoveCamera();
 	}
 
 	if (Role == ROLE_Authority)
@@ -241,10 +235,6 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			if (Health <= 0)
 			{
 				Death();
-			}
-			if (CurrentHandWeapon != NULL)
-			{
-
 			}
 			
 		}
@@ -376,6 +366,8 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 
 		float NewPitch = CurrentLeftShoulderWeapon->CalculateProjectilePath(MouseHit);
 
+
+
 		CurrentLeftShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
 	}
 
@@ -387,6 +379,10 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 		FRotator Direction = (MouseHit - LSWorldPOS).Rotation();
 
 		float NewPitch = CurrentRightShoulderWeapon->CalculateProjectilePath(MouseHit);
+
+
+		if (bIsInMenu)
+			NewPitch = 70;
 
 		CurrentRightShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
 	}
@@ -452,7 +448,7 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			if (SpawnedWeapon != NULL)
 			{
 
-				SpawnedWeapon->SetActorScale3D(FVector(0.5, 0.25, 0.5));
+				SpawnedWeapon->SetActorScale3D(FVector(0.75, 0.45, 0.75));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "LeftShoulderWeaponSock", EAttachLocation::SnapToTarget);
 				SpawnedWeapon->CurrentSlotType = In;
 				CurrentLeftShoulderWeapon = SpawnedWeapon;
@@ -471,7 +467,7 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			{
 
 				//SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0,0,0));
-				SpawnedWeapon->SetActorScale3D(FVector(0.25, 0.15, 0.25));
+				SpawnedWeapon->SetActorScale3D(FVector(0.5, 0.25, 0.5));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "RightShoulderWeaponSock", EAttachLocation::SnapToTarget);
 				SpawnedWeapon->CurrentSlotType = In;
 				CurrentRightShoulderWeapon = SpawnedWeapon;
