@@ -65,15 +65,29 @@ FVector AGOLMPlayerController::GetMouseHit()
 	
 	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
-		
 		FHitResult Hit(ForceInit);
 		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
 		return Hit.ImpactPoint;
-
 	}
 	
 	return FVector::ZeroVector;
 	
+}
+
+FVector AGOLMPlayerController::GetMouseMovement()
+{
+	//float x;
+	//float y;
+	FVector MouseWorldLocation = FVector::ZeroVector;
+	FVector MouseWorldDirection;
+	//if (GetMousePosition(x, y))
+
+	
+	DeprojectMousePositionToWorld(MouseWorldLocation, MouseWorldDirection);
+	
+	return MouseWorldDirection;
+	
+
 }
 
 void AGOLMPlayerController::RotatePlayerCamera(bool value)

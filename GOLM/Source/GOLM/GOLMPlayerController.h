@@ -86,6 +86,7 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseHit();
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseMovement();
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot);
 	

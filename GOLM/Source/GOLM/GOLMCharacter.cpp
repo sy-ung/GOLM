@@ -260,9 +260,9 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			{
 				//if(CurrentHandWeapon != NULL)
 				{
-					FVector MouseHit = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
-					MoveCamera(MouseHit);
-					UpdateAim(MouseHit);
+					;
+					UpdateAim(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
+					MoveCamera();
 				}
 			}
 
@@ -737,10 +737,19 @@ void AGOLMCharacter::RotateCamera()
 	PlayerCameraBoom->AddWorldRotation(deltaROT);
 }
 
-void AGOLMCharacter::MoveCamera(FVector MouseHit)
+void AGOLMCharacter::MoveCamera()
 {
 
-	FVector CameraCheck = MouseHit - GetActorLocation();
+
+	AGOLMPlayerController *PlayerCon = Cast<AGOLMPlayerController>(GetController());
+	//FVector CameraCheck = PlayerCameraBoom->TargetOffset + FVector(DeltaMouse.X * CameraMovementSensitivity, DeltaMouse.Y * CameraMovementSensitivity, 0);
+	FVector MouseWorldPOS;
+	FVector MouseWorldDirection;
+	PlayerCon->DeprojectMousePositionToWorld(MouseWorldPOS, MouseWorldDirection);
+	
+	FVector Intersection = FMath::LinePlaneIntersection(PlayerCon->PlayerCameraManager->GetCameraLocation(), MouseWorldPOS, GetActorLocation(), FVector::UpVector);
+
+	FVector CameraCheck = Intersection - GetActorLocation();
 	if (CameraCheck.Size()<MaxCameraMoveRadius)
 	{
 		NewCameraOffset = CameraCheck;

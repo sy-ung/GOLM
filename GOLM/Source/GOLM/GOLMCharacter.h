@@ -250,7 +250,7 @@ public:
 
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void MoveCamera(FVector MouseHit);
+		void MoveCamera();
 		FVector NewCameraOffset;
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
