@@ -1120,7 +1120,7 @@ void AGOLMCharacter::ClientSetPawnCollisionType_Implementation(EPlayerCollisionP
 		SetPawnCollisionType(NewCollisionType);
 }
 
-void AGOLMCharacter::OnRep_ShowCompatibleProjectiles()
+void AGOLMCharacter::ShowCompatibleProjectiles()
 {
 	if (IsLocallyControlled())
 	{
@@ -1146,4 +1146,22 @@ float AGOLMCharacter::TakeDamage(float DamageAmount, FDamageEvent const &DamageE
 
 	}
 	return Damage;
+}
+
+void AGOLMCharacter::OnRep_OnEquippedHandWeapon()
+{
+	CurrentHandWeapon->WeaponMesh->AddLocalRotation(FRotator(0,180,-180));
+	ShowCompatibleProjectiles();
+}
+
+void AGOLMCharacter::OnRep_OnEquippedRightShoulder()
+{
+	ShowCompatibleProjectiles();
+
+}
+
+void AGOLMCharacter::OnRep_OnEquippedLeftShoulderWeapon()
+{
+	ShowCompatibleProjectiles();
+
 }

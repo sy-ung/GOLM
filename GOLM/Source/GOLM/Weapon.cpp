@@ -58,14 +58,19 @@ void AWeapon::Tick(float DeltaSeconds)
 	//		}
 	//	}
 	//}
-	if (!bAbleToShoot)
+
+	if(Role == ROLE_Authority)
 	{
-		if (TimeBeforeNextShot <= 0)
+
+		if (!bAbleToShoot)
 		{
-			bAbleToShoot = true;
+			if (TimeBeforeNextShot <= 0)
+			{
+				bAbleToShoot = true;
+			}
+			else
+				TimeBeforeNextShot -= DeltaSeconds;
 		}
-		else
-			TimeBeforeNextShot -= DeltaSeconds;
 	}
 
 
@@ -98,21 +103,21 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeP
 
 void AWeapon::FireWeapon()
 {
-	if(bAbleToShoot)
+	//if(Role!= ROLE_Authority)
 	{
-		if (!bAutomatic)
+		if(bAbleToShoot)
 		{
-			bStartShooting = false;
-		}
-		FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
-		FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
-		LaunchProjectile(WeaponMuzzleLocation, WeaponMuzzleRotation);
+			if (!bAutomatic)
+			{
+				bStartShooting = false;
+			}
+			FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
+			FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
+			LaunchProjectile(WeaponMuzzleLocation, WeaponMuzzleRotation);
 
-		bAbleToShoot = false;
-		if (Role != ROLE_Authority)
+			bAbleToShoot = false;
 			ServerFireWeapon();
-
-
+		}
 	}
 	if (Role == ROLE_Authority)
 	{
@@ -138,7 +143,6 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
 	PlayLaunchEffects();
 
-
 	if(Role == ROLE_Authority)
 	{
 		FActorSpawnParameters spawnParams;
@@ -152,22 +156,13 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
 			projectile->SetActorScale3D(this->GetActorScale3D());
-			//projectile->SetActorRotation(MuzzleRotation);
 			projectile->TargetLocation = TargetLocation;
-			
 		}
-		//Instigator->MoveIgnoreActorAdd(projectile);	
-		//Instigator->MoveIgnoreActorAdd(GetOwner());
 		
 	}
 
 	if (Role != ROLE_Authority)
 	{
-		if (CurrentProjectile != NULL)
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Green, CurrentProjectile->Name.ToString());
-		else
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "CurrentProjectile is NULL");
-
 		ServerLaunchProjectile(MuzzleLocation, MuzzleRotation);
 	}
 		
@@ -185,20 +180,23 @@ bool AWeapon::ServerLaunchProjectile_Validate(FVector MuzzleLocation, FRotator M
 
 void AWeapon::LaunchSpreadProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
-	
-	for (int32 i = 0; i < NumberOfSpread;i++)
-	{
-		
-		int32 RandomSeed = FMath::Rand();
-		FRandomStream SpreadRandom(RandomSeed);
-		float SpreadCone = FMath::DegreesToRadians(SpreadAmount * 0.5);
-		FVector Direction = SpreadRandom.VRandCone(MuzzleRotation.Vector(), SpreadCone, SpreadCone);
-		FActorSpawnParameters spawnParams;
-		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
-		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, Direction.Rotation(), spawnParams);
-		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
-		projectile->SetActorScale3D(this->GetActorScale3D());
 
+	if(Role == ROLE_Authority)
+	{
+		for (int32 i = 0; i < NumberOfSpread;i++)
+		{
+		
+			int32 RandomSeed = FMath::Rand();
+			FRandomStream SpreadRandom(RandomSeed);
+			float SpreadCone = FMath::DegreesToRadians(SpreadAmount * 0.5);
+			FVector Direction = SpreadRandom.VRandCone(MuzzleRotation.Vector(), SpreadCone, SpreadCone);
+			FActorSpawnParameters spawnParams;
+			spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
+			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, Direction.Rotation(), spawnParams);
+			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
+			projectile->SetActorScale3D(this->GetActorScale3D());
+
+		}
 	}
 
 }

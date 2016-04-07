@@ -112,9 +112,9 @@ public:
 
 	UPROPERTY(BlueprintReadOnly, Replicated)		float WeaponAimPitch;
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentHandWeapon;
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentLeftShoulderWeapon;
-	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_ShowCompatibleProjectiles)		AWeapon *CurrentRightShoulderWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedHandWeapon)				AWeapon *CurrentHandWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedLeftShoulderWeapon)		AWeapon *CurrentLeftShoulderWeapon;
+	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedRightShoulder)			AWeapon *CurrentRightShoulderWeapon;
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
@@ -322,7 +322,18 @@ public:
 		void ClientSetPawnCollisionType_Implementation(EPlayerCollisionProfile NewCollisionType);
 
 	UFUNCTION()
-		void OnRep_ShowCompatibleProjectiles();
+		void ShowCompatibleProjectiles();
+
+	UFUNCTION()
+		void OnRep_OnEquippedLeftShoulderWeapon();
+
+	UFUNCTION()
+		void OnRep_OnEquippedRightShoulder();
+
+	UFUNCTION()
+		void OnRep_OnEquippedHandWeapon();
+
+
 
 	UFUNCTION()
 		virtual float TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController *EventInstigator, AActor *DamageCauser) override;
