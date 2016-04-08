@@ -144,7 +144,9 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 
 	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
 
-	DOREPLIFETIME(AGOLMCharacter, WeaponAimPitch);
+	DOREPLIFETIME(AGOLMCharacter, CurrentHandWeaponAimPitch);
+	DOREPLIFETIME(AGOLMCharacter, CurrentLeftShoulderWeaponAimPitch);
+	DOREPLIFETIME(AGOLMCharacter, CurrentRightShoulderWeaponAimPitch);
 
 	DOREPLIFETIME(AGOLMCharacter, RelativeForward);
 	DOREPLIFETIME(AGOLMCharacter, RelativeRight);
@@ -260,7 +262,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			{
 				//if(CurrentHandWeapon != NULL)
 				{
-					;
+					
 					UpdateAim(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
 					MoveCamera();
 				}
@@ -322,6 +324,9 @@ void AGOLMCharacter::NotifyHit
 void AGOLMCharacter::UpdateAim(FVector MouseHit)
 {
 	
+	if (!IsLocallyControlled())
+		return;
+
 	if (CurrentHandWeapon != NULL)
 	{
 
@@ -330,21 +335,16 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 		//FRotator aim = MouseHit.Rotation();
 		SetActorRotation(FRotator(0, aim.Yaw, 0));
 
-		FRotator WeaponRot = FRotator(WeaponAimPitch, aim.Yaw, -180);
+		FRotator WeaponRot = FRotator(CurrentHandWeaponAimPitch, aim.Yaw, -180);
 		CurrentHandWeapon->SetActorRotation(WeaponRot);
 
 		float NewPitch = CurrentHandWeapon->CalculateProjectilePath(MouseHit);
 
 		if (NewPitch != 0)
-			WeaponAimPitch = NewPitch;
+			CurrentHandWeaponAimPitch = NewPitch;
 
 		if (bIsInMenu)
-			WeaponAimPitch = -30;
-
-
-
-
-
+			CurrentHandWeaponAimPitch = -30;
 
 		HandSupportLocation = CurrentHandWeapon->WeaponMesh->GetSocketLocation("HandSupport");
 		GripBoneLocation = CurrentHandWeapon->WeaponMesh->GetBoneLocation("Grip_Bone");
@@ -354,7 +354,7 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 
 
 		if (Role != ROLE_Authority)
-			ServerUpdateAim(WeaponAimPitch, aim.Yaw);
+			ServerUpdateHandWeaponAim(CurrentHandWeaponAimPitch, aim.Yaw);
 	}
 
 	if (CurrentLeftShoulderWeapon != NULL)
@@ -366,9 +366,11 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 
 		float NewPitch = CurrentLeftShoulderWeapon->CalculateProjectilePath(MouseHit);
 
-
+		CurrentLeftShoulderWeaponAimPitch = NewPitch;
 
 		CurrentLeftShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
+		if(Role == ROLE_Authority)
+			ServerUpdateLeftShoulderWeaponAim(NewPitch, Direction.Yaw);
 	}
 
 	if (CurrentRightShoulderWeapon != NULL)
@@ -384,17 +386,27 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 		if (bIsInMenu)
 			NewPitch = 70;
 
-		CurrentRightShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
+		CurrentRightShoulderWeaponAimPitch = NewPitch;
+
+		CurrentRightShoulderWeapon->SetActorRotation(FRotator(CurrentRightShoulderWeaponAimPitch,Direction.Yaw,0));
 	}
 }
 
 
-void AGOLMCharacter::ServerUpdateAim_Implementation(float NewPitch, float NewYaw)
+void AGOLMCharacter::ServerUpdateHandWeaponAim_Implementation(float NewPitch, float NewYaw)
 {
-	WeaponAimPitch = NewPitch;
+	CurrentHandWeaponAimPitch = NewPitch;
 	SetActorRotation(FRotator(0, NewYaw, 0));
 }
-bool AGOLMCharacter::ServerUpdateAim_Validate(float NewPitch, float NewYaw)
+bool AGOLMCharacter::ServerUpdateHandWeaponAim_Validate(float NewPitch, float NewYaw)
+{
+	return true;
+}
+void AGOLMCharacter::ServerUpdateLeftShoulderWeaponAim_Implementation(float NewPitch, float NewYaw)
+{
+	CurrentLeftShoulderWeapon->SetActorRotation(FRotator(NewPitch, NewYaw, 0));
+}
+bool AGOLMCharacter::ServerUpdateLeftShoulderWeaponAim_Validate(float NewPitch, float NewYaw)
 {
 	return true;
 }
@@ -429,6 +441,8 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			{
 				SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0, 90, -180));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
+			/*	SpawnedWeapon->SetActorRelativeRotation(FRotator(0, 90, 0));*/
+				
 				SpawnedWeapon->CurrentSlotType = In;
 				bHasHandWeapon = true;
 				CurrentHandWeapon = SpawnedWeapon;
@@ -539,7 +553,7 @@ void AGOLMCharacter::ZoomMiniMapCamera(float value)
 void AGOLMCharacter::FireHandWeapon(bool value)
 {
 	if (CurrentHandWeapon != NULL)
-		CurrentHandWeapon->bStartShooting = value;
+			CurrentHandWeapon->bStartShooting = value;
 }
 
 void AGOLMCharacter::FireLeftShoulderWeapon(bool value)
@@ -740,6 +754,9 @@ void AGOLMCharacter::RotateCamera()
 void AGOLMCharacter::MoveCamera()
 {
 
+
+	if (CurrentHandWeapon == NULL && CurrentLeftShoulderWeapon == NULL && CurrentRightShoulderWeapon == NULL)
+		return;
 
 	AGOLMPlayerController *PlayerCon = Cast<AGOLMPlayerController>(GetController());
 	//FVector CameraCheck = PlayerCameraBoom->TargetOffset + FVector(DeltaMouse.X * CameraMovementSensitivity, DeltaMouse.Y * CameraMovementSensitivity, 0);

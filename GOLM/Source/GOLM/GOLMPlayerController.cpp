@@ -467,25 +467,54 @@ void AGOLMPlayerController::ZoomMiniMap(float value)
 
 void AGOLMPlayerController::GotoPlayerCamera()
 {
-	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->PlayerCameraActor, 0.5f);
-	EquipmentMenuReference->SetupWeaponProjectileSelection();
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
+
+	if (PlayerChar)
+	{
+		PlayerChar->EquipmentCameraFrontBoom->bInheritYaw = false;
+		PlayerChar->EquipmentCameraLeftShoulderBoom->bInheritYaw = false;
+		PlayerChar->EquipmentCameraRightShoulderBoom->bInheritYaw = false;
+
+		SetViewTargetWithBlend(PlayerChar->PlayerCameraActor, 0.5f);
+		EquipmentMenuReference->SetupWeaponProjectileSelection();
+	}
 	
 }
 void AGOLMPlayerController::GotoFrontCamera()
 {
-	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->FrontCameraActor, 0.5f);
-	EquipmentMenuReference->SetupWeaponProjectileSelection();
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
+
+	if (PlayerChar)
+	{
+		PlayerChar->EquipmentCameraFrontBoom->bInheritYaw = true;
+		SetViewTargetWithBlend(PlayerChar->FrontCameraActor, 0.5f);
+		EquipmentMenuReference->SetupWeaponProjectileSelection();
+	}
+
+
 }
 
 void AGOLMPlayerController::GotoLeftShoulderCamera()
 {
-	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->LeftShoulderCameraActor, 0.5f);
-	EquipmentMenuReference->SetupWeaponProjectileSelection();
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
+
+	if (PlayerChar)
+	{
+		PlayerChar->EquipmentCameraLeftShoulderBoom->bInheritYaw = true;
+		SetViewTargetWithBlend(PlayerChar->LeftShoulderCameraActor, 0.5f);
+		EquipmentMenuReference->SetupWeaponProjectileSelection();
+	}
 }
 void AGOLMPlayerController::GotoRightShoulderCamera()
 {
-	SetViewTargetWithBlend(Cast<AGOLMCharacter>(GetCharacter())->RightShoulderCameraActor, 0.5f);
-	EquipmentMenuReference->SetupWeaponProjectileSelection();
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
+
+	if (PlayerChar)
+	{
+		PlayerChar->EquipmentCameraRightShoulderBoom->bInheritYaw = true;
+		SetViewTargetWithBlend(PlayerChar->RightShoulderCameraActor, 0.5f);
+		EquipmentMenuReference->SetupWeaponProjectileSelection();
+	}
 }
 
 void AGOLMPlayerController::SetArcFire(bool value)

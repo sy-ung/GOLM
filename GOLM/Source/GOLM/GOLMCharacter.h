@@ -110,7 +110,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeRight;
 
 
-	UPROPERTY(BlueprintReadOnly, Replicated)		float WeaponAimPitch;
+	UPROPERTY(BlueprintReadOnly, Replicated)		float CurrentHandWeaponAimPitch;
+	UPROPERTY(BlueprintReadOnly, Replicated)		float CurrentLeftShoulderWeaponAimPitch;
+	UPROPERTY(BlueprintReadOnly, Replicated)		float CurrentRightShoulderWeaponAimPitch;
+
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedHandWeapon)				AWeapon *CurrentHandWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedLeftShoulderWeapon)		AWeapon *CurrentLeftShoulderWeapon;
@@ -135,9 +138,14 @@ public:
 
 		void UpdateAim(FVector MouseHit);
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerUpdateAim(float NewPitch, float NewYaw);
-		void ServerUpdateAim_Implementation(float NewPitch, float NewYaw);
-		bool ServerUpdateAim_Validate(float NewPitch, float NewYaw);
+		void ServerUpdateHandWeaponAim(float NewPitch, float NewYaw);
+		void ServerUpdateHandWeaponAim_Implementation(float NewPitch, float NewYaw);
+		bool ServerUpdateHandWeaponAim_Validate(float NewPitch, float NewYaw);
+
+		UFUNCTION(Server, Reliable, WithValidation)
+			void ServerUpdateLeftShoulderWeaponAim(float NewPitch, float NewYaw);
+			void ServerUpdateLeftShoulderWeaponAim_Implementation(float NewPitch, float NewYaw);
+			bool ServerUpdateLeftShoulderWeaponAim_Validate(float NewPitch, float NewYaw);
 
 	UFUNCTION()
 		virtual void BeginPlay() override;

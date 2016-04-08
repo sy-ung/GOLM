@@ -180,7 +180,6 @@ void AProjectile::Tick(float DeltaSeconds)
 
 void AProjectile::VTOLMovement(float DeltaSeconds)
 {
-	GEngine->ClearOnScreenDebugMessages();
 	if(!bVTOLStage1Complete)
 	{
 		
@@ -206,8 +205,6 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 
 		if ((VTOLDropStagingLoc - GetActorLocation()).Size() < VTOLDropRadius)
 			bVTOLStage2Complete = true;
-
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, MovementComponent->Velocity.ToString());
 
 	}
 	else if (!bVTOLStage3Complete)

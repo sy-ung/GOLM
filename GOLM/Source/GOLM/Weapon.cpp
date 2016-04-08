@@ -105,24 +105,24 @@ void AWeapon::FireWeapon()
 {
 	//if(Role!= ROLE_Authority)
 	{
-		if(bAbleToShoot)
+		//if(bAbleToShoot)
 		{
 			if (!bAutomatic)
 			{
 				bStartShooting = false;
 			}
-			FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
-			FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
-			LaunchProjectile(WeaponMuzzleLocation, WeaponMuzzleRotation);
-
 			bAbleToShoot = false;
-			ServerFireWeapon();
+			if(Role != ROLE_Authority)
+				ServerFireWeapon();
 		}
 	}
 	if (Role == ROLE_Authority)
 	{
 		bAbleToShoot = false;
 		TimeBeforeNextShot = FiringRate;
+		FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
+		FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
+		LaunchProjectile(WeaponMuzzleLocation, WeaponMuzzleRotation);
 	}
 	
 }
@@ -149,7 +149,9 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
 		
 		if (bIsSpread)
+		{
 			LaunchSpreadProjectile(MuzzleLocation, MuzzleRotation);
+		}
 		else
 		{
 			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
