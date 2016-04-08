@@ -134,21 +134,19 @@ void AProjectile::Tick(float DeltaSeconds)
 
 		if (!Alive)
 		{
-			{
-				OnDeath();
-			}
+			OnDeath();
 		}
-		if (bIsClusterProjectile)
+		else if (bIsClusterProjectile)
 		{
 			if(bVTOL)
 			{
-				if((TargetLocation - GetActorLocation()).Size() <= ClusterLaunchDistance && bVTOLStage2Complete)
-					FireCluster();
+				if ((TargetLocation - GetActorLocation()).Size() <= ClusterLaunchDistance && bVTOLStage2Complete)
+					OnDeath();
 			}
 			else
 			{
 				if ((TargetLocation - GetActorLocation()).Size() <= ClusterLaunchDistance)
-					FireCluster();
+					OnDeath();
 			}
 		}
 	}
@@ -347,14 +345,21 @@ void AProjectile::FireCluster()
 			int32 RandomSeed = FMath::Rand();
 			FRandomStream SpreadRandom(RandomSeed);
 			float SpreadCone = FMath::DegreesToRadians(ClusterSpreadAmount * 0.5);
-			FVector Direction = SpreadRandom.VRandCone(GetActorRotation().Vector(), SpreadCone, SpreadCone);
+			FVector Direction;
+
+			if(!MovementComponent->bShouldBounce)
+				Direction = SpreadRandom.VRandCone(MovementComponent->Velocity.SafeNormal(), SpreadCone, SpreadCone);
+			if (MovementComponent->bShouldBounce)
+				Direction = SpreadRandom.VRandCone(FVector::UpVector, SpreadCone, SpreadCone);
+
 			FActorSpawnParameters spawnParams;
 			spawnParams.Instigator = Cast<AGOLMCharacter>(GetInstigator());
 			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(ClusterProjectile.GetDefaultObject()->GetClass(), GetActorLocation(), Direction.Rotation(), spawnParams);
 			projectile->TargetLocation = TargetLocation;
 			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream;
 			projectile->SetActorScale3D(this->GetActorScale3D() * ClusterProjectileScale);
-			Alive = false;
+			
 		}
+		Alive = false;
 	}
 }
