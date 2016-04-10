@@ -33,14 +33,12 @@ class GOLM_API UGOLMMultiplayerMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
 private:
-	TArray<FServerListItemWidget> Servers;
 	UScrollBox *ServerScrollBox;
 public:
 
 	void AddServer(FOnlineSessionSearchResult *NewSession, UWorld *World);
+	void ClearServers();
 
-	UFUNCTION(BlueprintCallable, Category = MultiplayerMenuData)
-		TArray<FServerListItemWidget> GetServers();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ServerListWidget)
 		TSubclassOf<UUserWidget> ServerListWidget;

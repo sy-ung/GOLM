@@ -37,6 +37,5 @@ int32 UGOLMServerListWidget::GetServerSessionMaxNumPlayers()
 
 void UGOLMServerListWidget::Selected()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(),  "Instanced name from ServerListWidget is " + UGameplayStatics::GetGameInstance(GetWorld())->GetName());
 	Cast<UGOLMGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()))->SetSelectedSession(ServerSession);
 }

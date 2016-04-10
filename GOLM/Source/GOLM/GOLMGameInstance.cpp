@@ -27,29 +27,6 @@ UGOLMGameInstance::UGOLMGameInstance()
 
 
 
-void UGOLMGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
-{
-	/*GEngine->AddOnScreenDebugMessage(-1, 60.0f, FColor::Red,
-		FString::Printf(TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful)
-		);*/
-	//***Get Online subsystem for Session interface
-	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
-	if (OnlineSubSys)
-	{
-		IOnlineSessionPtr Sessions = OnlineSubSys->GetSessionInterface();
-		if (Sessions.IsValid())
-		{
-			//***Clear SessionComplete delegate handle since it is finished
-			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
-			if (bWasSuccessful)
-			{
-				//***Set StartSession delegate handle
-				OnStartSessionCompleteDelegateHandle = Sessions->AddOnStartSessionCompleteDelegate_Handle(OnStartSessionCompleteDelegate);
-				Sessions->StartSession(SessionName);
-			}
-		}
-	}
-}
 
 void UGOLMGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSuccessful)
 {
@@ -195,12 +172,12 @@ void UGOLMGameInstance::ToggleGameInput()
 	PlayerCon->SetInputMode(GI);
 }
 
-void UGOLMGameInstance::HostAGame(bool bAsLan, int32 MaxPlayers)
+void UGOLMGameInstance::HostGame(bool bAsLan, int32 MaxPlayers, FName GameServerName)
 {
 	//Create local player to get UserID from
 	ULocalPlayer *const Player = GetFirstGamePlayer();
-
 	HostSession(Player->GetPreferredUniqueNetId(), GameSessionName, bAsLan, true, MaxPlayers);
+
 }
 
 bool UGOLMGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserID, FName SessionName, bool bAsLan, bool bAsPresence, uint32 MaxPlayers)
@@ -216,7 +193,6 @@ bool UGOLMGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserID, FName
 		{
 			//***Set up Session settings
 			SessionSettings = MakeShareable(new FOnlineSessionSettings());
-
 			SessionSettings->bIsLANMatch = bAsLan;
 			SessionSettings->bUsesPresence = bAsPresence;
 			SessionSettings->NumPublicConnections = MaxPlayers;
@@ -227,7 +203,7 @@ bool UGOLMGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserID, FName
 			SessionSettings->bAllowJoinViaPresence = true;
 			SessionSettings->bAllowJoinViaPresenceFriendsOnly = false;
 			
-
+			
 			SessionSettings->Set(SETTING_MAPNAME, FString("MyGame"), EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 			//***Set delegate handle to session interface
@@ -244,6 +220,31 @@ bool UGOLMGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserID, FName
 	return false;
 }
 
+void UGOLMGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	/*GEngine->AddOnScreenDebugMessage(-1, 60.0f, FColor::Red,
+	FString::Printf(TEXT("OnCreateSessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful)
+	);*/
+	//***Get Online subsystem for Session interface
+	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
+	if (OnlineSubSys)
+	{
+		IOnlineSessionPtr Sessions = OnlineSubSys->GetSessionInterface();
+		if (Sessions.IsValid())
+		{
+			//***Clear SessionComplete delegate handle since it is finished
+			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
+			if (bWasSuccessful)
+			{
+				//***Set StartSession delegate handle
+				OnStartSessionCompleteDelegateHandle = Sessions->AddOnStartSessionCompleteDelegate_Handle(OnStartSessionCompleteDelegate);
+				Sessions->StartSession(SessionName);
+			}
+		}
+	}
+}
+
+
 void UGOLMGameInstance::FindSessions(TSharedPtr<const FUniqueNetId>UserID, FName SessionName, bool bAsLan, bool bAsPresence)
 {
 	//***Get current online subsystem
@@ -256,18 +257,19 @@ void UGOLMGameInstance::FindSessions(TSharedPtr<const FUniqueNetId>UserID, FName
 		{
 			//GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::White, "LOOKING FOR A GAME");
 			//***SessionSearch settings
-			SessionSearch = MakeShareable(new FOnlineSessionSearch());
-			SessionSearch->bIsLanQuery = bAsLan;
-			SessionSearch->MaxSearchResults = 20;
-			SessionSearch->PingBucketSize = 50;
+			SessionSearchResults = NULL;
+			SessionSearchResults = MakeShareable(new FOnlineSessionSearch());
+			SessionSearchResults->bIsLanQuery = bAsLan;
+			SessionSearchResults->MaxSearchResults = 20;
+			SessionSearchResults->PingBucketSize = 50;
 			if (bAsPresence)
 			{
 				//***Query settings to use for finding matching servers
-				SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, bAsPresence, EOnlineComparisonOp::Equals);			
+				SessionSearchResults->QuerySettings.Set(SEARCH_PRESENCE, bAsPresence, EOnlineComparisonOp::Equals);
 			}
 
 			//***Getting a reference to SessionSearch
-			TSharedRef<FOnlineSessionSearch> SearchSettingRef = SessionSearch.ToSharedRef();
+			TSharedRef<FOnlineSessionSearch> SearchSettingRef = SessionSearchResults.ToSharedRef();
 
 			//***Setting delegate to delegate handle of FindSession function
 			OnFindSessionsCompleteDelegateHandle = Sessions->AddOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegate);
@@ -301,18 +303,16 @@ void UGOLMGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnFindSessionsCompleteDelegateHandle);
 
 			//***If at least found 1 search results
-			if (SessionSearch->SearchResults.Num() > 0)
+			if (SessionSearchResults->SearchResults.Num() > 0)
 			{
-				SessionSearch->SortSearchResults();
+				SessionSearchResults->SortSearchResults();
 				
 				//**********FOR LOOP TO ADD SERVER LIST WIDGET***************
-				for (int32 i = 0; i < SessionSearch->SearchResults.Num(); i++)
+				for (int32 i = 0; i < SessionSearchResults->SearchResults.Num(); i++)
 				{
-
-					
 					//Current Widget will refer to mulitplayer menu widget
 				 	Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->AddServer(
-						&SessionSearch->SearchResults[i],GetWorld()
+						&SessionSearchResults->SearchResults[i],GetWorld()
 						);
 				}
 				
@@ -398,6 +398,7 @@ void UGOLMGameInstance::LookForGames()
 {
 	ULocalPlayer *const Player = GetFirstGamePlayer();
 	bCanSearchAgain = false;
+	Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->ClearServers();
 	FindSessions(Player->GetPreferredUniqueNetId(), GameSessionName, true, true);
 
 

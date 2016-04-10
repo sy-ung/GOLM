@@ -50,23 +50,16 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	FName Name;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	bool bArcFire;
 
-	UPROPERTY(Replicated) FVector TargetLocation;
-
 	UPROPERTY(Replicated) bool bAbleToShoot;
-	bool bStartShooting;
+	UPROPERTY(Replicated) bool bStartShooting;
 	float TimeBeforeNextShot;
 
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerSetTargetLocation(FVector NewTargetLocation);
-		void ServerSetTargetLocation_Implementation(FVector NewTargetLocation);
-		bool ServerSetTargetLocation_Validate(FVector NewTargetLocation);
-
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void FireWeapon();
+		void FireWeapon(FVector StartLocation, FRotator StartRotation);
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerFireWeapon();
-		void ServerFireWeapon_Implementation();
-		bool ServerFireWeapon_Validate();
+		void ServerFireWeapon(FVector StartLocation, FRotator StartRotation);
+		void ServerFireWeapon_Implementation(FVector StartLocation, FRotator StartRotation);
+		bool ServerFireWeapon_Validate(FVector StartLocation, FRotator StartRotation);
 
 
 

@@ -47,31 +47,19 @@ public:
 
 	UFUNCTION()												virtual void Tick(float DeltaSeconds) override;
 
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireHandWeapon(bool value);
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireLeftShoulderWeapon(bool value);
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireRightShoulderWeapon(bool value);
+
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireWeapon(EEquipSlot WeaponSlot, bool StartShooting);
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void RotatePlayerCamera(bool value);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerUp(bool value);
-	UFUNCTION(Server, Reliable, WithValidation)				void ServerMovePlayerUp(bool value);
-															void ServerMovePlayerUp_Implementation(bool value);
-															bool ServerMovePlayerUp_Validate(bool value);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerDown(bool value);
-	UFUNCTION(Server, Reliable, WithValidation)				void ServerMovePlayerDown(bool value);
-															void ServerMovePlayerDown_Implementation(bool value);
-															bool ServerMovePlayerDown_Validate(bool value);
-
+	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerLeft(bool value);
-	UFUNCTION(Server, Reliable, WithValidation)				void ServerMovePlayerLeft(bool value);
-															void ServerMovePlayerLeft_Implementation(bool value);
-															bool ServerMovePlayerLeft_Validate(bool value);
-
+	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void MovePlayerRight(bool value);
-	UFUNCTION(Server, Reliable, WithValidation)				void ServerMovePlayerRight(bool value);
-															void ServerMovePlayerRight_Implementation(bool value);
-															bool ServerMovePlayerRight_Validate(bool value);
+
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void BoostPlayer(bool value);
@@ -97,9 +85,8 @@ public:
 
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void GotoLockerRoom();
-	UFUNCTION(Server, Reliable, WithValidation)				void ServerGotoLockerRoom();
-															void ServerGotoLockerRoom_Implementation();
-															bool ServerGotoLockerRoom_Validate();
+
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void GotoLevel(FName LevelName);
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void RespawnCharacter();
 	UFUNCTION(Server, Reliable, WithValidation, BlueprintCallable, Category = DebugStuffICanDo)

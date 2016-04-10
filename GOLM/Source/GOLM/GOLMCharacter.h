@@ -106,18 +106,17 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bRotatingCamera;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bMovingCamera;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeForward;
-	UPROPERTY(BlueprintReadOnly, Replicated)		float RelativeRight;
+	UPROPERTY(BlueprintReadOnly)		float RelativeForward;
+	UPROPERTY(BlueprintReadOnly)		float RelativeRight;
 
 
-	UPROPERTY(BlueprintReadOnly, Replicated)		float CurrentHandWeaponAimPitch;
-	UPROPERTY(BlueprintReadOnly, Replicated)		float CurrentLeftShoulderWeaponAimPitch;
-	UPROPERTY(BlueprintReadOnly, Replicated)		float CurrentRightShoulderWeaponAimPitch;
+	UPROPERTY(BlueprintReadOnly)		float CurrentHandWeaponAimPitch;
 
 	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedHandWeapon)				AWeapon *CurrentHandWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedLeftShoulderWeapon)		AWeapon *CurrentLeftShoulderWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedRightShoulder)			AWeapon *CurrentRightShoulderWeapon;
+	UPROPERTY(Replicated)	FVector TargetLocation;
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
@@ -129,23 +128,19 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector LeftPalmLocation;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bHasHandWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingUp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingDown;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingLeft;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingRight;
 
-		void UpdateAim(FVector MouseHit);
+	void UpdateAim();
+	
+	void UpdateTargetLocation(FVector NewTargetLocation);
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerUpdateHandWeaponAim(float NewPitch, float NewYaw);
-		void ServerUpdateHandWeaponAim_Implementation(float NewPitch, float NewYaw);
-		bool ServerUpdateHandWeaponAim_Validate(float NewPitch, float NewYaw);
-
-		UFUNCTION(Server, Reliable, WithValidation)
-			void ServerUpdateLeftShoulderWeaponAim(float NewPitch, float NewYaw);
-			void ServerUpdateLeftShoulderWeaponAim_Implementation(float NewPitch, float NewYaw);
-			bool ServerUpdateLeftShoulderWeaponAim_Validate(float NewPitch, float NewYaw);
+		void ServerUpdateTargetLocation(FVector NewTargetLocation);
+		void ServerUpdateTargetLocation_Implementation(FVector NewTargetLocation);
+		bool ServerUpdateTargetLocation_Validate(FVector NewTargetLocation);
 
 	UFUNCTION()
 		virtual void BeginPlay() override;
@@ -205,15 +200,13 @@ public:
 		void ServerUpdateRelativeDirectionScale_Implementation(float relativeforwardscale, float relativerightscale);
 		bool ServerUpdateRelativeDirectionScale_Validate(float relativeforwardscale, float relativerightscale);
 
-
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void FireHandWeapon(bool value);
+		void FireWeapon(EEquipSlot WeaponSlot, bool StartFiring);
 
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void FireLeftShoulderWeapon(bool value);
-
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void FireRightShoulderWeapon(bool value);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerFireWeapon(EEquipSlot WeaponSlot, bool StartFiring);
+		void ServerFireWeapon_Implementation(EEquipSlot WeaponSlot, bool StartFiring);
+		bool ServerFireWeapon_Validate(EEquipSlot WeaponSlot, bool StartFiring);
 
 	UFUNCTION(BlueprintCallable, Category = StuffIMustDo)
 		void Equip(AWeapon *NewWeapon, EEquipSlot In);
@@ -232,9 +225,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MyMovements)
 		void MoveCheck();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerMove(FRotator direction);
-		void ServerMove_Implementation(FRotator direction);
-		bool ServerMove_Validate(FRotator direction);
+		void ServerMove(FRotator direction, bool bIsMoving);
+		void ServerMove_Implementation(FRotator direction, bool bIsMoving);
+		bool ServerMove_Validate(FRotator direction, bool bIsMoving);
 
 
 
@@ -276,16 +269,15 @@ public:
 		FName GetCurrentLevelStream();
 
 		void LoadEntranceLevel(class AGOLMLevelStreamBeacon *LevelBeacon);
-	UFUNCTION(Client, Reliable, WithValidation)
+	UFUNCTION(Client, Reliable)
 		void ClientLoadEntranceLevel(class AGOLMLevelStreamBeacon *LevelBeacon);
 		void ClientLoadEntranceLevel_Implementation(class AGOLMLevelStreamBeacon *LevelBeacon);
-		bool ClientLoadEntranceLevel_Validate(class AGOLMLevelStreamBeacon *LevelBeacon);
 
 		void LoadEntranceLevel(FName EntranceLevelName);
-	UFUNCTION(Client, Reliable, WithValidation)
+	UFUNCTION(Client, Reliable)
 		void ClientLoadEntranceLevelNameOnly(FName EntranceLevelName);
-		void ClientLoadEntranceLevel_ImplementationNameOnly(FName EntranceLevelNamen);
-		bool ClientLoadEntranceLevel_ValidateNameOnly(FName EntranceLevelName);
+		void ClientLoadEntranceLevelNameOnly_Implementation(FName EntranceLevelName);
+
 
 
 		

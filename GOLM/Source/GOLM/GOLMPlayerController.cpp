@@ -38,27 +38,12 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 	if(CursorWidgetReference != NULL)
 		CursorWidgetReference->MoveMouseCursor(this);
 }
-
-void AGOLMPlayerController::FireHandWeapon(bool value)
+void AGOLMPlayerController::FireWeapon(EEquipSlot WeaponSlot, bool StartShooting)
 {
-
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
 	if (!PlayerChar->bIsInMenu)
-		PlayerChar->FireHandWeapon(value);
+		PlayerChar->FireWeapon(WeaponSlot, StartShooting);
 }
-void AGOLMPlayerController::FireLeftShoulderWeapon(bool value)
-{
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-	if (!PlayerChar->bIsInMenu)
-		PlayerChar->FireLeftShoulderWeapon(value);
-}
-void AGOLMPlayerController::FireRightShoulderWeapon(bool value)
-{
-	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-	if (!PlayerChar->bIsInMenu)
-		PlayerChar->FireRightShoulderWeapon(value);
-}
-
 
 FVector AGOLMPlayerController::GetMouseHit()
 {
@@ -76,12 +61,9 @@ FVector AGOLMPlayerController::GetMouseHit()
 
 FVector AGOLMPlayerController::GetMouseMovement()
 {
-	//float x;
-	//float y;
+
 	FVector MouseWorldLocation = FVector::ZeroVector;
 	FVector MouseWorldDirection;
-	//if (GetMousePosition(x, y))
-
 	
 	DeprojectMousePositionToWorld(MouseWorldLocation, MouseWorldDirection);
 	
@@ -107,11 +89,10 @@ void AGOLMPlayerController::MovePlayerUp(bool value)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 			if (PlayerChar)	PlayerChar->bMovingUp = value;
-		if (Role != ROLE_Authority)	ServerMovePlayerUp(value);
+			//if (Role != ROLE_Authority)	ServerMovePlayerUp(value);
 	}
 }
-void AGOLMPlayerController::ServerMovePlayerUp_Implementation(bool value){ MovePlayerUp(value); }
-bool AGOLMPlayerController::ServerMovePlayerUp_Validate(bool value){ return true; }
+
 
 void AGOLMPlayerController::MovePlayerDown(bool value)
 {
@@ -119,11 +100,9 @@ void AGOLMPlayerController::MovePlayerDown(bool value)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)	PlayerChar->bMovingDown = value;
-		if (Role != ROLE_Authority)	ServerMovePlayerDown(value);
+
 	}
 }
-void AGOLMPlayerController::ServerMovePlayerDown_Implementation(bool value) { MovePlayerDown(value); }
-bool AGOLMPlayerController::ServerMovePlayerDown_Validate(bool value) { return true; }
 
 
 void AGOLMPlayerController::MovePlayerLeft(bool value)
@@ -132,26 +111,17 @@ void AGOLMPlayerController::MovePlayerLeft(bool value)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar) PlayerChar->bMovingLeft = value;
-		if (Role != ROLE_Authority)	ServerMovePlayerLeft(value);
+	
 	}
 }
-void AGOLMPlayerController::ServerMovePlayerLeft_Implementation(bool value) { MovePlayerLeft(value); }
-bool AGOLMPlayerController::ServerMovePlayerLeft_Validate(bool value) { return true; }
-
-
 void AGOLMPlayerController::MovePlayerRight(bool value)
 {
 	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)	PlayerChar->bMovingRight = value;
-		if (Role != ROLE_Authority)	ServerMovePlayerRight(value);
 	}
 }
-void AGOLMPlayerController::ServerMovePlayerRight_Implementation(bool value) { MovePlayerRight(value); }
-bool AGOLMPlayerController::ServerMovePlayerRight_Validate(bool value) { return true; }
-
-
 void AGOLMPlayerController::BoostPlayer(bool value)
 {
 	if (Role == ROLE_Authority)
@@ -195,13 +165,15 @@ void AGOLMPlayerController::GotoLockerRoom()
 			PlayerChar->GotoLockerRoom();
 	}
 }
-void AGOLMPlayerController::ServerGotoLockerRoom_Implementation()
-{
 
-}
-bool AGOLMPlayerController::ServerGotoLockerRoom_Validate()
+void AGOLMPlayerController::GotoLevel(FName LevelName)
 {
-	return true;
+	if (IsLocalController())
+	{
+		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+		if (PlayerChar)
+			PlayerChar->LoadEntranceLevel(LevelName);
+	}
 }
 void AGOLMPlayerController::RespawnCharacter()
 {
@@ -330,7 +302,6 @@ void AGOLMPlayerController::MenuSetWeaponSlotChoice(EEquipSlot Choice)
 		default:
 			break;
 		}
-		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "I AM BEING CALLED");
 		EquipmentMenuReference->SetupWeaponSelection();
 	}
 }

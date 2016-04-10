@@ -45,6 +45,7 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 				{
 					RequestingPlayer->UnPossess();
 					RequestingPlayer->Possess(PlayerCharacter);
+					//PlayerCharacter->SetOwner(RequestingPlayer);
 					PlayerCharacter->Init();
 					PlayerCharacter->Respawn();
 				}

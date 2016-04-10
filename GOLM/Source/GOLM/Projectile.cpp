@@ -149,30 +149,31 @@ void AProjectile::Tick(float DeltaSeconds)
 					OnDeath();
 			}
 		}
-	}
 
-
-	
-	
-	if (bVTOL)
-	{
-		if (bBeginVTOL)
+		if (bVTOL)
 		{
-			VTOLMovement(DeltaSeconds);
-		}
-		else if (!bBeginVTOL)
-		{
-			if (VTOLStartTimer <= 0)
+			if (bBeginVTOL)
 			{
-				bBeginVTOL = true;
-				if (Role == ROLE_Authority)
-				{
-					BeginParticle();
-				}
+				VTOLMovement(DeltaSeconds);
 			}
-			VTOLStartTimer -= DeltaSeconds;
+			else if (!bBeginVTOL)
+			{
+				if (VTOLStartTimer <= 0)
+				{
+					bBeginVTOL = true;
+
+					BeginParticle();
+					
+				}
+				VTOLStartTimer -= DeltaSeconds;
+			}
 		}
 	}
+
+
+	
+	
+
 
 }
 

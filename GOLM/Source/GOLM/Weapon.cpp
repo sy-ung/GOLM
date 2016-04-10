@@ -61,7 +61,6 @@ void AWeapon::Tick(float DeltaSeconds)
 
 	if(Role == ROLE_Authority)
 	{
-
 		if (!bAbleToShoot)
 		{
 			if (TimeBeforeNextShot <= 0)
@@ -71,21 +70,28 @@ void AWeapon::Tick(float DeltaSeconds)
 			else
 				TimeBeforeNextShot -= DeltaSeconds;
 		}
+
+	}
+
+	if (bStartShooting)
+	{
+		if (bAbleToShoot)
+		{
+			FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
+			FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
+			FireWeapon(WeaponMuzzleLocation, WeaponMuzzleRotation);
+		}
 	}
 
 
-	if(bStartShooting)
+	if(!bStartShooting)
 	{
-		if(bAbleToShoot)
-			FireWeapon();
-	}
-	else
-	{
-		if(bAutomatic)
-			if(WeaponAudio->Sound != NULL)
+		if (bAutomatic)
+			if (WeaponAudio->Sound != NULL)
 				if (WeaponAudio->IsPlaying())
 					WeaponAudio->Stop();
 	}
+
 	
 	
 }
@@ -94,43 +100,41 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeP
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AWeapon, CurrentProjectile);
-	DOREPLIFETIME(AWeapon, TargetLocation);
 	DOREPLIFETIME(AWeapon, bAbleToShoot);
+	DOREPLIFETIME(AWeapon, bStartShooting);
 }
 
 
 
 
-void AWeapon::FireWeapon()
+void AWeapon::FireWeapon(FVector StartLocation, FRotator StartRotation)
 {
-	//if(Role!= ROLE_Authority)
+	if (!bAutomatic)
 	{
-		//if(bAbleToShoot)
-		{
-			if (!bAutomatic)
-			{
-				bStartShooting = false;
-			}
-			bAbleToShoot = false;
-			if(Role != ROLE_Authority)
-				ServerFireWeapon();
-		}
+		bStartShooting = false;
 	}
+
+	
+	bAbleToShoot = false;
+
+	if(Role != ROLE_Authority)
+		ServerFireWeapon(StartLocation,StartRotation);
+		
+	
 	if (Role == ROLE_Authority)
 	{
 		bAbleToShoot = false;
 		TimeBeforeNextShot = FiringRate;
-		FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
-		FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
-		LaunchProjectile(WeaponMuzzleLocation, WeaponMuzzleRotation);
+
+		LaunchProjectile(StartLocation, StartRotation);
 	}
 	
 }
-void AWeapon::ServerFireWeapon_Implementation()
+void AWeapon::ServerFireWeapon_Implementation(FVector StartLocation, FRotator StartRotation)
 {
-	FireWeapon();
+	FireWeapon(StartLocation,StartRotation);
 }
-bool AWeapon::ServerFireWeapon_Validate()
+bool AWeapon::ServerFireWeapon_Validate(FVector StartLocation, FRotator StartRotation)
 {
 	return true;
 }
@@ -145,22 +149,27 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 
 	if(Role == ROLE_Authority)
 	{
-		FActorSpawnParameters spawnParams;
-		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
-		
-		if (bIsSpread)
-		{
-			LaunchSpreadProjectile(MuzzleLocation, MuzzleRotation);
-		}
-		else
-		{
-			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
 
-			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
-			projectile->SetActorScale3D(this->GetActorScale3D());
-			projectile->TargetLocation = TargetLocation;
+		AGOLMCharacter *WeaponOwner = Cast<AGOLMCharacter>(GetOwner());
+		if (UKismetSystemLibrary::IsValid(WeaponOwner))
+		{
+			FActorSpawnParameters spawnParams;
+			spawnParams.Instigator = WeaponOwner;
+
+			if (bIsSpread)
+			{
+				LaunchSpreadProjectile(MuzzleLocation, MuzzleRotation);
+			}
+			else
+			{
+				AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
+				
+				projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
+				projectile->SetActorScale3D(this->GetActorScale3D());
+				projectile->TargetLocation = WeaponOwner->TargetLocation;
+
+			}
 		}
-		
 	}
 
 	if (Role != ROLE_Authority)
@@ -183,23 +192,21 @@ bool AWeapon::ServerLaunchProjectile_Validate(FVector MuzzleLocation, FRotator M
 void AWeapon::LaunchSpreadProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
 
-	if(Role == ROLE_Authority)
+	for (int32 i = 0; i < NumberOfSpread;i++)
 	{
-		for (int32 i = 0; i < NumberOfSpread;i++)
-		{
 		
-			int32 RandomSeed = FMath::Rand();
-			FRandomStream SpreadRandom(RandomSeed);
-			float SpreadCone = FMath::DegreesToRadians(SpreadAmount * 0.5);
-			FVector Direction = SpreadRandom.VRandCone(MuzzleRotation.Vector(), SpreadCone, SpreadCone);
-			FActorSpawnParameters spawnParams;
-			spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
-			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, Direction.Rotation(), spawnParams);
-			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
-			projectile->SetActorScale3D(this->GetActorScale3D());
+		int32 RandomSeed = FMath::Rand();
+		FRandomStream SpreadRandom(RandomSeed);
+		float SpreadCone = FMath::DegreesToRadians(SpreadAmount * 0.5);
+		FVector Direction = SpreadRandom.VRandCone(MuzzleRotation.Vector(), SpreadCone, SpreadCone);
+		FActorSpawnParameters spawnParams;
+		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
+		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, Direction.Rotation(), spawnParams);
+		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
+		projectile->SetActorScale3D(this->GetActorScale3D());
 
-		}
 	}
+	
 
 }
 
@@ -283,17 +290,6 @@ bool AWeapon::ServerSetNewProjectile_Validate(AProjectile *NewProjectile)
 float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 {
 	
-	if (Role != ROLE_Authority)
-	{
-		ServerSetTargetLocation(TargetPoint);
-	}
-	else
-	{
-		TargetLocation = TargetPoint;
-	}
-
-	
-
 	if (CurrentProjectile->bVTOL)
 		return 20.0f;
 
@@ -312,7 +308,7 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 
 	float Height = TargetPoint.Z - SockLoc.Z;
 
-	float Gravity = 980;
+	float Gravity = 980 * CurrentProjectile->MovementComponent->ProjectileGravityScale;
 	float calculation = (Speed * Speed * Speed * Speed) - (Gravity * (Gravity * (HorizontalDistance * HorizontalDistance) + (2 * Height * (Speed * Speed))));
 	if (calculation <= 0)
 		return 0;
@@ -333,15 +329,6 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 	}
 
 	return 0;
-}
-
-void AWeapon::ServerSetTargetLocation_Implementation(FVector NewTargetLocation)
-{
-	TargetLocation = NewTargetLocation;
-}
-bool AWeapon::ServerSetTargetLocation_Validate(FVector NewTargetLocation)
-{
-	return true;
 }
 
 void AWeapon::DrawProjectilePath()

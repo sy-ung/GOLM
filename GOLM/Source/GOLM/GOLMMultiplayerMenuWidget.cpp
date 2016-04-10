@@ -45,10 +45,14 @@ void UGOLMMultiplayerMenuWidget::AddServer(FOnlineSessionSearchResult *NewSessio
 
 }
 
-TArray<FServerListItemWidget> UGOLMMultiplayerMenuWidget::GetServers()
+void UGOLMMultiplayerMenuWidget::ClearServers()
 {
-	return Servers;
+	if (ServerScrollBox != NULL)
+	{
+		ServerScrollBox->ClearChildren();
+	}
 }
+
 
 void UGOLMMultiplayerMenuWidget::SetServerScrollBox(UScrollBox *ServerScrollBox)
 {

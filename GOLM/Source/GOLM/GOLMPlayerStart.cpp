@@ -18,5 +18,6 @@ FVector AGOLMPlayerStart::GetSpawnLocation()
 
 	FVector NewLocation = UKismetMathLibrary::RandomPointInBoundingBox(SpawnArea->Bounds.Origin, SpawnArea->Bounds.BoxExtent);
 	//return SpawnArea->GetComponentLocation();
+	
 	return NewLocation;
 }

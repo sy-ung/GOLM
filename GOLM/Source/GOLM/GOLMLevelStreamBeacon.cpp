@@ -43,11 +43,16 @@ void AGOLMLevelStreamBeacon::NotifyHit(
 	class UPrimitiveComponent * MyComp, AActor *Other, class UPrimitiveComponent *OtherComp,
 	bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult & Hit)
 {
+	if(Role == ROLE_Authority)
 	{
 		AGOLMCharacter *Player = Cast<AGOLMCharacter>(Other);
 		if (Player != NULL)
 		{
 			Player->LoadEntranceLevel(this);
 		}
+	}
+	if (Role != ROLE_Authority)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Beacon has been hit");
 	}
 }

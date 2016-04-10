@@ -59,7 +59,7 @@ private:
 
 	
 	//***Searching for sessions data
-	TSharedPtr<FOnlineSessionSearch> SessionSearch;
+	TSharedPtr<FOnlineSessionSearch> SessionSearchResults;
 
 	//***Settings for our session
 	TSharedPtr<FOnlineSessionSettings> SessionSettings;
@@ -123,7 +123,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MenuInteractions)	void ShowInGameMenu(bool bToggle);
 	UFUNCTION(BlueprintCallable, Category = MenUInteractions)	void ShowEquipmentMenu();
 
-	UFUNCTION(BlueprintCallable, Category = NetworkActions)		void HostAGame(bool bAsLan, int32 MaxPlayers);
+	UFUNCTION(BlueprintCallable, Category = NetworkActions)		void HostGame(bool bAsLan, int32 MaxPlayers, FName GameServerName);
 	UFUNCTION(BlueprintCallable, Category = NetworkActions)		void LookForGames();
 
 	UFUNCTION(BlueprintCallable, Category = InstanceActions)	void SetSelectedSession(FSessionToJoin ServerSession);

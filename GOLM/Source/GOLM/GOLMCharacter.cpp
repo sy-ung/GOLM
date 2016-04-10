@@ -144,25 +144,20 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 
 	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
 
-	DOREPLIFETIME(AGOLMCharacter, CurrentHandWeaponAimPitch);
-	DOREPLIFETIME(AGOLMCharacter, CurrentLeftShoulderWeaponAimPitch);
-	DOREPLIFETIME(AGOLMCharacter, CurrentRightShoulderWeaponAimPitch);
-
-	DOREPLIFETIME(AGOLMCharacter, RelativeForward);
-	DOREPLIFETIME(AGOLMCharacter, RelativeRight);
 	DOREPLIFETIME(AGOLMCharacter, FinalOrientation);
 	DOREPLIFETIME(AGOLMCharacter, bMoving);
 
 	DOREPLIFETIME(AGOLMCharacter, CurrentHandWeapon);
 	DOREPLIFETIME(AGOLMCharacter, CurrentLeftShoulderWeapon);
 	DOREPLIFETIME(AGOLMCharacter, CurrentRightShoulderWeapon);
+	DOREPLIFETIME(AGOLMCharacter, TargetLocation);
 	
 	DOREPLIFETIME(AGOLMCharacter, bBoosting);
 
 	DOREPLIFETIME(AGOLMCharacter, Health);
 	DOREPLIFETIME(AGOLMCharacter, bAlive);
 	DOREPLIFETIME(AGOLMCharacter, TimeUntilRespawn);
-	DOREPLIFETIME(AGOLMCharacter, bHasHandWeapon);
+
 }
 
 void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker)
@@ -173,23 +168,18 @@ void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyT
 
 //***RealViewer refers to player controller and ViewTarget refers to Character
 bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
-{	
-	const AGOLMCharacter *TargetChar = Cast<AGOLMCharacter>(ViewTarget);
-
-	if (TargetChar->CurrentLevelStream == "LockerRoom")
+{
+	if (Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation))
 	{
-		if (TargetChar == this)
-		{
-			return true;
-		}
-		else
-			return false;
+		GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, "Relevant");
+		return true;
 	}
-	else if (TargetChar->CurrentLevelStream == CurrentLevelStream)
-		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
-
-	
-	return false;
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Red, "Not Relevant");
+		return false;
+	}
+		
 
 }
 
@@ -198,38 +188,13 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (MiniMapCameraReference != NULL)
-		MiniMapCameraReference->UpdateCamera();
-	if (IsLocallyControlled())
-	{
-		//GEngine->ClearOnScreenDebugMessages();
-		//if(bAlive)
-		//{
-		//	
-		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
-		//}
-		//else
-		//{
-		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
-		//}
-
-	}
-	
+	//****Updates on client side that will be sent to server
 	if (Role != ROLE_Authority || IsLocallyControlled())
 	{
-		if(bAlive)
-		{
-			bAimPitchable = GetMovementComponent()->IsFalling();
-
-
-
-		}
-
-		if (bRotatingCamera)
-			RotateCamera();
 
 	}
 
+	//****Updates on server side that will replicate to client
 	if (Role == ROLE_Authority)
 	{
 		if (bAlive)
@@ -246,69 +211,84 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			TimeUntilRespawn = deathTimer - RespawnTimeCheck;
 			if (RespawnTimeCheck > deathTimer)
 			{
-				
 				Respawn();
-				
 			}
 		}
 	}
+
+	//****Locally Controlled Updates - Values to get from local or things to only run on local
+	if(bAlive)
+	{
+		if (IsLocallyControlled())
+		{
+			if (MiniMapCameraReference != NULL)
+				MiniMapCameraReference->UpdateCamera();
+
+
+			if (bRotatingCamera)
+				RotateCamera();
+
+			
+
+			//GEngine->ClearOnScreenDebugMessages();
+			//if(bAlive)
+			//{
+			//	
+			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
+			//}
+			//else
+			//{
+			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
+			//}
+
+			UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
+
+			MoveCamera();
+
+			MoveCheck();
+
+			if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
+			{
+				PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
+			}
+
+			if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
+			{
+				PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
+			}
+		}
+	}
+
+
+	//****NON-Network updates - Runs on client and server simultaneously
+	UpdateAim();
 
 	if (bAlive)
 	{
 
-		//if (bHasHandWeapon)
-		{
-			if (IsLocallyControlled())
-			{
-				//if(CurrentHandWeapon != NULL)
-				{
-					
-					UpdateAim(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
-					MoveCamera();
-				}
-			}
 
-		}
-
-		if (!bMovingUp && !bMovingDown && !bMovingLeft && !bMovingRight)
-		{
-			bMoving = false;
-		}
-		else
-			bMoving = true;
-
-		if (bMoving)
-		{
-			MoveCheck();
-			if (!bHasHandWeapon)
-			{
-				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
-				GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
-			}
-			else if (bHasHandWeapon)
-			{
-				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
-			}
-			
-			
-		}
-		//MoveCamera(bHasHandWeapon);
 		CalculateRelativeDirectionScale();
 		if (bBoosting)
 			Boost();
 	}
-	if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
-	{
-		PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
-	}
 
-	//if (!bRotatingCamera)
+	if (bMoving)
 	{
-		if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
+		//MoveCheck();
+		
+		if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
 		{
-			PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
+			SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
+			GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
+		}
+		else
+		{
+			GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
 		}
 	}
+
+
+
 }
 
 void AGOLMCharacter::NotifyHit
@@ -319,26 +299,42 @@ void AGOLMCharacter::NotifyHit
 
 }
 
+void AGOLMCharacter::UpdateTargetLocation(FVector NewTargetLocation)
+{
+	TargetLocation = NewTargetLocation;
+	if (Role != ROLE_Authority)
+		ServerUpdateTargetLocation(NewTargetLocation);
+}
 
+void AGOLMCharacter::ServerUpdateTargetLocation_Implementation(FVector NewTargetLocation)
+{
+	UpdateTargetLocation(NewTargetLocation);
+}
 
-void AGOLMCharacter::UpdateAim(FVector MouseHit)
+bool AGOLMCharacter::ServerUpdateTargetLocation_Validate(FVector NewTargetLocation)
+{
+	return true;
+}
+
+void AGOLMCharacter::UpdateAim()
 {
 	
-	if (!IsLocallyControlled())
-		return;
 
 	if (CurrentHandWeapon != NULL)
 	{
 
-		//FRotator aim = (MouseHit - GetMesh()->GetSocketLocation("SpineSocket")).Rotation();
-		FRotator aim = (MouseHit - CurrentHandWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
-		//FRotator aim = MouseHit.Rotation();
+		FRotator aim = (TargetLocation - CurrentHandWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
 		SetActorRotation(FRotator(0, aim.Yaw, 0));
 
 		FRotator WeaponRot = FRotator(CurrentHandWeaponAimPitch, aim.Yaw, -180);
 		CurrentHandWeapon->SetActorRotation(WeaponRot);
+		
+		float NewPitch = 0;
 
-		float NewPitch = CurrentHandWeapon->CalculateProjectilePath(MouseHit);
+		if (CurrentHandWeapon->CurrentProjectile->MovementComponent->ProjectileGravityScale == 0)
+			NewPitch = aim.Pitch;
+		else
+			NewPitch = CurrentHandWeapon->CalculateProjectilePath(TargetLocation);
 
 		if (NewPitch != 0)
 			CurrentHandWeaponAimPitch = NewPitch;
@@ -350,11 +346,6 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 		GripBoneLocation = CurrentHandWeapon->WeaponMesh->GetBoneLocation("Grip_Bone");
 		LeftPalmLocation = GetMesh()->GetSocketLocation("LeftPalmSocket");
 
-
-
-
-		if (Role != ROLE_Authority)
-			ServerUpdateHandWeaponAim(CurrentHandWeaponAimPitch, aim.Yaw);
 	}
 
 	if (CurrentLeftShoulderWeapon != NULL)
@@ -362,15 +353,17 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 		FRotator LSWorldRot;
 		FVector LSWorldPOS;
 		CurrentLeftShoulderWeapon->WeaponMesh->GetSocketWorldLocationAndRotation("MuzzleFlash", LSWorldPOS, LSWorldRot);
-		FRotator Direction = (MouseHit - LSWorldPOS).Rotation();
+		FRotator Direction = (TargetLocation - LSWorldPOS).Rotation();
 
-		float NewPitch = CurrentLeftShoulderWeapon->CalculateProjectilePath(MouseHit);
+		float NewPitch = 0;
 
-		CurrentLeftShoulderWeaponAimPitch = NewPitch;
+		if (CurrentLeftShoulderWeapon->CurrentProjectile->MovementComponent->ProjectileGravityScale == 0)
+			NewPitch = Direction.Pitch;
+		else
+			NewPitch = CurrentLeftShoulderWeapon->CalculateProjectilePath(TargetLocation);
 
 		CurrentLeftShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
-		if(Role == ROLE_Authority)
-			ServerUpdateLeftShoulderWeaponAim(NewPitch, Direction.Yaw);
+		
 	}
 
 	if (CurrentRightShoulderWeapon != NULL)
@@ -378,41 +371,22 @@ void AGOLMCharacter::UpdateAim(FVector MouseHit)
 		FRotator LSWorldRot;
 		FVector LSWorldPOS;
 		CurrentRightShoulderWeapon->WeaponMesh->GetSocketWorldLocationAndRotation("MuzzleFlash", LSWorldPOS, LSWorldRot);
-		FRotator Direction = (MouseHit - LSWorldPOS).Rotation();
+		FRotator Direction = (TargetLocation - LSWorldPOS).Rotation();
 
-		float NewPitch = CurrentRightShoulderWeapon->CalculateProjectilePath(MouseHit);
+		float NewPitch = 0;
+
+		if (CurrentRightShoulderWeapon->CurrentProjectile->MovementComponent->ProjectileGravityScale == 0)
+			NewPitch = Direction.Pitch;
+		else
+			NewPitch = CurrentRightShoulderWeapon->CalculateProjectilePath(TargetLocation);
 
 
 		if (bIsInMenu)
 			NewPitch = 70;
 
-		CurrentRightShoulderWeaponAimPitch = NewPitch;
-
-		CurrentRightShoulderWeapon->SetActorRotation(FRotator(CurrentRightShoulderWeaponAimPitch,Direction.Yaw,0));
+		CurrentRightShoulderWeapon->SetActorRotation(FRotator(NewPitch,Direction.Yaw,0));
 	}
 }
-
-
-void AGOLMCharacter::ServerUpdateHandWeaponAim_Implementation(float NewPitch, float NewYaw)
-{
-	CurrentHandWeaponAimPitch = NewPitch;
-	SetActorRotation(FRotator(0, NewYaw, 0));
-}
-bool AGOLMCharacter::ServerUpdateHandWeaponAim_Validate(float NewPitch, float NewYaw)
-{
-	return true;
-}
-void AGOLMCharacter::ServerUpdateLeftShoulderWeaponAim_Implementation(float NewPitch, float NewYaw)
-{
-	CurrentLeftShoulderWeapon->SetActorRotation(FRotator(NewPitch, NewYaw, 0));
-}
-bool AGOLMCharacter::ServerUpdateLeftShoulderWeaponAim_Validate(float NewPitch, float NewYaw)
-{
-	return true;
-}
-
-
-
 
 void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 {
@@ -441,16 +415,13 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			{
 				SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0, 90, -180));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
-			/*	SpawnedWeapon->SetActorRelativeRotation(FRotator(0, 90, 0));*/
-				
+					
 				SpawnedWeapon->CurrentSlotType = In;
-				bHasHandWeapon = true;
 				CurrentHandWeapon = SpawnedWeapon;
 			}
 			else
 			{
 				CurrentHandWeapon = NULL;
-				bHasHandWeapon = false;
 			}
 			break;
 		case EEquipSlot::LEFT_SHOULDER:
@@ -480,7 +451,7 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			if (SpawnedWeapon != NULL)
 			{
 
-				//SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0,0,0));
+			
 				SpawnedWeapon->SetActorScale3D(FVector(0.5, 0.25, 0.5));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "RightShoulderWeaponSock", EAttachLocation::SnapToTarget);
 				SpawnedWeapon->CurrentSlotType = In;
@@ -550,53 +521,80 @@ void AGOLMCharacter::ZoomMiniMapCamera(float value)
 	}
 }
 
-void AGOLMCharacter::FireHandWeapon(bool value)
+void AGOLMCharacter::FireWeapon(EEquipSlot WeaponSlot, bool StartFiring)
 {
-	if (CurrentHandWeapon != NULL)
-			CurrentHandWeapon->bStartShooting = value;
+	if(Role == ROLE_Authority)
+	{
+		switch (WeaponSlot)
+		{
+			case EEquipSlot::HAND_SLOT:
+				if(CurrentHandWeapon != NULL)
+					CurrentHandWeapon->bStartShooting = StartFiring;
+				break;
+			case EEquipSlot::LEFT_SHOULDER:
+				if(CurrentLeftShoulderWeapon != NULL)
+					CurrentLeftShoulderWeapon->bStartShooting = StartFiring;
+				break;
+			case EEquipSlot::RIGHT_SHOULDER:
+				if(CurrentRightShoulderWeapon != NULL)
+					CurrentRightShoulderWeapon->bStartShooting = StartFiring;
+				break;
+			default:break;
+		}
+	}
+	if (Role != ROLE_Authority)
+		ServerFireWeapon(WeaponSlot, StartFiring);
+}
+void AGOLMCharacter::ServerFireWeapon_Implementation(EEquipSlot WeaponSlot, bool StartFiring)
+{
+	FireWeapon(WeaponSlot, StartFiring);
+}
+bool AGOLMCharacter::ServerFireWeapon_Validate(EEquipSlot WeaponSlot, bool StartFiring)
+{
+	return true;
 }
 
-void AGOLMCharacter::FireLeftShoulderWeapon(bool value)
-{
-	if (CurrentLeftShoulderWeapon != NULL)
-		CurrentLeftShoulderWeapon->bStartShooting = value;
-}
-void AGOLMCharacter::FireRightShoulderWeapon(bool value)
-{
-	if (CurrentRightShoulderWeapon != NULL)
-		CurrentRightShoulderWeapon->bStartShooting = value;
-}
 
 void AGOLMCharacter::MoveCheck()
 {
-	if (Role != ROLE_Authority || IsLocallyControlled())
+	if (IsLocallyControlled())
 	{
+		if (!bMovingUp && !bMovingDown && !bMovingLeft && !bMovingRight)
+		{
+			bMoving = false;
+		}
+		else
+			bMoving = true;
+	
 		FVector OverallDirection = FVector::ZeroVector;
 
-		if (bMovingUp)		OverallDirection += PlayerCamera->GetForwardVector();
-		if (bMovingDown)	OverallDirection += -PlayerCamera->GetForwardVector();
-		if (bMovingRight)	OverallDirection += PlayerCamera->GetRightVector();
-		if (bMovingLeft)	OverallDirection += -PlayerCamera->GetRightVector();
+		if(bMoving)
+		{
+				if (bMovingUp)		OverallDirection += PlayerCamera->GetForwardVector();
+				if (bMovingDown)	OverallDirection += -PlayerCamera->GetForwardVector();
+				if (bMovingRight)	OverallDirection += PlayerCamera->GetRightVector();
+				if (bMovingLeft)	OverallDirection += -PlayerCamera->GetRightVector();
+		}
 			
 		OverallDirection.Z = 0;
 		OverallDirection.Normalize();
 
 		FinalOrientation = OverallDirection.Rotation();
 
-		
-
 		if (Role != ROLE_Authority)
 		{
-			ServerMove(FinalOrientation);
+			ServerMove(FinalOrientation,bMoving);
 		}
 	}
+	
 }
 
-void AGOLMCharacter::ServerMove_Implementation(FRotator direction)
+void AGOLMCharacter::ServerMove_Implementation(FRotator direction, bool bIsMoving)
 {
+	bMoving = bIsMoving;
 	FinalOrientation = direction;
 }
-bool AGOLMCharacter::ServerMove_Validate(FRotator direction){return true;}
+bool AGOLMCharacter::ServerMove_Validate(FRotator direction, bool bIsMoving){return true;}
 
 
 
@@ -638,7 +636,7 @@ bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection)
 void AGOLMCharacter::BoostCharacter(FVector LaunchVelocity)
 {
 	LaunchCharacter(LaunchVelocity.GetSafeNormal() * BoostSpeed, false, false);
-	if (!bHasHandWeapon)
+	if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
 		SetActorRotation(LaunchVelocity.GetSafeNormal().Rotation());
 
 
@@ -851,10 +849,6 @@ void AGOLMCharacter::ClientLoadEntranceLevelNameOnly_Implementation(FName Entran
 	if (Role != ROLE_Authority)
 		LoadEntranceLevel(EntranceLevelName);
 }
-bool AGOLMCharacter::ClientLoadEntranceLevelNameOnly_Validate(FName EntranceLevelName)
-{
-	return true;
-}
 
 
 void AGOLMCharacter::LoadEntranceLevel(AGOLMLevelStreamBeacon *LevelBeacon)
@@ -882,16 +876,14 @@ void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(AGOLMLevelStreamBeac
 	if(Role!= ROLE_Authority)
 		LoadEntranceLevel(LevelBeacon);
 }
-bool AGOLMCharacter::ClientLoadEntranceLevel_Validate(AGOLMLevelStreamBeacon *LevelBeacon)
-{
-	return true;
-}
 
 
 void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 {
 	if (Role == ROLE_Authority)
 	{
+		
+
 		if (EntranceLevelNameTag == "LockerRoom")
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
@@ -910,10 +902,10 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
 				{
 					//SetActorLocation(StartLocation->GetSpawnLocation());
-					CurrentLevelStream = EntranceLevelNameTag;
+					
 					
 					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
-					
+					CurrentLevelStream = EntranceLevelNameTag;
 					break;
 				}
 			}
@@ -925,8 +917,7 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 	
 	if (Role != ROLE_Authority)
 	{
-		if (Role != ROLE_Authority)
-			ServerMoveToEntranceTagOnly(EntranceLevelNameTag);
+		ServerMoveToEntranceTagOnly(EntranceLevelNameTag);
 	}
 }
 void AGOLMCharacter::ServerMoveToEntranceTagOnly_Implementation(FName EntranceLevelName)
@@ -943,6 +934,8 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 {
 	if (Role == ROLE_Authority)
 	{
+		
+
 		if (LevelBeacon->NameOfLevelToLoad == "LockerRoom")
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
@@ -962,11 +955,13 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 				{
 					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
 					//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), StartLocation->GetSpawnLocation().ToString());
+					
+					
 					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+					CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
 					break;
 				}
 			}
-			CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
 		}
 		else
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
@@ -974,8 +969,7 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 
 	if (Role != ROLE_Authority)
 	{
-		if (Role != ROLE_Authority)
-			ServerMoveToEntrance(LevelBeacon);
+		ServerMoveToEntrance(LevelBeacon);
 	}
 }
 void AGOLMCharacter::ServerMoveToEntrance_Implementation(AGOLMLevelStreamBeacon *LevelBeacon)
@@ -1064,28 +1058,27 @@ bool AGOLMCharacter::ServerRecieveDamage_Validate(float damage)
 
 void AGOLMCharacter::CalculateRelativeDirectionScale()
 {
-
-	if(IsLocallyControlled())
 	{
 		if(bMoving)
 		{
-			FVector FacingVec = GetActorForwardVector();
-			FacingVec.Z = 0;
-			FVector MovementVec = FinalOrientation.Vector();
-			MovementVec.Z = 0;
-			FVector RightFacingVec = GetActorRightVector();
-			RightFacingVec.Z = 0;
+			if(UKismetSystemLibrary::IsValid(CurrentHandWeapon))
+			{
+				FVector FacingVec = GetActorForwardVector();
+				FacingVec.Z = 0;
+				FVector MovementVec = FinalOrientation.Vector();
+				MovementVec.Z = 0;
+				FVector RightFacingVec = GetActorRightVector();
+				RightFacingVec.Z = 0;
 
-			RelativeForward = FVector::DotProduct(FacingVec, MovementVec);
-			RelativeRight = FVector::DotProduct(RightFacingVec, MovementVec);
+				RelativeForward = FVector::DotProduct(FacingVec, MovementVec);
+				RelativeRight = FVector::DotProduct(RightFacingVec, MovementVec);
+			}
 		}
 		else
 		{
 			RelativeForward = RelativeRight = 0;
 		}
 	}
-	if (Role != ROLE_Authority)
-		ServerUpdateRelativeDirectionScale(RelativeForward, RelativeRight);
 }
 
 
@@ -1167,18 +1160,37 @@ float AGOLMCharacter::TakeDamage(float DamageAmount, FDamageEvent const &DamageE
 
 void AGOLMCharacter::OnRep_OnEquippedHandWeapon()
 {
-	CurrentHandWeapon->WeaponMesh->AddLocalRotation(FRotator(0,180,-180));
-	ShowCompatibleProjectiles();
+	//if(IsLocallyControlled())
+	{ 
+		if(UKismetSystemLibrary::IsValid(CurrentHandWeapon))
+		{
+			CurrentHandWeapon->WeaponMesh->AddLocalRotation(FRotator(0,180,-180));
+			if(bIsInMenu)
+				ShowCompatibleProjectiles();
+		}
+	}
 }
 
 void AGOLMCharacter::OnRep_OnEquippedRightShoulder()
 {
-	ShowCompatibleProjectiles();
-
+	//if (IsLocallyControlled())
+	{
+		if (UKismetSystemLibrary::IsValid(CurrentRightShoulderWeapon))
+		{
+			if (bIsInMenu)
+				ShowCompatibleProjectiles();
+		}
+	}
 }
 
 void AGOLMCharacter::OnRep_OnEquippedLeftShoulderWeapon()
 {
-	ShowCompatibleProjectiles();
-
+	//if (IsLocallyControlled())
+	{
+		if (UKismetSystemLibrary::IsValid(CurrentLeftShoulderWeapon))
+		{
+			if (bIsInMenu)
+				ShowCompatibleProjectiles();
+		}
+	}
 }
