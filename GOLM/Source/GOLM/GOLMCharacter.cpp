@@ -271,22 +271,24 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		CalculateRelativeDirectionScale();
 		if (bBoosting)
 			Boost();
+
+		if (bMoving)
+		{
+			//MoveCheck();
+
+			if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
+			{
+				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
+				GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
+			}
+			else
+			{
+				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
+			}
+		}
+
 	}
 
-	if (bMoving)
-	{
-		//MoveCheck();
-		
-		if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
-		{
-			SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
-			GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
-		}
-		else
-		{
-			GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
-		}
-	}
 
 
 
@@ -834,6 +836,7 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName)
 		if (CurrentLevelStream != "None" && CurrentLevelStream != EntranceLevelName)
 			UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
 
+		CurrentLevelStream = EntranceLevelName;
 	}
 
 	if (IsLocallyControlled() || Role != ROLE_Authority)
@@ -856,11 +859,17 @@ void AGOLMCharacter::LoadEntranceLevel(AGOLMLevelStreamBeacon *LevelBeacon)
 {
 	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
-		
-		UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
-		if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
-			UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
+		if (LevelBeacon != NULL)
+		{
 
+			UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
+			if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
+				UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
+
+			CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
+		}
+		else
+			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "LevelBeacon is NULL");
 	}
 
 	if (IsLocallyControlled() || Role != ROLE_Authority)
@@ -894,10 +903,10 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
 				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
 				{
-					//SetActorLocation(StartLocation->GetSpawnLocation());
+					SetActorLocation(StartLocation->GetSpawnLocation());
 
 
-					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+					//TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					CurrentLevelStream = EntranceLevelNameTag;
 					break;
 				}

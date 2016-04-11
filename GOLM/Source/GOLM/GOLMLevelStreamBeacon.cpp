@@ -51,8 +51,4 @@ void AGOLMLevelStreamBeacon::NotifyHit(
 			Player->LoadEntranceLevel(this);
 		}
 	}
-	if (Role != ROLE_Authority)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Yellow, "Beacon has been hit");
-	}
 }

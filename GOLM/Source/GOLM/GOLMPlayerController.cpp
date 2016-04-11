@@ -160,16 +160,11 @@ void AGOLMPlayerController::MovePlayerRight(bool value)
 }
 void AGOLMPlayerController::BoostPlayer(bool value)
 {
-	if (Role == ROLE_Authority)
+	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
 		if (PlayerChar)
 			PlayerChar->Boost();
-			//PlayerChar->bBoosting = value;
-	}
-	else if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
-	{
-		ServerBoostPlayer(value);
 	}
 }
 void AGOLMPlayerController::ServerBoostPlayer_Implementation(bool value)
