@@ -103,6 +103,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MinCameraHeight;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = CameraData)			float MaxCameraMoveRadius;
 																				
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)					bool bIsAI;
 																				
 
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float Health;
@@ -139,7 +140,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector GripBoneLocation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector LeftPalmLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingUp;

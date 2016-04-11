@@ -19,6 +19,7 @@ public:
 	AGOLMGameMode();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerCharacters) TSubclassOf<AGOLMCharacter> PlayerCharacterRegular;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerCharacters) TSubclassOf<AGOLMCharacter> EnemyAI;
 
 	UFUNCTION(BlueprintCallable, Category = ServerActions)
 		void RequestRespawn(APlayerController *RequestingPlayer);
@@ -46,6 +47,12 @@ protected:
 private:
 	bool IsLevel(FString LevelName);
 	bool bAllLevelLoaded;
+	TArray<class AGOLMPlayerStart*> EnemySpawnLocations;
+
+	float EnemySpawnInterval;
+	float EnemySpawnTimer;
+	int32 NumOfEnemies;
+	int32 MaxNumOfEnemies;
 
 
 public:
@@ -53,6 +60,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	FName NameOfSession;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	bool IsLanServer;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	int32 MaximumPlayers;
+
+	UFUNCTION(BlueprintCallable, Category = SpawnEnemy)
+		void SpawnEnemy();
+
+	UFUNCTION(BlueprintCallable, Category = Init)
+		void GetEnemySpawnLocations();
 
 protected:
 	

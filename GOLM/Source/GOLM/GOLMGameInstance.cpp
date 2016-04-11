@@ -52,7 +52,7 @@ void UGOLMGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSu
 
 		FLatentActionInfo LatInfo;
 		//UGameplayStatics::LoadStreamLevel(GetWorld(), "MainGame", true, false, LatInfo);
-		UGameplayStatics::OpenLevel(GetWorld(), "MainGame", true, "listen");
+		UGameplayStatics::OpenLevel(GetWorld(), "GameLevel", true, "listen");
 		
 
 		//***NEED TO FIND A WAY TO LISTEN FOR CONNECTION

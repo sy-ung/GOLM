@@ -12,6 +12,16 @@
 
 AGOLMCharacter::AGOLMCharacter()
 {
+
+	PrimaryActorTick.bCanEverTick = true;
+
+	Health = 100.0f;
+	bAlive = true;
+	SetReplicates(true);
+
+	if (bIsAI)
+		return;
+
 	// Set size for player capsule
 	//GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
 	// Don't rotate character to camera direction
@@ -34,8 +44,6 @@ AGOLMCharacter::AGOLMCharacter()
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	PlayerCamera->AttachTo(PlayerCameraBoom, USpringArmComponent::SocketName);
 
-	GetMesh();
-	
 	EquipmentCameraFrontBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("FrontCameraBoom"));
 	EquipmentCameraFrontBoom->AttachTo(RootComponent);
 	EquipmentCameraFront = CreateDefaultSubobject<UCameraComponent>(TEXT("FrontCamera"));
@@ -52,13 +60,9 @@ AGOLMCharacter::AGOLMCharacter()
 	EquipmentCameraRightShoulder->AttachTo(EquipmentCameraRightShoulderBoom, USpringArmComponent::SocketName);
 	EquipmentCameraRightShoulderBoom->AttachTo(RootComponent);
 
-	PrimaryActorTick.bCanEverTick = true;
-	
-	Health = 100.0f;
-	bAlive = true;
 
 
-	SetReplicates(true);
+
 
 	//MovementComponent = CreateDefaultSubobject<UGOLMPawnMovementComponent>(TEXT("GOLM Movement Component"));
 	//MovementComponent->UpdatedComponent = RootComponent;
@@ -76,9 +80,9 @@ void AGOLMCharacter::Init()
 	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
 		UWorld *World = GetWorld();
-		UGameplayStatics::GetStreamingLevel(World, "LockerRoom")->bShouldBeVisible = false;
-		UGameplayStatics::GetStreamingLevel(World, "GameLevel")->bShouldBeVisible = false;
-		UGameplayStatics::GetStreamingLevel(World, "Bottomworld")->bShouldBeVisible = false;
+		//UGameplayStatics::GetStreamingLevel(World, "LockerRoom")->bShouldBeVisible = false;
+		//UGameplayStatics::GetStreamingLevel(World, "GameLevel")->bShouldBeVisible = false;
+		//UGameplayStatics::GetStreamingLevel(World, "Bottomworld")->bShouldBeVisible = false;
 	}
 
 }
@@ -96,6 +100,14 @@ bool AGOLMCharacter::ClientInit_Validate()
 void AGOLMCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	bAlive = true;
+	Health = 100;
+	deathTimer = 5.0f;
+
+
+	if (bIsAI)
+		return;
 
 	GetCharacterMovement()->MaxWalkSpeed = MovingSpeed;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -118,15 +130,11 @@ void AGOLMCharacter::BeginPlay()
 
 	RespawnTimeCheck = 0;
 
-	if (GetController() != NULL)
+	if (Cast<AGOLMPlayerController>(GetController()) != NULL)
 	{
 		Cast<AGOLMPlayerController>(GetController())->ShowInGameHud();
 	}
-	
-	DefaultNetCullDistanceSquared = NetCullDistanceSquared;
-	bAlive = true;
-	Health = 100;
-	deathTimer = 5.0f;
+
 
 
 	if(MiniMapCamera != NULL)
@@ -172,12 +180,10 @@ bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* Vi
 {
 	if (Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation))
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Green, "Relevant");
 		return true;
 	}
 	else
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 10, FColor::Red, "Not Relevant");
 		return false;
 	}
 		
@@ -188,77 +194,6 @@ bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* Vi
 void AGOLMCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	//****Updates on client side that will be sent to server
-	if (Role != ROLE_Authority || IsLocallyControlled())
-	{
-
-	}
-
-	//****Updates on server side that will replicate to client
-	if (Role == ROLE_Authority)
-	{
-		if (bAlive)
-		{
-			if (Health <= 0)
-			{
-				Death();
-			}
-			
-		}
-		else
-		{
-			RespawnTimeCheck += DeltaSeconds;
-			TimeUntilRespawn = deathTimer - RespawnTimeCheck;
-			if (RespawnTimeCheck > deathTimer)
-			{
-				Respawn();
-			}
-		}
-	}
-
-	//****Locally Controlled Updates - Values to get from local or things to only run on local
-	if(bAlive)
-	{
-		if (IsLocallyControlled())
-		{
-			if (MiniMapCameraReference != NULL)
-				MiniMapCameraReference->UpdateCamera();
-
-
-			if (bRotatingCamera)
-				RotateCamera();
-
-			
-
-			//GEngine->ClearOnScreenDebugMessages();
-			//if(bAlive)
-			//{
-			//	
-			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
-			//}
-			//else
-			//{
-			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
-			//}
-
-			UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
-
-			MoveCamera();
-
-			MoveCheck();
-
-			if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
-			{
-				PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
-			}
-
-			if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
-			{
-				PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
-			}
-		}
-	}
 
 
 	//****NON-Network updates - Runs on client and server simultaneously
@@ -291,6 +226,86 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 
 
+
+	//****Updates on client side that will be sent to server
+	if (Role != ROLE_Authority || IsLocallyControlled())
+	{
+
+	}
+
+	//****Updates on server side that will replicate to client
+	if (Role == ROLE_Authority)
+	{
+		if (bAlive)
+		{
+			if (Health <= 0)
+			{
+				Death();
+			}
+			
+		}
+		else
+		{
+			RespawnTimeCheck += DeltaSeconds;
+			TimeUntilRespawn = deathTimer - RespawnTimeCheck;
+			if (RespawnTimeCheck > deathTimer)
+			{
+				if (bIsAI)
+					Destroy();
+				else
+					Respawn();
+			}
+		}
+	}
+
+
+	if (bIsAI)
+		return;
+
+
+	//****Locally Controlled Updates - Values to get from local or things to only run on local
+	if(bAlive)
+	{
+		if (IsLocallyControlled())
+		{
+			if (MiniMapCameraReference != NULL)
+				MiniMapCameraReference->UpdateCamera();
+
+
+			if (bRotatingCamera)
+				RotateCamera();
+
+			
+
+			//GEngine->ClearOnScreenDebugMessages();
+			//if(bAlive)
+			//{
+			//	
+			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
+			//}
+			//else
+			//{
+			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
+			//}
+
+	
+			UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
+			MoveCamera();
+
+			MoveCheck();
+
+			if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
+			{
+				PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
+			}
+
+			if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
+			{
+				PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
+			}
+
+		}
+	}
 
 }
 
@@ -717,6 +732,7 @@ bool AGOLMCharacter::ServerRespawn_Validate()
 }
 void AGOLMCharacter::Death()
 {
+
 	SetPawnCollisionType(EPlayerCollisionProfile::DEATH);
 	if (Role == ROLE_Authority)
 	{
@@ -832,9 +848,9 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName)
 	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
 
-		UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
-		if (CurrentLevelStream != "None" && CurrentLevelStream != EntranceLevelName)
-			UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
+		//UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
+		//if (CurrentLevelStream != "None" && CurrentLevelStream != EntranceLevelName)
+		//	UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
 
 		CurrentLevelStream = EntranceLevelName;
 	}
@@ -862,9 +878,9 @@ void AGOLMCharacter::LoadEntranceLevel(AGOLMLevelStreamBeacon *LevelBeacon)
 		if (LevelBeacon != NULL)
 		{
 
-			UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
-			if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
-				UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
+			//UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
+			//if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
+			//	UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
 
 			CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
 		}

@@ -3,17 +3,22 @@
 #include "GOLM.h"
 #include "GOLMGameMode.h"
 #include "GOLMGameInstance.h"
+#include "GOLMPlayerStart.h"
 #include "Engine/Blueprint.h"
 
 AGOLMGameMode::AGOLMGameMode()
 {
-
+	EnemySpawnTimer = 1.0f;
+	NumOfEnemies = 0;
+	MaxNumOfEnemies = 20;
+	EnemySpawnInterval = 1.0f;
 }
 
 void AGOLMGameMode::BeginPlay()
 {
 	//StartDedicatedServer();
 	//GEngine->AddOnScreenStart
+	GetEnemySpawnLocations();
 }
 
 void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)
@@ -71,6 +76,17 @@ void AGOLMGameMode::Tick(float DeltaSeconds)
 				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::White, STUFF[i]->GetName());
 			}
 		}
+
+	if (NumOfEnemies < MaxNumOfEnemies)
+	{
+		EnemySpawnTimer -= DeltaSeconds;
+		if (EnemySpawnTimer <= 0)
+		{
+			SpawnEnemy();
+			EnemySpawnTimer = EnemySpawnInterval;
+		}
+
+	}
 }
 
 void AGOLMGameMode::GotoSpawnLocation(FName PlayerStartTag, AGOLMCharacter *RequestingPlayerCharacter)
@@ -118,3 +134,24 @@ void AGOLMGameMode::StartDedicatedServer()
 	//Cast<UGOLMGameInstance>(GetGameInstance())->HostAGame(true, 8);
 }
 
+void AGOLMGameMode::SpawnEnemy()
+{
+	if (EnemySpawnLocations.Num() != 0)
+	{
+		AGOLMPlayerStart *RandomEnemySpawn = EnemySpawnLocations[FMath::RandRange(0, EnemySpawnLocations.Num()-1)];
+		GetWorld()->SpawnActor<AGOLMCharacter>(EnemyAI.GetDefaultObject()->GetClass(), RandomEnemySpawn->GetSpawnLocation(),FRotator(0,0,0));
+	}
+}
+
+void AGOLMGameMode::GetEnemySpawnLocations()
+{
+	TArray<AActor*,FDefaultAllocator> GetSpawnLocs;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), GetSpawnLocs);
+	for (int32 i = 0; i < GetSpawnLocs.Num(); i++)
+	{
+		AGOLMPlayerStart *StartCheck = Cast<AGOLMPlayerStart>(GetSpawnLocs[i]);
+		if(StartCheck->PlayerStartTag == "EnemySpawn")
+			EnemySpawnLocations.Add(StartCheck);
+	}
+
+}
