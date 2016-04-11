@@ -22,7 +22,9 @@ AWeapon::AWeapon()
 	WeaponAudio = CreateDefaultSubobject<UAudioComponent>(TEXT("WeaponAudio"));
 	WeaponAudio->AttachTo(RootComponent);
 	
-	
+	WeaponAutoMaticEnd = CreateDefaultSubobject<UAudioComponent>(TEXT("WeaponAutomaticEnd"));
+	WeaponAutoMaticEnd->AttachTo(RootComponent);
+
 	bReplicates = true;
 	SetReplicates(true);
 }
@@ -87,9 +89,17 @@ void AWeapon::Tick(float DeltaSeconds)
 	if(!bStartShooting)
 	{
 		if (bAutomatic)
+		{
 			if (WeaponAudio->Sound != NULL)
 				if (WeaponAudio->IsPlaying())
+				{
 					WeaponAudio->Stop();
+					if (WeaponAutoMaticEnd->Sound != NULL)
+						WeaponAutoMaticEnd->Play();
+				}
+
+
+		}
 	}
 
 	
@@ -216,8 +226,10 @@ void AWeapon::PlayLaunchEffects()
 	FRotator WMFR = WeaponMesh->GetSocketRotation("MuzzleFlash");
 
 	if(CurrentProjectile->MuzzleParticle->Template != NULL)
+	{
+		//UGameplayStatics::SpawnEmitterAttached(CurrentProjectile->MuzzleParticle->Template, WeaponMesh, NAME_None, WMFL, WMFR,EAttachLocation::SnapToTarget);
 		UGameplayStatics::SpawnEmitterAtLocation(WeaponMesh, CurrentProjectile->MuzzleParticle->Template, WMFL, WMFR);
-
+	}
 	//if(CurrentProjectile->FiringSounds != NULL)
 	{
 		if (bAutomatic)

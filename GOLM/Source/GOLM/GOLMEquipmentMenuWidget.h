@@ -5,6 +5,7 @@
 #include "Blueprint/UserWidget.h"
 #include "GOLMEquipmentMenuItemWeapon.h"
 #include "GOLMEquipmentMenuItemProjectile.h"
+#include "GOLMEquipmentMenuItemSkin.h"
 #include "GOLMPlayerState.h"
 
 #include "Weapon.h"
@@ -30,19 +31,22 @@ private:
 	AGOLMPlayerController *PlayerCon;
 	UScrollBox *WeaponScrollBox;
 	UScrollBox *ProjectileScrollBox;
+	UScrollBox *SkinScrollBox;
 
 	bool bListCreated;
 
 public:
 	UFUNCTION(BlueprintCallable, Category = Init)	void SetWeaponScrollBox(UScrollBox *WeaponListScollBox);
 	UFUNCTION(BlueprintCallable, Category = Init)	void SetProjectileScrollBox(UScrollBox *ProjectileListScollBox);
+	UFUNCTION(BlueprintCallable, Category = Init)	void SetSkinScrollBox(UScrollBox *SkinListScollBox);
 
 	UFUNCTION(BlueprintCallable, Category = InMenu)	void AddToWeaponSelection(TSubclassOf<AWeapon> NewWeapon);
 
 	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupWeaponSelection();
 	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupWeaponProjectileSelection();
+	UFUNCTION(BlueprintCallable, Category = InMenu)	void SetupSkinSelection();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = WeaponItemWidget)	TSubclassOf<UUserWidget> WeaponItemWidget;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = WeaponItemWidget)	TSubclassOf<UUserWidget> ProjectileItemWidget;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ItemWidget)	TSubclassOf<UUserWidget> WeaponItemWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ItemWidget)	TSubclassOf<UUserWidget> ProjectileItemWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ItemWidget)	TSubclassOf<UUserWidget> SkinItemWidget;
 };

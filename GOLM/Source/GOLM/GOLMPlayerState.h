@@ -63,6 +63,12 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ListOfWeapons)
 		TArray<TSubclassOf<class AWeapon>> WeaponsList;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ListOfWeapons)
+		TArray<USkeletalMesh*> SkinList;
+
+	UPROPERTY(BlueprintReadWrite, Category = PlayerData)
+		FName CurrentPlayerName;
+
 private:
 
 	class AWeapon *HandWeapon;

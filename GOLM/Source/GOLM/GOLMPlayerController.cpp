@@ -6,6 +6,7 @@
 #include "GOLMMouseWidget.h"
 #include "GOLMEquipmentMenuWidget.h"
 #include "GOLMInGameHUDWidget.h"
+#include "GOLMGameInstance.h"
 #include "Engine.h"
 #include "AI/Navigation/NavigationSystem.h"
 
@@ -30,6 +31,41 @@ void AGOLMPlayerController::BeginPlay()
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "CURSOR WIDGET IS NULL");
 	//bShowMouseCursor = true;
+
+
+}
+
+void AGOLMPlayerController::SetCharacterName(FName NewName)
+{
+	if(Role == ROLE_Authority)
+		Cast<AGOLMCharacter>(GetCharacter())->CharacterName = NewName;
+	if (Role != ROLE_Authority)
+		ServerSetCharacterName(NewName);
+}
+
+void AGOLMPlayerController::ServerSetCharacterName_Implementation(FName NewName)
+{
+	SetCharacterName(NewName);
+}
+bool AGOLMPlayerController::ServerSetCharacterName_Validate(FName NewName)
+{
+	return true;
+}
+
+void AGOLMPlayerController::GetCharacterName()
+{
+	if (Role != ROLE_Authority || IsLocalController())
+	{
+		SetCharacterName(Cast<UGOLMGameInstance>(GetGameInstance())->CurrentPlayerName);
+	}
+
+	if (Role == ROLE_Authority)
+		ClientGetCharacterName();
+}
+void AGOLMPlayerController::ClientGetCharacterName_Implementation()
+{
+	if (Role != ROLE_Authority)
+		GetCharacterName();
 }
 
 void AGOLMPlayerController::Tick(float DeltaSeconds)
@@ -223,6 +259,12 @@ void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 	}
 }
 
+void AGOLMPlayerController::ChangeSkin(USkeletalMesh *NewSkin)
+{
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
+	PlayerChar->ChangeColor(NewSkin);
+}
+
 void AGOLMPlayerController::GetEquippedWeapons()
 {
 	if (Role != ROLE_Authority || IsLocalController())
@@ -338,6 +380,7 @@ void AGOLMPlayerController::ShowEquipmentMenu()
 					UI.SetWidgetToFocus(EquipmentMenuReference->GetCachedWidget());
 					bIsInEquipmentMenu = true;
 					Cast<AGOLMCharacter>(GetCharacter())->bIsInMenu = true;
+					EquipmentMenuReference->SetupSkinSelection();
 					
 				}
 				else
@@ -502,3 +545,5 @@ void AGOLMPlayerController::SetArcFire(bool value)
 		bIsArcFireOn = value;
 	}
 }
+
+

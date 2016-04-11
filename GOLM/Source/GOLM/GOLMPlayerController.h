@@ -77,7 +77,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseMovement();
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot);
-	
+	UFUNCTION(BlueprintCallable, Category = StiffICanDo)	void ChangeSkin(USkeletalMesh *NewSkin);
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void GetEquippedWeapons();
 
 	UFUNCTION(Client, Reliable)								void ClientGetEquippedWeapons();
@@ -124,6 +124,20 @@ public:
 	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
 															void ZoomMiniMap(float value);
 
+	UFUNCTION(BlueprintCallable, Category = Init)
+		void SetCharacterName(FName NewName);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetCharacterName(FName NewName);
+		void ServerSetCharacterName_Implementation(FName NewName);
+		bool ServerSetCharacterName_Validate(FName NewName);
+
+	UFUNCTION(BlueprintCallable, Category = Init)
+		void GetCharacterName();
+	UFUNCTION(Client, Reliable)
+		void ClientGetCharacterName();
+		void ClientGetCharacterName_Implementation();
+
+
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoPlayerCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoFrontCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoLeftShoulderCamera();
@@ -131,7 +145,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = FireMode)		void SetArcFire(bool value);
 
 
-															
+	UPROPERTY(BlueprintReadWrite, Category = PlayerData) FName CurrentPlayerName;
 
 
 //Non Unreal Engine 4 Application

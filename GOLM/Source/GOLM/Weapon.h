@@ -44,7 +44,7 @@ public:
 		TArray<TSubclassOf<AProjectile>> CompatibleProjectiles;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UAudioComponent *WeaponAudio;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Config)	USoundBase *WeaponAutoMaticEnd;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UAudioComponent *WeaponAutoMaticEnd;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	bool bAutomatic;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	float FiringRate;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config)	FName Name;

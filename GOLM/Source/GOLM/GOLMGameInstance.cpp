@@ -257,6 +257,7 @@ void UGOLMGameInstance::FindSessions(TSharedPtr<const FUniqueNetId>UserID, FName
 		{
 			//GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::White, "LOOKING FOR A GAME");
 			//***SessionSearch settings
+			Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->StatusTextBox->SetText(FText::FromString(""));
 			SessionSearchResults = NULL;
 			SessionSearchResults = MakeShareable(new FOnlineSessionSearch());
 			SessionSearchResults->bIsLanQuery = bAsLan;
@@ -318,7 +319,10 @@ void UGOLMGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 				
 			}
 			else
-				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "There are no games available");
+			{
+				Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->StatusTextBox->SetColorAndOpacity(FLinearColor::Red);
+				Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->StatusTextBox->SetText(FText::FromString( "No Servers found. Try Searching again."));
+			}
 		}
 	}
 

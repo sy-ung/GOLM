@@ -349,7 +349,7 @@ void AProjectile::FireCluster()
 			FVector Direction;
 
 			if(!MovementComponent->bShouldBounce)
-				Direction = SpreadRandom.VRandCone(MovementComponent->Velocity.SafeNormal(), SpreadCone, SpreadCone);
+				Direction = SpreadRandom.VRandCone(MovementComponent->Velocity.GetSafeNormal(), SpreadCone, SpreadCone);
 			if (MovementComponent->bShouldBounce)
 				Direction = SpreadRandom.VRandCone(FVector::UpVector, SpreadCone, SpreadCone);
 

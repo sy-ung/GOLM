@@ -34,7 +34,9 @@ class GOLM_API UGOLMMultiplayerMenuWidget : public UUserWidget
 	GENERATED_BODY()
 private:
 	UScrollBox *ServerScrollBox;
+	
 public:
+	UPROPERTY(BlueprintReadWrite, Category = MenuStuff) UTextBlock *StatusTextBox;
 
 	void AddServer(FOnlineSessionSearchResult *NewSession, UWorld *World);
 	void ClearServers();
@@ -46,5 +48,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = ServerScrollBoxData)
 		void SetServerScrollBox(UScrollBox *ServerScrollBox);
 
+	UFUNCTION(BlueprintCallable, Category = NameCheck)
+		bool CheckPlayerName(FText PlayerNameCheck);
 		
 };

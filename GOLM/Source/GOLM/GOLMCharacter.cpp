@@ -34,7 +34,7 @@ AGOLMCharacter::AGOLMCharacter()
 	PlayerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 	PlayerCamera->AttachTo(PlayerCameraBoom, USpringArmComponent::SocketName);
 
-
+	GetMesh();
 	
 	EquipmentCameraFrontBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("FrontCameraBoom"));
 	EquipmentCameraFrontBoom->AttachTo(RootComponent);
@@ -158,6 +158,7 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, bAlive);
 	DOREPLIFETIME(AGOLMCharacter, TimeUntilRespawn);
 
+	DOREPLIFETIME(AGOLMCharacter, CharacterName);
 }
 
 void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker)
@@ -882,17 +883,9 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 {
 	if (Role == ROLE_Authority)
 	{
-		
-
-		if (EntranceLevelNameTag == "LockerRoom")
-			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
-		else
-			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
-
-		
 		TArray<AActor*, FDefaultAllocator> SpawnLocs;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
-		
+
 		//Looking for a start location to teleport to
 		if (SpawnLocs.Num() != 0)
 		{
@@ -902,17 +895,23 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
 				{
 					//SetActorLocation(StartLocation->GetSpawnLocation());
-					
-					
+
+
 					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					CurrentLevelStream = EntranceLevelNameTag;
 					break;
 				}
 			}
-			
+
 		}
 		else
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+
+
+		if (EntranceLevelNameTag == "LockerRoom")
+			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
+		else
+			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
 	}
 	
 	if (Role != ROLE_Authority)
@@ -940,7 +939,6 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
 			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
-
 
 		TArray<AActor*, FDefaultAllocator> SpawnLocs;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
@@ -1193,4 +1191,33 @@ void AGOLMCharacter::OnRep_OnEquippedLeftShoulderWeapon()
 				ShowCompatibleProjectiles();
 		}
 	}
+}
+
+void AGOLMCharacter::ChangeColor(USkeletalMesh *NewSkin)
+{
+	GetMesh()->SetSkeletalMesh(NewSkin);
+	if (Role != ROLE_Authority)
+	{
+		
+		ServerChangeColor(NewSkin);
+	}
+	if (Role == ROLE_Authority)
+	{
+		ClientChangeColor(NewSkin);
+	}
+}
+
+void AGOLMCharacter::ServerChangeColor_Implementation(USkeletalMesh *NewSkin)
+{
+	ChangeColor(NewSkin);
+}
+
+bool AGOLMCharacter::ServerChangeColor_Validate(USkeletalMesh *NewSkin)
+{
+	return true;
+}
+void AGOLMCharacter::ClientChangeColor_Implementation(USkeletalMesh *NewSkin)
+{
+	if (Role != ROLE_Authority)
+		GetMesh()->SetSkeletalMesh(NewSkin);
 }

@@ -15,6 +15,19 @@ enum class EPlayerCollisionProfile : uint8
 
 };
 
+UENUM(BlueprintType)
+enum class ERobotColor : uint8
+{
+	BLACK			UMETA(DisplayName = "Black Skin"),
+	BLUE			UMETA(DisplayName = "Blue Skin"),
+	GOLD			UMETA(DisplayName = "Gold Skin"),
+	OLIVE			UMETA(DisplayName = "Olive Skin"),
+	PINK			UMETA(DisplayName = "Pink Skin"),
+	PURPLE			UMETA(DisplayName = "Purple Skin"),
+	RED				UMETA(DisplayName = "Red Skin"),
+	SILVER			UMETA(DisplayName = "Silver Skin"),
+	YELLOW			UMETA(DisplayName = "Yellow Skin")
+};
 
 UCLASS(Blueprintable)
 class AGOLMCharacter : public ACharacter
@@ -47,7 +60,7 @@ class AGOLMCharacter : public ACharacter
 public:
 	AGOLMCharacter();
 
-	bool bIsInMenu;
+	UPROPERTY(BlueprintReadOnly,Category = MenuCheck) bool bIsInMenu;
 
 	virtual void PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker);
 	virtual bool IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const override;
@@ -101,8 +114,6 @@ public:
 	UPROPERTY(Replicated)		bool bAlive;
 	UPROPERTY(Replicated)		float TimeUntilRespawn;
 
-
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bRotatingCamera;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bMovingCamera;
 
@@ -120,6 +131,8 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
+
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = CharacterData) FName CharacterName;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector HandSupportLocation;
@@ -333,10 +346,21 @@ public:
 	UFUNCTION()
 		void OnRep_OnEquippedHandWeapon();
 
-
-
 	UFUNCTION()
 		virtual float TakeDamage(float DamageAmount, FDamageEvent const &DamageEvent, AController *EventInstigator, AActor *DamageCauser) override;
 	
+
+	UFUNCTION(BlueprintCallable, Category = Cosmetics)
+		void ChangeColor(USkeletalMesh *NewSkin);
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerChangeColor(USkeletalMesh *NewSkin);
+		void ServerChangeColor_Implementation(USkeletalMesh *NewSkin);
+		bool ServerChangeColor_Validate(USkeletalMesh *NewSkin);
+	UFUNCTION(Client, Reliable, NetMultiCast)
+		void ClientChangeColor(USkeletalMesh *NewSkin);
+		void ClientChangeColor_Implementation(USkeletalMesh *NewSkin);
+
+		
+
 };
 

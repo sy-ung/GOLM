@@ -102,6 +102,23 @@ void UGOLMEquipmentMenuWidget::SetupWeaponProjectileSelection()
 	}
 }
 
+void UGOLMEquipmentMenuWidget::SetupSkinSelection()
+{
+	SkinScrollBox->ClearChildren();
+
+	if (PlayerCon == NULL)
+		PlayerCon = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+
+	TArray<USkeletalMesh*> Skins = Cast<AGOLMPlayerState>(PlayerCon->PlayerState)->SkinList;
+
+	for (int32 i = 0; i < Skins.Num(); i++)
+	{
+		UGOLMEquipmentMenuItemSkin *NewSkinItem = CreateWidget<UGOLMEquipmentMenuItemSkin>(PlayerCon, SkinItemWidget.GetDefaultObject()->GetClass());
+		NewSkinItem->SetSkinColor(Skins[i]);
+		SkinScrollBox->AddChild(NewSkinItem);
+	}
+}
+
 void UGOLMEquipmentMenuWidget::SetWeaponScrollBox(UScrollBox *WeaponListScollBox)
 {
 	WeaponScrollBox = WeaponListScollBox;
@@ -110,6 +127,9 @@ void UGOLMEquipmentMenuWidget::SetProjectileScrollBox(UScrollBox *ProjectileList
 {
 	ProjectileScrollBox = ProjectileListScollBox;
 }
-
+void UGOLMEquipmentMenuWidget::SetSkinScrollBox(UScrollBox *SkinListScollBox)
+{
+	SkinScrollBox = SkinListScollBox;
+}
 
 

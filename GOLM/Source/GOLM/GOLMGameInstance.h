@@ -113,6 +113,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Menus) TSubclassOf<UUserWidget> EquipmentMenuWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Menus) TSubclassOf<UUserWidget> InGameMenuWidget;
 
+	UPROPERTY(BlueprintReadOnly, Category = PlayerData) FName CurrentPlayerName;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bHasSelectedServer;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bCanSearchAgain;
 
