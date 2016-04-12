@@ -17,9 +17,11 @@ AProjectile::AProjectile()
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionComp"));
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponStaticMesh"));
 	RearParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RearParticle"));
-	DeathParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DeathParticle"));
+
 	MuzzleParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("MuzzleParticle"));
 	MovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComponent"));
+
+	DeathParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("DeathParticle"));
 
 	RootComponent = CollisionBox;
 	
@@ -35,6 +37,8 @@ AProjectile::AProjectile()
 
 	ExplosiveSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ExplosiveDamageRadius"));
 	ExplosiveSphere->AttachTo(RootComponent);
+
+	ProjectileForceComponent = CreateDefaultSubobject<URadialForceComponent>(TEXT("RadialFoce"));
 
 	SetReplicates(true);
 }
@@ -228,27 +232,43 @@ void AProjectile::OnDeath()
 		{
 			UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSounds->Sound, GetActorLocation());
 		}
-		else
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "Death sound is NULL");
 
 		if (ProjectileMesh != NULL)
 			ProjectileMesh->DestroyComponent();
 
 		if (RearParticle != NULL)
 			RearParticle->Deactivate();
+		ProjectileForceComponent->Activate();
+		ProjectileForceComponent->FireImpulse();
 	}
 
 	if (Role == ROLE_Authority)
 	{
 		if (!bIsClusterProjectile)
-			InflictDamage();
-		else
+		{
+			if (bExplosive)
+			{
+				
+				if (ExplosionBP != NULL)
+				{
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+					AExplosion *Explode = GetWorld()->SpawnActor<AExplosion>(ExplosionBP.GetDefaultObject()->GetClass(), GetActorLocation(), GetActorRotation(), SpawnParams);
+					Explode->ExplosionForce->Radius = ExplosionRadius;
+				}
+				
+				
+			}
+		}
+		if(bIsClusterProjectile)
 			FireCluster();
 
-		ClientOnDeath();
+
+
+		//ClientOnDeath();
 		DestroyMe();
 	}
-	
+
 }
 
 void AProjectile::ClientOnDeath_Implementation()
@@ -261,6 +281,7 @@ void AProjectile::InflictDamage()
 {
 	if(bExplosive)
 	{
+
 		TArray<AActor*> OverlappingActors;
 		ExplosiveSphere->GetOverlappingActors(OverlappingActors);
 		for (int32 i = 0; i < OverlappingActors.Num(); i++)
@@ -324,7 +345,7 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 			{
 				if (HitPlayer2 != NULL)
 				{
-					UGameplayStatics::ApplyDamage(Other, 30, ConInstigator, GetInstigator(), DamageType);
+					UGameplayStatics::ApplyDamage(Other, Damage, ConInstigator, GetInstigator(), DamageType);
 
 				}
 			}

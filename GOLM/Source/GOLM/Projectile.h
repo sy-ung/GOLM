@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "Explosion.h"
 #include "Projectile.generated.h"
 
 UCLASS(Blueprintable)
@@ -53,6 +54,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *MuzzleParticle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *RearParticle;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UParticleSystemComponent *DeathParticle;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		URadialForceComponent *ProjectileForceComponent;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		bool bExplosive;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		float  ExplosionRadius;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		FName Name;
@@ -68,6 +70,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLDropRadius;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ProjectileSetup)		float VTOLStartTimer;
 	
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Explosion)
+		TSubclassOf<AExplosion> ExplosionBP;
+
 	bool bBeginVTOL;
 	bool bVTOLStage1Complete;
 	bool bVTOLStage2Complete;

@@ -11,7 +11,7 @@ AGOLMGameMode::AGOLMGameMode()
 	EnemySpawnTimer = 1.0f;
 	NumOfEnemies = 0;
 	MaxNumOfEnemies = 20;
-	EnemySpawnInterval = 1.0f;
+	EnemySpawnInterval = 0.25f;
 }
 
 void AGOLMGameMode::BeginPlay()
@@ -63,19 +63,6 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 void AGOLMGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	TArray<AActor*, FDefaultAllocator> STUFF;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), APlayerStart::StaticClass(), STUFF);
-
-	if (false)
-		if (STUFF.Num() != 0)
-		{
-			//GEngine->ClearOnScreenDebugMessages();
-			//GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Green, "There is " + FString::FromInt(STUFF.Num()) + " spawn location");
-			for (int32 i = 0; i < STUFF.Num(); i++)
-			{
-				GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::White, STUFF[i]->GetName());
-			}
-		}
 
 	if (NumOfEnemies < MaxNumOfEnemies)
 	{
@@ -85,8 +72,10 @@ void AGOLMGameMode::Tick(float DeltaSeconds)
 			SpawnEnemy();
 			EnemySpawnTimer = EnemySpawnInterval;
 		}
-
 	}
+	TArray<AActor*> Enemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMCharacter::StaticClass(), Enemies);
+	NumOfEnemies = Enemies.Num() - 1;
 }
 
 void AGOLMGameMode::GotoSpawnLocation(FName PlayerStartTag, AGOLMCharacter *RequestingPlayerCharacter)

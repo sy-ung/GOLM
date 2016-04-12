@@ -3,6 +3,7 @@
 #include "Projectile.h"
 #include "GOLMPlayerState.h"
 #include "GameFramework/Actor.h"
+
 #include "Weapon.generated.h"
 
 #define TRACE_WEAPON ECC_GameTraceChannel1
@@ -42,6 +43,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = CompatibleProjectiles)
 		TArray<TSubclassOf<AProjectile>> CompatibleProjectiles;
+
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UAudioComponent *WeaponAudio;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Config)	UAudioComponent *WeaponAutoMaticEnd;
