@@ -138,6 +138,7 @@ void AProjectile::Tick(float DeltaSeconds)
 
 		if (!Alive)
 		{
+
 			OnDeath();
 		}
 		else if (bIsClusterProjectile)
@@ -170,6 +171,15 @@ void AProjectile::Tick(float DeltaSeconds)
 					
 				}
 				VTOLStartTimer -= DeltaSeconds;
+			}
+		}
+
+
+		if(!Alive)
+		{
+			if (bExplosive)
+			{
+				InflictExplosiveDamage();
 			}
 		}
 	}
@@ -248,7 +258,6 @@ void AProjectile::OnDeath()
 		{
 			if (bExplosive)
 			{
-				
 				if (ExplosionBP != NULL)
 				{
 					FActorSpawnParameters SpawnParams;
@@ -256,8 +265,6 @@ void AProjectile::OnDeath()
 					AExplosion *Explode = GetWorld()->SpawnActor<AExplosion>(ExplosionBP.GetDefaultObject()->GetClass(), GetActorLocation(), GetActorRotation(), SpawnParams);
 					Explode->ExplosionForce->Radius = ExplosionRadius;
 				}
-				
-				
 			}
 		}
 		if(bIsClusterProjectile)
@@ -277,16 +284,16 @@ void AProjectile::ClientOnDeath_Implementation()
 		OnDeath();
 }
 
-void AProjectile::InflictDamage()
+void AProjectile::InflictExplosiveDamage()
 {
 	if(bExplosive)
 	{
-
-		TArray<AActor*> OverlappingActors;
-		ExplosiveSphere->GetOverlappingActors(OverlappingActors);
-		for (int32 i = 0; i < OverlappingActors.Num(); i++)
+		TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+		AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
+		if (bExplosive)
 		{
-			//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, OverlappingActors[i]->GetName() + " is overlapped");
+			TArray<AActor*> OverlappedActors;
+			UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
 		}
 	}
 }
@@ -321,32 +328,20 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 
 	if(Role == ROLE_Authority)
 	{
-		
-
 		if (!MovementComponent->bShouldBounce)
 		{
 			Alive = false;
-		}
-		
 
-		TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-		AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
-		if (bExplosive)
-		{
-			TArray<AActor*> OverlappedActors;
-			UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, Hit.Location, ExplosionRadius, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
+			TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
+			AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
 
-		}
-		else 
-		{
-			//UGameplayStatics::ApplyPointDamage(Other, Damage, GetActorForwardVector(),Hit, ConInstigator,GetInstigator(), DamageType);
 			auto *HitPlayer2 = Cast<AGOLMCharacter>(Other);
 			if (HitPlayer2 != GetInstigator())
 			{
 				if (HitPlayer2 != NULL)
 				{
-					UGameplayStatics::ApplyDamage(Other, Damage, ConInstigator, GetInstigator(), DamageType);
-
+					if (!bExplosive)
+						UGameplayStatics::ApplyDamage(Other, Damage, ConInstigator, GetInstigator(), DamageType);
 				}
 			}
 		}

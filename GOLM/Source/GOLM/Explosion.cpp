@@ -21,6 +21,7 @@ AExplosion::AExplosion()
 
 	ParticleFinishedDelegate.BindUFunction(this,FName("DestroyMe"));
 	ExplosionEmitter->OnSystemFinished.Add(ParticleFinishedDelegate);
+	bAppliedForce = false;
 }
 
 // Called when the game starts or when spawned
@@ -28,18 +29,25 @@ void AExplosion::BeginPlay()
 {
 	Super::BeginPlay();
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEmitter->Template, GetActorLocation())->SetRelativeScale3D(GetActorScale3D());
-	
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound->Sound, GetActorLocation());
-	ExplosionForce->FireImpulse();
+	
 }
 
 // Called every frame
 void AExplosion::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
+	ApplyImpulseForce();
+	UKismetSystemLibrary::Delay(GetWorld(), 0.032f, FLatentActionInfo());
+	ExplosionForce->DestroyComponent();
 }
 
 void AExplosion::DestroyMe()
 {
 	Destroy();
+}
+
+void AExplosion::ApplyImpulseForce()
+{
+	ExplosionForce->FireImpulse();
 }

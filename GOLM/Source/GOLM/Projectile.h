@@ -107,7 +107,7 @@ public:
 		void ClientOnDeath_Implementation();
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
-		void InflictDamage();
+		void InflictExplosiveDamage();
 
 	void ToggleNoPawnCollision();
 	void SetHomingPosition(FVector Location);

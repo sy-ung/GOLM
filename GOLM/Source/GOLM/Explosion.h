@@ -13,6 +13,8 @@ class GOLM_API AExplosion : public AActor
 private:
 	FScriptDelegate ParticleFinishedDelegate;
 
+	bool bAppliedForce;
+
 	UFUNCTION()
 	void DestroyMe();
 
@@ -38,6 +40,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		URadialForceComponent *ExplosionForce;
 	
+	void ApplyImpulseForce();
 	
 	
 };
