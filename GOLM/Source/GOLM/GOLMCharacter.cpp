@@ -214,11 +214,14 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
 			{
 				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
-				GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
+				
+				if(!bIsAI)
+					GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
 			}
 			else
 			{
-				GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
+				if (!bIsAI)
+					GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
 			}
 		}
 
@@ -411,16 +414,23 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 	if(Role == ROLE_Authority)
 	{
 
-		
-	
 		FActorSpawnParameters spawnParams;
 		spawnParams.Owner = this;
 		AWeapon *SpawnedWeapon = NULL;
 		//SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon, spawnParams);
-		if (NewWeapon != NULL)
+
+		if (bIsAI)
+		{
+			if (NewWeapon != NULL)
+				SpawnedWeapon = NewWeapon;
+			else
+				SpawnedWeapon = NULL;
+		}
+		else if (NewWeapon != NULL)
 		{
 			SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
 		}
+
 		switch (In)
 		{
 		case EEquipSlot::HAND_SLOT:

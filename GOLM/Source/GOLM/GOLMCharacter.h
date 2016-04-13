@@ -128,7 +128,7 @@ public:
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedHandWeapon)				AWeapon *CurrentHandWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedLeftShoulderWeapon)		AWeapon *CurrentLeftShoulderWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedRightShoulder)			AWeapon *CurrentRightShoulderWeapon;
-	UPROPERTY(Replicated)	FVector TargetLocation;
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "CharacterData")	FVector TargetLocation;
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
@@ -141,7 +141,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector LeftPalmLocation;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMoving;
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "CharacterData")	bool bMoving;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingUp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingDown;

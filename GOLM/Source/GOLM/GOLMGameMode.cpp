@@ -10,7 +10,7 @@ AGOLMGameMode::AGOLMGameMode()
 {
 	EnemySpawnTimer = 1.0f;
 	NumOfEnemies = 0;
-	MaxNumOfEnemies = 20;
+	MaxNumOfEnemies = 1;
 	EnemySpawnInterval = 0.25f;
 }
 
