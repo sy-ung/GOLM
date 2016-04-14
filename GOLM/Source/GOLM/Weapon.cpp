@@ -75,15 +75,20 @@ void AWeapon::Tick(float DeltaSeconds)
 
 	}
 
-	if (bStartShooting)
+	if (Cast<AGOLMCharacter>(GetOwner())->bAlive)
 	{
-		if (bAbleToShoot)
+		if (bStartShooting)
 		{
-			FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
-			FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
-			FireWeapon(WeaponMuzzleLocation, WeaponMuzzleRotation);
+			if (bAbleToShoot)
+			{
+				FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
+				FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
+				FireWeapon(WeaponMuzzleLocation, WeaponMuzzleRotation);
+			}
 		}
 	}
+	else
+		bStartShooting = false;
 
 
 	if(!bStartShooting)

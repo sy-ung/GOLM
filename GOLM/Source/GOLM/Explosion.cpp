@@ -37,9 +37,12 @@ void AExplosion::BeginPlay()
 void AExplosion::Tick( float DeltaTime )
 {
 	Super::Tick( DeltaTime );
-	ApplyImpulseForce();
+	if(UKismetSystemLibrary::IsValid(ExplosionForce))
+		ApplyImpulseForce();
+
 	UKismetSystemLibrary::Delay(GetWorld(), 0.032f, FLatentActionInfo());
-	ExplosionForce->DestroyComponent();
+	if (UKismetSystemLibrary::IsValid(ExplosionForce))
+		ExplosionForce->DestroyComponent();
 }
 
 void AExplosion::DestroyMe()

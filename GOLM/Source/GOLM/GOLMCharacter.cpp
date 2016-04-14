@@ -244,6 +244,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			if (Health <= 0)
 			{
 				Death();
+				bMoving = false;
 			}
 			
 		}
@@ -266,7 +267,20 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		return;
 
 
+
+
 	//****Locally Controlled Updates - Values to get from local or things to only run on local
+	GEngine->ClearOnScreenDebugMessages();
+	if (bAlive)
+	{
+
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health));
+	}
+	else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
+	}
+
 	if(bAlive)
 	{
 		if (IsLocallyControlled())
@@ -280,16 +294,9 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 			
 
-			//GEngine->ClearOnScreenDebugMessages();
-			//if(bAlive)
-			//{
-			//	
-			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health) );
-			//}
-			//else
-			//{
-			//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
-			//}
+
+
+
 
 	
 			UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
@@ -629,6 +636,7 @@ bool AGOLMCharacter::ServerMove_Validate(FRotator direction, bool bIsMoving){ret
 void AGOLMCharacter::Boost()
 {
 	//if (Role != ROLE_Authority || IsLocallyControlled())
+	if(bAlive)
 	{
 		FVector direction = FVector::ZeroVector;
 

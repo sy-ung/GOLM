@@ -112,7 +112,7 @@ public:
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)		bool bBoosting;
-	UPROPERTY(Replicated)		bool bAlive;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)		bool bAlive;
 	UPROPERTY(Replicated)		float TimeUntilRespawn;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = MyActions)		bool bRotatingCamera;
