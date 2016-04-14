@@ -40,6 +40,13 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		URadialForceComponent *ExplosionForce;
 	
+
+
+	void PlayEffects();
+	UFUNCTION(Client, Unreliable, NetMultiCast)
+	void ClientPlayEffects();
+	void ClientPlayEffects_Implementation();
+
 	void ApplyImpulseForce();
 	
 	

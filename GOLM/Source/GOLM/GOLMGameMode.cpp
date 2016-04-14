@@ -144,3 +144,17 @@ void AGOLMGameMode::GetEnemySpawnLocations()
 	}
 
 }
+
+void AGOLMGameMode::KillAllEnemies()
+{
+	TArray<AActor*> Enemies;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMCharacter::StaticClass(), Enemies);
+	for (int32 i = 0; i < Enemies.Num(); i++)
+	{
+		AGOLMCharacter *RobotCheck = Cast<AGOLMCharacter>(Enemies[i]);
+		if (RobotCheck->bIsAI)
+		{
+			RobotCheck->Destroy();
+		}
+	}
+}

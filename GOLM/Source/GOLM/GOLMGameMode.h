@@ -67,6 +67,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Init)
 		void GetEnemySpawnLocations();
 
+	void KillAllEnemies();
+
 protected:
 	
 	

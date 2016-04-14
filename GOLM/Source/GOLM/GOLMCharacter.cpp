@@ -707,11 +707,16 @@ void AGOLMCharacter::Respawn()
 	{
 		if (!bAlive)
 		{
+
 			bAlive = true;
 			SetRagDoll(false);
 		}
 		RespawnTimeCheck = 0;
 		Health = 100;
+
+		if (!bIsAI)
+			Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->KillAllEnemies();
+
 		//ChangePlayerCollisionProfile(NoPawnCollisionProfile);
 		LoadEntranceLevel("LockerRoom");
 		GetEquippedWeapons();
@@ -1060,7 +1065,7 @@ void AGOLMCharacter::SetRagDoll(bool value)
 				
 				GetMesh()->SetCollisionProfileName("CharacterMesh");
 				GetMesh()->AttachTo(GetCapsuleComponent(), NAME_None, EAttachLocation::SnapToTarget, true);
-				GetMesh()->AddLocalOffset(FVector(0, 0, 0));
+				//GetMesh()->AddLocalOffset(FVector(0, 0, 0));
 				GetMesh()->AddLocalRotation(FRotator(0, -90, 0));
 			}
 		}
