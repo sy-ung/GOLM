@@ -15,7 +15,7 @@ AGOLMCharacter::AGOLMCharacter()
 
 	PrimaryActorTick.bCanEverTick = true;
 
-	Health = 100.0f;
+	Health = 1000.0f;
 	bAlive = true;
 	SetReplicates(true);
 
@@ -1185,7 +1185,12 @@ float AGOLMCharacter::TakeDamage(float DamageAmount, FDamageEvent const &DamageE
 	{
 
 		UDamageType *DamageType = Cast<UDamageType>(DamageEvent.DamageTypeClass->GetDefaultObject());
-		Health -= Damage;
+		if(!bGodMode)
+		{
+			Health -= Damage;
+			if (Health <= 0)
+				SetRagDoll(true);
+		}
 
 	}
 	return Damage;

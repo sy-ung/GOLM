@@ -135,7 +135,7 @@ public:
 
 	UPROPERTY(Replicated, BlueprintReadOnly, Category = CharacterData) FName CharacterName;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterData")					bool bGodMode;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector HandSupportLocation;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector GripBoneLocation;
 
