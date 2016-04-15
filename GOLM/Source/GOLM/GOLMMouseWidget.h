@@ -11,6 +11,7 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 
+#include "GOLMPlayerController.h"
 #include "GOLMMouseWidget.generated.h"
 
 /**
@@ -27,10 +28,14 @@ private:
 	
 
 public:
-	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *Crosshair;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *MenuCursor;
 	
 	UFUNCTION(BlueprintCallable,Category = Init)
 	void SetMouseReference(UImage *MouseReference);
+
+	UFUNCTION(BlueprintCallable, Category = Actions)
+		void ChangeMouseType(EPlayerCursorType NewCursor);
 
 	UFUNCTION(BlueprintCallable,Category = MouseStuff)
 	UImage *GetMouseReference();

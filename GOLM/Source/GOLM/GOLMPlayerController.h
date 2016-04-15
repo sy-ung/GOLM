@@ -30,8 +30,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> InGameHUD;
 
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *Crosshair;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	UTexture2D *MenuCursor;
+
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInEquipmentMenu;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Menu)	bool bIsInSettingsMenu;

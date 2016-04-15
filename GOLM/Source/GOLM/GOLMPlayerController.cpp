@@ -300,22 +300,10 @@ void AGOLMPlayerController::KillCharacter()
 
 void AGOLMPlayerController::ChangeCursor(EPlayerCursorType NewCursor)
 {
-	UImage *MouseImage = Cast<UGOLMMouseWidget>(CursorWidgetReference)->GetMouseReference();
-	if (MouseImage != NULL)
-	{
-		switch (NewCursor)
-		{
-		case EPlayerCursorType::CROSSHAIR:
-			MouseImage->SetBrushFromTexture(Crosshair);
-			break;
-		case EPlayerCursorType::MENU:
-			MouseImage->SetBrushFromTexture(MenuCursor);
-		default:break;
-		}
+	if (CursorWidgetReference == NULL)
+		return;
 
-	}
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "MOUSE IS NULL");
+	Cast<UGOLMMouseWidget>(CursorWidgetReference)->ChangeMouseType(NewCursor);
 	CurrentCursorType = NewCursor;
 }
 

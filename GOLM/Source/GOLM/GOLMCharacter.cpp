@@ -457,6 +457,8 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			else
 			{
 				CurrentHandWeapon = NULL;
+				if(!bIsAI)
+					Cast<AGOLMPlayerController>(GetController())->ChangeCursor(EPlayerCursorType::MENU);
 			}
 			break;
 		case EEquipSlot::LEFT_SHOULDER:

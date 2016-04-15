@@ -97,7 +97,7 @@ public:
 
 		void ToggleProjectileCollision(bool CollisionPossible);
 
-		
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config) class UImage *WeaponImage;
 
 protected:
 

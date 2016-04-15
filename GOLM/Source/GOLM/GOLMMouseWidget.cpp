@@ -1,7 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "GOLM.h"
-#include "GOLMPlayerController.h"
 #include "GOLMMouseWidget.h"
 
 
@@ -51,4 +50,20 @@ void UGOLMMouseWidget::SetMouseReference(UImage *MouseReference)
 UImage *UGOLMMouseWidget::GetMouseReference()
 {
 	return MouseCursor;
+}
+
+void UGOLMMouseWidget::ChangeMouseType(EPlayerCursorType NewCursor)
+{
+	if (MouseCursor == NULL)
+		return;
+
+	switch (NewCursor)
+	{
+	case EPlayerCursorType::CROSSHAIR:
+		MouseCursor->SetBrushFromTexture(Crosshair);
+		break;
+	case EPlayerCursorType::MENU:
+		MouseCursor->SetBrushFromTexture(MenuCursor);
+	default:break;
+	}
 }
