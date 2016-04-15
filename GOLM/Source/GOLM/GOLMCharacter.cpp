@@ -269,17 +269,17 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 
 
-	//****Locally Controlled Updates - Values to get from local or things to only run on local
-	GEngine->ClearOnScreenDebugMessages();
-	if (bAlive)
-	{
+	////****Locally Controlled Updates - Values to get from local or things to only run on local
+	//GEngine->ClearOnScreenDebugMessages();
+	//if (bAlive)
+	//{
 
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health));
-	}
-	else
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
-	}
+	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Cyan, "Health: " + FString::SanitizeFloat(Health));
+	//}
+	//else
+	//{
+	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
+	//}
 
 	if(bAlive)
 	{
@@ -796,7 +796,10 @@ void AGOLMCharacter::MoveCamera()
 
 
 	if (CurrentHandWeapon == NULL && CurrentLeftShoulderWeapon == NULL && CurrentRightShoulderWeapon == NULL)
+	{
+		NewCameraOffset = FVector::ZeroVector;
 		return;
+	}
 
 	AGOLMPlayerController *PlayerCon = Cast<AGOLMPlayerController>(GetController());
 	//FVector CameraCheck = PlayerCameraBoom->TargetOffset + FVector(DeltaMouse.X * CameraMovementSensitivity, DeltaMouse.Y * CameraMovementSensitivity, 0);

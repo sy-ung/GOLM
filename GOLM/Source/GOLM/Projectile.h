@@ -102,17 +102,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void OnDeath();
 
-	UFUNCTION(Client, Reliable, NetMulticast)
-		void ClientOnDeath();
-		void ClientOnDeath_Implementation();
-
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void InflictExplosiveDamage();
 
 	void ToggleNoPawnCollision();
 	void SetHomingPosition(FVector Location);
 
-
+	UFUNCTION()
+		virtual void Destroyed() override;
 
 private:
 
@@ -120,13 +117,6 @@ private:
 	bool Alive;
 
 	FVector Direction;
-
-	void DestroyMe();
-	UFUNCTION(Server,Reliable,WithValidation)
-	void ServerDestroyMe();
-	void ServerDestroyMe_Implementation();
-	bool ServerDestroyMe_Validate();
-
 	void VTOLMovement(float DeltaSeconds);
 
 };

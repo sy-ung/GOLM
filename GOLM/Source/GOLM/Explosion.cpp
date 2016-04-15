@@ -36,16 +36,7 @@ void AExplosion::PlayEffects()
 {
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionEmitter->Template, GetActorLocation())->SetRelativeScale3D(GetActorScale3D());
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound->Sound, GetActorLocation());
-	if (Role == ROLE_Authority)
-		ClientPlayEffects();
 }
-
-void AExplosion::ClientPlayEffects_Implementation()
-{
-	if(Role!= ROLE_Authority)
-		PlayEffects();
-}
-
 
 // Called every frame
 void AExplosion::Tick( float DeltaTime )

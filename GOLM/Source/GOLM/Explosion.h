@@ -43,9 +43,6 @@ public:
 
 
 	void PlayEffects();
-	UFUNCTION(Client, Unreliable, NetMultiCast)
-	void ClientPlayEffects();
-	void ClientPlayEffects_Implementation();
 
 	void ApplyImpulseForce();
 	

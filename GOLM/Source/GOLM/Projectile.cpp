@@ -78,24 +78,24 @@ void AProjectile::BeginPlay()
 bool AProjectile::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
 	
-
-	const AGOLMCharacter *TargetCharacter = Cast<AGOLMCharacter>(ViewTarget);
-
-	if (TargetCharacter->CurrentLevelStream == "LockerRoom")
-	{
-		if (TargetCharacter == Cast<AGOLMCharacter>(GetInstigator()))
-			return true;
-		else
-		{
-
-			return false;
-		}
-			
-	}
-	else if (TargetCharacter->CurrentLevelStream == Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream)
-		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
 	
-	return false;
+	//const AGOLMCharacter *TargetCharacter = Cast<AGOLMCharacter>(ViewTarget);
+
+	//if (TargetCharacter->CurrentLevelStream == "LockerRoom")
+	//{
+	//	if (TargetCharacter == Cast<AGOLMCharacter>(GetInstigator()))
+	//		return true;
+	//	else
+	//	{
+
+	//		return false;
+	//	}
+	//		
+	//}
+	//else if (TargetCharacter->CurrentLevelStream == Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream)
+		return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
+	//
+	//return false;
 
 }
 
@@ -195,7 +195,6 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 {
 	if(!bVTOLStage1Complete)
 	{
-		
 		if ((GetActorLocation() - VTOLStartLocation).Size() < VTOLHeight)
 		{
 			
@@ -230,59 +229,18 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 
 void AProjectile::OnDeath()
 {
-
-
-	if(!IsRunningDedicatedServer())
-	{
-
-		if (DeathParticle != NULL && !bIsClusterProjectile)
-			UGameplayStatics::SpawnEmitterAtLocation(CollisionBox, DeathParticle->Template, this->GetActorLocation(), this->GetActorRotation());
-
-		if (DeathSounds->Sound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSounds->Sound, GetActorLocation());
-		}
-
-		if (ProjectileMesh != NULL)
-			ProjectileMesh->DestroyComponent();
-
-		if (RearParticle != NULL)
-			RearParticle->Deactivate();
-		ProjectileForceComponent->Activate();
-		ProjectileForceComponent->FireImpulse();
-	}
-
 	if (Role == ROLE_Authority)
 	{
-		if (!bIsClusterProjectile)
-		{
-			if (bExplosive)
-			{
-				if (ExplosionBP != NULL)
-				{
-					FActorSpawnParameters SpawnParams;
-					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-					AExplosion *Explode = GetWorld()->SpawnActor<AExplosion>(ExplosionBP.GetDefaultObject()->GetClass(), GetActorLocation(), GetActorRotation(), SpawnParams);
-					Explode->ExplosionForce->Radius = ExplosionRadius;
-				}
-			}
-		}
+
 		if(bIsClusterProjectile)
 			FireCluster();
 
-
-
 		//ClientOnDeath();
-		DestroyMe();
+		Destroy();
 	}
 
 }
 
-void AProjectile::ClientOnDeath_Implementation()
-{
-	if(Role != ROLE_Authority)
-		OnDeath();
-}
 
 void AProjectile::InflictExplosiveDamage()
 {
@@ -298,24 +256,12 @@ void AProjectile::InflictExplosiveDamage()
 	}
 }
 
-void AProjectile::DestroyMe()
-{
-	Destroy();
-}
 
-void AProjectile::ServerDestroyMe_Implementation()
-{
-	DestroyMe();
-}
+
 
 void AProjectile::SetHomingPosition(FVector Location)
 {
 	
-}
-
-bool AProjectile::ServerDestroyMe_Validate()
-{
-	return true;
 }
 
 void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, class UPrimitiveComponent * OtherComp, bool bSelfMoved,
@@ -379,4 +325,48 @@ void AProjectile::FireCluster()
 		}
 		Alive = false;
 	}
+}
+
+//***Strictly Cosmetics
+void  AProjectile::Destroyed()
+{
+	if (!IsRunningDedicatedServer())
+	{
+
+		if (!bIsClusterProjectile)
+		{
+			if (bExplosive)
+			{
+				if (ExplosionBP != NULL)
+				{
+
+					FActorSpawnParameters SpawnParams;
+					SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
+					AExplosion *Explode = GetWorld()->SpawnActor<AExplosion>(ExplosionBP.GetDefaultObject()->GetClass(), GetActorLocation(), GetActorRotation(), SpawnParams);
+					Explode->ExplosionForce->Radius = ExplosionRadius;
+				}
+			}
+		}
+
+
+		if (DeathParticle != NULL && !bIsClusterProjectile)
+			UGameplayStatics::SpawnEmitterAtLocation(CollisionBox, DeathParticle->Template, this->GetActorLocation(), this->GetActorRotation());
+
+		if (DeathSounds->Sound != NULL)
+		{
+			UGameplayStatics::PlaySoundAtLocation(GetWorld(), DeathSounds->Sound, GetActorLocation());
+		}
+
+		if (ProjectileMesh != NULL)
+			ProjectileMesh->DestroyComponent();
+
+		if (RearParticle != NULL)
+			RearParticle->Deactivate();
+		ProjectileForceComponent->Activate();
+		ProjectileForceComponent->FireImpulse();
+	}
+
+
+
+	Super::Destroyed();
 }
