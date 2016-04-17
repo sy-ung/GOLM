@@ -39,8 +39,11 @@ void AWeapon::BeginPlay()
 	{
 		bAbleToShoot = true;
 		CurrentProjectile = CompatibleProjectiles[0].GetDefaultObject();
+
 	}
-		
+	
+
+
 	//UGameplayStatics::SpawnEmitterAttached(WeaponProjectileTraceImpact->Template, WeaponMesh, "MuzzleFlash");
 }
 
@@ -63,16 +66,72 @@ void AWeapon::Tick(float DeltaSeconds)
 
 	if(Role == ROLE_Authority)
 	{
-		if (!bAbleToShoot)
+		if (TotalAmmoCount <= 0)
 		{
-			if (TimeBeforeNextShot <= 0)
-			{
-				bAbleToShoot = true;
-			}
-			else
-				TimeBeforeNextShot -= DeltaSeconds;
+			TotalAmmoCount = 0;
+			if (bReloading)
+				bReloading = false;
 		}
 
+		if ((TotalAmmoCount + CurrentAmmoCount) <= 0)
+		{
+			bStartShooting = false;
+			bAbleToShoot = false;
+		}
+		else
+		{
+			if (CurrentAmmoCount > 0)
+			{
+				if (!bAbleToShoot)
+				{
+					if (TimeBeforeNextShot <= 0)
+					{
+						bAbleToShoot = true;
+					}
+					else
+						TimeBeforeNextShot -= DeltaSeconds;
+				}
+			}
+			else
+			{
+				bStartShooting = false;
+				bReloading = true;
+			}
+
+			if(TotalAmmoCount>0)
+			{
+				if (bReloading)
+				{
+					bStartShooting = false;
+					bAbleToShoot = false;
+
+					if (ReloadTimer >= ReloadTimeFinish)
+					{
+						bReloading = false;
+						ReloadTimer = 0;
+						int32 DeltaAmmo = MagazineSize - CurrentAmmoCount;
+
+						if (DeltaAmmo <= TotalAmmoCount)
+						{
+							TotalAmmoCount -= DeltaAmmo;
+							CurrentAmmoCount += DeltaAmmo;
+						}
+						else
+						{
+							CurrentAmmoCount += TotalAmmoCount;
+							TotalAmmoCount = 0;
+						}
+
+						TimeBeforeNextShot = 0;
+						bAbleToShoot = true;
+					}
+					else
+					{
+						ReloadTimer += DeltaSeconds;
+					}
+				}
+			}
+		}
 	}
 
 	if(GetOwner() != NULL)
@@ -83,9 +142,14 @@ void AWeapon::Tick(float DeltaSeconds)
 			{
 				if (bAbleToShoot)
 				{
-					FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
-					FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
-					FireWeapon(WeaponMuzzleLocation, WeaponMuzzleRotation);
+					if (CurrentAmmoCount > 0)
+					{
+						FRotator WeaponMuzzleRotation = WeaponMesh->GetSocketRotation("MuzzleFlash");
+						FVector WeaponMuzzleLocation = WeaponMesh->GetSocketLocation("MuzzleFlash");
+						FireWeapon(WeaponMuzzleLocation, WeaponMuzzleRotation);
+					}
+					else
+						bStartShooting = false;
 				}
 			}
 		}
@@ -110,6 +174,7 @@ void AWeapon::Tick(float DeltaSeconds)
 
 		}
 	}
+	
 
 	
 	
@@ -121,6 +186,11 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeP
 	DOREPLIFETIME(AWeapon, CurrentProjectile);
 	DOREPLIFETIME(AWeapon, bAbleToShoot);
 	DOREPLIFETIME(AWeapon, bStartShooting);
+	DOREPLIFETIME(AWeapon, CurrentAmmoCount);
+	DOREPLIFETIME(AWeapon, TotalAmmoCount);
+
+	DOREPLIFETIME(AWeapon, bReloading);
+	DOREPLIFETIME(AWeapon, ReloadTimer);
 }
 
 
@@ -132,8 +202,6 @@ void AWeapon::FireWeapon(FVector StartLocation, FRotator StartRotation)
 	{
 		bStartShooting = false;
 	}
-
-	
 	bAbleToShoot = false;
 
 	if(Role != ROLE_Authority)
@@ -175,19 +243,22 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 			FActorSpawnParameters spawnParams;
 			spawnParams.Instigator = WeaponOwner;
 
+
 			if (bIsSpread)
 			{
 				LaunchSpreadProjectile(MuzzleLocation, MuzzleRotation);
 			}
 			else
 			{
-				AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(),MuzzleLocation,MuzzleRotation,spawnParams);
-				
+				AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, MuzzleRotation, spawnParams);
+
 				projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;
 				projectile->SetActorScale3D(this->GetActorScale3D());
 				projectile->TargetLocation = WeaponOwner->TargetLocation;
 
 			}
+			CurrentAmmoCount--;
+			
 		}
 	}
 
@@ -355,4 +426,19 @@ float AWeapon::CalculateProjectilePath(FVector TargetPoint)
 void AWeapon::DrawProjectilePath()
 {
 	
+}
+
+void AWeapon::Reload()
+{
+	bReloading = true;
+	if (Role != ROLE_Authority)
+		ServerReload();
+}
+void AWeapon::ServerReload_Implementation()
+{
+	Reload();
+}
+bool AWeapon::ServerReload_Validate()
+{
+	return true;
 }

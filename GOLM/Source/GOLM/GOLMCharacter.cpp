@@ -167,6 +167,9 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, TimeUntilRespawn);
 
 	DOREPLIFETIME(AGOLMCharacter, CharacterName);
+
+	DOREPLIFETIME(AGOLMCharacter, ReturnHomeTimer);
+	DOREPLIFETIME(AGOLMCharacter, bCanGoHome);
 }
 
 void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker)
@@ -293,8 +296,18 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 				RotateCamera();
 
 			
-
-
+			if(!bCanGoHome)
+			{
+				if (bStartHomeTimer)
+				{
+					ReturnHomeTimer += DeltaSeconds;
+					if (ReturnHomeTimer >= ReturnHomeCoolDown)
+					{
+						bCanGoHome = true;
+					}
+				}
+			}
+				
 
 
 
@@ -420,7 +433,6 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 {
 	if(Role == ROLE_Authority)
 	{
-
 		FActorSpawnParameters spawnParams;
 		spawnParams.Owner = this;
 		AWeapon *SpawnedWeapon = NULL;
@@ -433,70 +445,94 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 			else
 				SpawnedWeapon = NULL;
 		}
-		else if (NewWeapon != NULL)
-		{
-			SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
-		}
+		//else if (NewWeapon != NULL)
+		//{
+		//	SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
+		//}
 
 		switch (In)
 		{
 		case EEquipSlot::HAND_SLOT:
-			if (CurrentHandWeapon != NULL)
-			{
-				CurrentHandWeapon->Destroy();
-			}
-
+			//Mainly for AI
 			if (SpawnedWeapon != NULL)
 			{
+				CurrentHandWeapon = SpawnedWeapon;
+				SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0, 90, -180));
+				CurrentHandWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
+			}
+			else if(NewWeapon != NULL)
+			{
+				if(CurrentHandWeapon !=NULL)
+					CurrentHandWeapon->Destroy();
+
+				SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
 				SpawnedWeapon->WeaponMesh->SetWorldRotation(FRotator(0, 90, -180));
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "HandWeaponSock", EAttachLocation::SnapToTarget);
 					
 				SpawnedWeapon->CurrentSlotType = In;
 				CurrentHandWeapon = SpawnedWeapon;
+				if (NewWeapon->CurrentProjectile != NULL)
+					CurrentHandWeapon->CurrentProjectile = NewWeapon->CurrentProjectile;
 			}
 			else
 			{
+				if(CurrentHandWeapon!=NULL)
+					CurrentHandWeapon->Destroy();
 				CurrentHandWeapon = NULL;
-				if(!bIsAI)
-					Cast<AGOLMPlayerController>(GetController())->ChangeCursor(EPlayerCursorType::MENU);
 			}
 			break;
 		case EEquipSlot::LEFT_SHOULDER:
-			if (CurrentLeftShoulderWeapon != NULL)
-			{
-				CurrentLeftShoulderWeapon->Destroy();
-			}
-
+			//Mainly for AI
 			if (SpawnedWeapon != NULL)
 			{
-
-				SpawnedWeapon->SetActorScale3D(FVector(0.75, 0.45, 0.75));
-				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "LeftShoulderWeaponSock", EAttachLocation::SnapToTarget);
-				SpawnedWeapon->CurrentSlotType = In;
 				CurrentLeftShoulderWeapon = SpawnedWeapon;
+				CurrentLeftShoulderWeapon->AttachRootComponentTo(GetMesh(), "LeftShoulderWeaponSock", EAttachLocation::SnapToTarget);
+			}
+			else if (NewWeapon != NULL)
+			{
+				if (CurrentLeftShoulderWeapon != NULL)
+					CurrentLeftShoulderWeapon->Destroy();
+
+				SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
+				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "LeftShoulderWeaponSock", EAttachLocation::SnapToTarget);
+
+				SpawnedWeapon->CurrentSlotType = In;
+				SpawnedWeapon->SetActorScale3D(FVector(0.75, 0.45, 0.75));
+				CurrentLeftShoulderWeapon = SpawnedWeapon;
+				if (NewWeapon->CurrentProjectile != NULL)
+					CurrentLeftShoulderWeapon->CurrentProjectile = NewWeapon->CurrentProjectile;
 			}
 			else
 			{
+				if(CurrentLeftShoulderWeapon!= NULL)
+					CurrentLeftShoulderWeapon->Destroy();
 				CurrentLeftShoulderWeapon = NULL;
 			}
 			break;
 		case EEquipSlot::RIGHT_SHOULDER:
-			if (CurrentRightShoulderWeapon != NULL)
-			{
-				CurrentRightShoulderWeapon->Destroy();
-			}
 			if (SpawnedWeapon != NULL)
 			{
+				CurrentRightShoulderWeapon = SpawnedWeapon;
+				CurrentRightShoulderWeapon->AttachRootComponentTo(GetMesh(), "RightShoulderWeaponSock", EAttachLocation::SnapToTarget);
+			}
+			else if (NewWeapon != NULL)
+			{
+				if (CurrentRightShoulderWeapon != NULL)
+					CurrentRightShoulderWeapon->Destroy();
 
-			
-				SpawnedWeapon->SetActorScale3D(FVector(0.5, 0.25, 0.5));
+				SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon->GetClass(), spawnParams);
 				SpawnedWeapon->AttachRootComponentTo(GetMesh(), "RightShoulderWeaponSock", EAttachLocation::SnapToTarget);
+				SpawnedWeapon->SetActorScale3D(FVector(0.5, 0.25, 0.5));
+
 				SpawnedWeapon->CurrentSlotType = In;
 				CurrentRightShoulderWeapon = SpawnedWeapon;
-				//CurrentRightShoulderWeapon->bArcFire = true;
+				if (NewWeapon->CurrentProjectile != NULL)
+					CurrentRightShoulderWeapon->CurrentProjectile = NewWeapon->CurrentProjectile;
 			}
 			else
 			{
+				if(CurrentRightShoulderWeapon!=NULL)
+					CurrentRightShoulderWeapon->Destroy();
 				CurrentRightShoulderWeapon = NULL;
 			}
 			break;
@@ -707,21 +743,27 @@ void AGOLMCharacter::Respawn()
 	
 	if(Role == ROLE_Authority)
 	{
-		if (!bAlive)
-		{
 
-			bAlive = true;
-			SetRagDoll(false);
-		}
 		RespawnTimeCheck = 0;
 		Health = 100;
+
+		ReturnHomeTimer = 0;
 
 		if (!bIsAI)
 			Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->KillAllEnemies();
 
 		//ChangePlayerCollisionProfile(NoPawnCollisionProfile);
 		LoadEntranceLevel("LockerRoom");
+
+		if (!bAlive)
+		{
+
+			bAlive = true;
+			SetRagDoll(false);
+		}
 		GetEquippedWeapons();
+
+
 	}
 	
 }
@@ -740,7 +782,7 @@ bool AGOLMCharacter::ClientRespawn_Validate()
 
 void AGOLMCharacter::GotoLockerRoom()
 {
-	if(CurrentLevelStream != "LockerRoom")
+	if(CurrentLevelStream != "LockerRoom" && bCanGoHome)
 	{
 		LoadEntranceLevel("LockerRoom");
 	}
@@ -863,6 +905,16 @@ void AGOLMCharacter::Destroyed()
 
 	if (CurrentRightShoulderWeapon != NULL)
 		CurrentRightShoulderWeapon->Death();
+
+	if (bIsAI)
+	{
+		if (Role == ROLE_Authority)
+		{
+			AGOLMGameMode *GM = Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+			if(GM != NULL)
+				GM->NumOfEnemies--;
+		}
+	}
 	Super::Destroyed();
 }
 
@@ -952,6 +1004,16 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 
 					//TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					CurrentLevelStream = EntranceLevelNameTag;
+					if (CurrentLevelStream == "LockerRoom")
+					{
+						bStartHomeTimer = false;
+						ReturnHomeTimer = 0;
+						bCanGoHome = false;
+					}
+					else
+					{
+						bStartHomeTimer = true;
+					}
 					break;
 				}
 			}
@@ -986,8 +1048,6 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 {
 	if (Role == ROLE_Authority)
 	{
-		
-
 		if (LevelBeacon->NameOfLevelToLoad == "LockerRoom")
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
@@ -1010,6 +1070,17 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 					
 					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
+
+					if (CurrentLevelStream == "LockerRoom")
+					{
+						bStartHomeTimer = false;
+						ReturnHomeTimer = 0;
+						bCanGoHome = false;
+					}
+					else
+					{
+						bStartHomeTimer = true;
+					}
 					break;
 				}
 			}
@@ -1046,24 +1117,7 @@ void AGOLMCharacter::SetRagDoll(bool value)
 			{
 				
 				GetMesh()->SetCollisionProfileName("Ragdoll");
-				if (CurrentHandWeapon != NULL)
-				{
-					CurrentHandWeapon->SetRagDoll(value);
-					CurrentHandWeapon->DetachRootComponentFromParent(true);
-					
-				}
-				if (CurrentLeftShoulderWeapon != NULL)
-				{
-					CurrentLeftShoulderWeapon->SetRagDoll(value);
-					CurrentLeftShoulderWeapon->DetachRootComponentFromParent(true);
 
-				}
-				if (CurrentRightShoulderWeapon != NULL)
-				{
-					CurrentRightShoulderWeapon->SetRagDoll(value);
-					CurrentRightShoulderWeapon->DetachRootComponentFromParent(true);
-
-				}
 			}
 			else
 			{
@@ -1072,6 +1126,27 @@ void AGOLMCharacter::SetRagDoll(bool value)
 				GetMesh()->AttachTo(GetCapsuleComponent(), NAME_None, EAttachLocation::SnapToTarget, true);
 				//GetMesh()->AddLocalOffset(FVector(0, 0, 0));
 				GetMesh()->AddLocalRotation(FRotator(0, -90, 0));
+			}
+
+			if (CurrentHandWeapon != NULL)
+			{
+				CurrentHandWeapon->SetRagDoll(value);
+				if (value)
+					CurrentHandWeapon->DetachRootComponentFromParent(true);
+
+			}
+			if (CurrentLeftShoulderWeapon != NULL)
+			{
+				CurrentLeftShoulderWeapon->SetRagDoll(value);
+				if (value)
+					CurrentLeftShoulderWeapon->DetachRootComponentFromParent(true);
+
+			}
+			if (CurrentRightShoulderWeapon != NULL)
+			{
+				CurrentRightShoulderWeapon->SetRagDoll(value);
+				if (value)
+					CurrentRightShoulderWeapon->DetachRootComponentFromParent(true);
 			}
 		}
 	

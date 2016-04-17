@@ -49,4 +49,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ItemWidget)	TSubclassOf<UUserWidget> WeaponItemWidget;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ItemWidget)	TSubclassOf<UUserWidget> ProjectileItemWidget;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ItemWidget)	TSubclassOf<UUserWidget> SkinItemWidget;
+
+	
+
 };

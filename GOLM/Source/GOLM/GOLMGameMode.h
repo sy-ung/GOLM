@@ -51,15 +51,15 @@ private:
 
 	float EnemySpawnInterval;
 	float EnemySpawnTimer;
-	int32 NumOfEnemies;
-	int32 MaxNumOfEnemies;
+
+	uint32 MaxNumOfEnemies;
+	
 
 
 public:
 	//Server Infomation
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	FName NameOfSession;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	bool IsLanServer;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	int32 MaximumPlayers;
 
 	UFUNCTION(BlueprintCallable, Category = SpawnEnemy)
 		void SpawnEnemy();
@@ -68,6 +68,9 @@ public:
 		void GetEnemySpawnLocations();
 
 	void KillAllEnemies();
+
+	uint32 NumOfEnemies;
+	uint32 NumOfPlayers;
 
 protected:
 	

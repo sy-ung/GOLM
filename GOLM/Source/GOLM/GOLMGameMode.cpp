@@ -11,7 +11,8 @@ AGOLMGameMode::AGOLMGameMode()
 	EnemySpawnTimer = 1.0f;
 	NumOfEnemies = 0;
 	MaxNumOfEnemies = 1;
-	EnemySpawnInterval = 0.25f;
+	EnemySpawnInterval = 3.0f;
+	NumOfPlayers = 1;
 }
 
 void AGOLMGameMode::BeginPlay()
@@ -54,6 +55,7 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 					Cast<AGOLMPlayerController>(RequestingPlayer)->GetCharacterName();
 					PlayerCharacter->Init();
 					PlayerCharacter->Respawn();
+					NumOfPlayers++;
 				}
 			}
 
@@ -63,9 +65,9 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 void AGOLMGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
-	if (NumOfEnemies < MaxNumOfEnemies)
+	if (NumOfEnemies < MaxNumOfEnemies )
 	{
+		
 		EnemySpawnTimer -= DeltaSeconds;
 		if (EnemySpawnTimer <= 0)
 		{
@@ -73,9 +75,6 @@ void AGOLMGameMode::Tick(float DeltaSeconds)
 			EnemySpawnTimer = EnemySpawnInterval;
 		}
 	}
-	TArray<AActor*> Enemies;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMCharacter::StaticClass(), Enemies);
-	NumOfEnemies = Enemies.Num() - 1;
 }
 
 void AGOLMGameMode::GotoSpawnLocation(FName PlayerStartTag, AGOLMCharacter *RequestingPlayerCharacter)
@@ -129,6 +128,7 @@ void AGOLMGameMode::SpawnEnemy()
 	{
 		AGOLMPlayerStart *RandomEnemySpawn = EnemySpawnLocations[FMath::RandRange(0, EnemySpawnLocations.Num()-1)];
 		GetWorld()->SpawnActor<AGOLMCharacter>(EnemyAI.GetDefaultObject()->GetClass(), RandomEnemySpawn->GetSpawnLocation(),FRotator(0,0,0));
+		NumOfEnemies++;
 	}
 }
 

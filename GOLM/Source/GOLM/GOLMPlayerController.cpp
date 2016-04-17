@@ -73,12 +73,23 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if(CursorWidgetReference != NULL)
 		CursorWidgetReference->MoveMouseCursor(this);
+	if (InGameHUDReference != NULL)
+	{
+		InGameHUDReference->UpdateWeaponBar();
+		InGameHUDReference->UpdateReturnHomeCooldownUI();
+	}
 }
-void AGOLMPlayerController::FireWeapon(EEquipSlot WeaponSlot, bool StartShooting)
+
+
+void AGOLMPlayerController::FireWeapon(EEquipSlot WeaponSlot, bool StartShooting, bool InstantFire)
 {
 	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
 	if (!PlayerChar->bIsInMenu)
+		PlayerChar->FireWeapon(InGameHUDReference->GetCurrentWeaponSelection(), StartShooting);
+
+	if (InstantFire)
 		PlayerChar->FireWeapon(WeaponSlot, StartShooting);
+
 }
 
 FVector AGOLMPlayerController::GetMouseHit()
@@ -225,33 +236,25 @@ bool AGOLMPlayerController::ServerRespawn_Validate()
 
 void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 {
-	//if (CheckIsNotServer())
+	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
+	if (PlayerChar)
 	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		AGOLMPlayerState *PS = Cast<AGOLMPlayerState>(PlayerState);
-		if (PlayerChar)
+		if (PlayerChar->CurrentLevelStream == "LockerRoom")
 		{
-			if (PlayerChar->CurrentLevelStream == "LockerRoom")
-			{
-				PlayerChar->Equip(NewWeapon, Slot);
-				EquipmentMenuReference->SetupWeaponProjectileSelection();
-			}
+			PlayerChar->Equip(NewWeapon, Slot);
+			EquipmentMenuReference->SetupWeaponProjectileSelection();
+			InGameHUDReference->SetWeaponBarSlot(Slot, NewWeapon);
+			InGameHUDReference->SelectCurrentWeapon(Slot);
 		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Character is NULL from Controller");
-			return;
-		}
-		if (PS)
-			PS->SetWeaponFor(NewWeapon, Slot);
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL from Controller");
-			return;
-		}
-
-		
 	}
+}
+
+void AGOLMPlayerController::UpdateWeaponSelection(AWeapon *NewWeapon, EEquipSlot Slot)
+{
+	AGOLMPlayerState *PS = Cast<AGOLMPlayerState>(PlayerState);
+	if (PS)
+		PS->SetWeaponFor(NewWeapon, Slot);
+		
 }
 
 void AGOLMPlayerController::ChangeSkin(USkeletalMesh *NewSkin)
@@ -303,8 +306,11 @@ void AGOLMPlayerController::ChangeCursor(EPlayerCursorType NewCursor)
 	if (CursorWidgetReference == NULL)
 		return;
 
-	Cast<UGOLMMouseWidget>(CursorWidgetReference)->ChangeMouseType(NewCursor);
-	CurrentCursorType = NewCursor;
+	if(NewCursor != CurrentCursorType)
+	{
+		Cast<UGOLMMouseWidget>(CursorWidgetReference)->ChangeMouseType(NewCursor);
+		CurrentCursorType = NewCursor;
+	}
 }
 
 
@@ -354,7 +360,6 @@ void AGOLMPlayerController::ShowEquipmentMenu()
 				if (EquipmentMenuReference != NULL)
 				{
 				
-					
 					FInputModeGameAndUI UI;
 
 					SetInputMode(UI);
@@ -384,7 +389,21 @@ void AGOLMPlayerController::HideEquipmentMenu()
 			FInputModeGameAndUI GI;
 			GI.SetHideCursorDuringCapture(false);
 			SetInputMode(GI);
-			ChangeCursor(EPlayerCursorType::CROSSHAIR);
+
+			AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
+			
+			if(PlayerChar->CurrentHandWeapon == NULL && 
+				PlayerChar->CurrentLeftShoulderWeapon == NULL && 
+				PlayerChar->CurrentRightShoulderWeapon == NULL)
+				ChangeCursor(EPlayerCursorType::MENU);
+			else
+				ChangeCursor(EPlayerCursorType::CROSSHAIR);
+
+			UpdateWeaponSelection(PlayerChar->CurrentHandWeapon, EEquipSlot::HAND_SLOT);
+			UpdateWeaponSelection(PlayerChar->CurrentLeftShoulderWeapon, EEquipSlot::LEFT_SHOULDER);
+			UpdateWeaponSelection(PlayerChar->CurrentRightShoulderWeapon, EEquipSlot::RIGHT_SHOULDER);
+		
+
 			bIsInEquipmentMenu = false;
 			Cast<AGOLMCharacter>(GetCharacter())->bIsInMenu = false;
 			GotoPlayerCamera();
@@ -529,4 +548,65 @@ void AGOLMPlayerController::SetArcFire(bool value)
 	}
 }
 
+void AGOLMPlayerController::ReloadWeapon(EEquipSlot WeaponSlot)
+{
 
+	AGOLMCharacter *ConChar = Cast<AGOLMCharacter>(GetCharacter());
+	if (ConChar != NULL)
+	{
+		switch (InGameHUDReference->GetCurrentWeaponSelection())
+		{
+		case EEquipSlot::HAND_SLOT:
+			ConChar->CurrentHandWeapon->Reload();
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			ConChar->CurrentLeftShoulderWeapon->Reload();
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			ConChar->CurrentRightShoulderWeapon->Reload();
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+void AGOLMPlayerController::SelectWeapon(EEquipSlot WeaponSlot, bool GotoNext, bool GotoPrevious)
+{
+	if (InGameHUDReference != NULL)
+	{
+		if(GotoNext == false && GotoPrevious == false)
+			InGameHUDReference->SelectCurrentWeapon(WeaponSlot);
+
+		switch (InGameHUDReference->GetCurrentWeaponSelection())
+		{
+		case EEquipSlot::HAND_SLOT:
+			if (GotoNext)
+				InGameHUDReference->SelectCurrentWeapon(EEquipSlot::RIGHT_SHOULDER);
+			else if (GotoPrevious)
+				InGameHUDReference->SelectCurrentWeapon(EEquipSlot::LEFT_SHOULDER);
+
+			Cast<AGOLMCharacter>(GetCharacter())->FireWeapon(EEquipSlot::HAND_SLOT, false);
+
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			if (GotoNext)
+				InGameHUDReference->SelectCurrentWeapon(EEquipSlot::HAND_SLOT);
+			else if (GotoPrevious)
+				InGameHUDReference->SelectCurrentWeapon(EEquipSlot::RIGHT_SHOULDER);
+
+			Cast<AGOLMCharacter>(GetCharacter())->FireWeapon(EEquipSlot::LEFT_SHOULDER, false);
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			if (GotoNext)
+				InGameHUDReference->SelectCurrentWeapon(EEquipSlot::LEFT_SHOULDER);
+			else if (GotoPrevious)
+				InGameHUDReference->SelectCurrentWeapon(EEquipSlot::HAND_SLOT);
+
+			Cast<AGOLMCharacter>(GetCharacter())->FireWeapon(EEquipSlot::RIGHT_SHOULDER, false);
+			break;
+		default:
+			break;
+		}
+	}
+}

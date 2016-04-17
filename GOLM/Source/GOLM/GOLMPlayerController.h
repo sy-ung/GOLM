@@ -46,8 +46,8 @@ public:
 
 	UFUNCTION()												virtual void Tick(float DeltaSeconds) override;
 
-
-	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireWeapon(EEquipSlot WeaponSlot, bool StartShooting);
+	//WeaponSlot is for the instant fire if true
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void FireWeapon(EEquipSlot WeaponSlot, bool StartShooting, bool InstantFire);
 	
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void RotatePlayerCamera(bool value);
 
@@ -76,6 +76,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	FVector GetMouseMovement();
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot);
+	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void UpdateWeaponSelection(AWeapon *NewWeapon, EEquipSlot Slot);
 	UFUNCTION(BlueprintCallable, Category = StiffICanDo)	void ChangeSkin(USkeletalMesh *NewSkin);
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)	void GetEquippedWeapons();
 
@@ -122,6 +123,13 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
 															void ZoomMiniMap(float value);
+	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
+															void SelectWeapon(EEquipSlot WeaponSlot,bool GotoNext, bool GotoPrevious);
+
+
+
+	UFUNCTION(BlueprintCallable, Category = PlayerAction)
+		void ReloadWeapon(EEquipSlot WeaponSlot);
 
 	UFUNCTION(BlueprintCallable, Category = Init)
 		void SetCharacterName(FName NewName);
@@ -142,7 +150,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoLeftShoulderCamera();
 	UFUNCTION(BlueprintCallable, Category = SetCamera)		void GotoRightShoulderCamera();
 	UFUNCTION(BlueprintCallable, Category = FireMode)		void SetArcFire(bool value);
-
 
 	UPROPERTY(BlueprintReadWrite, Category = PlayerData) FName CurrentPlayerName;
 

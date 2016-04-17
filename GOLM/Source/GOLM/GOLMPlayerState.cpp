@@ -39,7 +39,9 @@ AWeapon *AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
 	{
 	case EEquipSlot::HAND_SLOT:
 		if(HandWeapon!=NULL)
+		{
 			return HandWeapon;
+		}
 		break;
 	case EEquipSlot::LEFT_SHOULDER:
 		if(LeftShoulder != NULL)

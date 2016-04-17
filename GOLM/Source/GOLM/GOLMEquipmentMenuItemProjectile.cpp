@@ -30,6 +30,8 @@ void UGOLMEquipmentMenuItemProjectile::GetProjectile()
 	default:
 		break;
 	}
+
+	
 	
 }
 

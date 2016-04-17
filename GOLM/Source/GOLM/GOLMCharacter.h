@@ -193,6 +193,11 @@ public:
 		void ClientRespawn_Implementation();
 		bool ClientRespawn_Validate();
 
+
+	UPROPERTY(Replicated) bool bCanGoHome;
+	UPROPERTY(Replicated) float ReturnHomeTimer;
+	bool bStartHomeTimer;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Cooldowns) float ReturnHomeCoolDown;
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void GotoLockerRoom();
 

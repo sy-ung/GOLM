@@ -97,7 +97,23 @@ public:
 
 		void ToggleProjectileCollision(bool CollisionPossible);
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config) class UImage *WeaponImage;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config) UTexture2D *WeaponImage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo) int32 MagazineSize;
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = Ammo) int32 CurrentAmmoCount;
+	UPROPERTY(EditAnywhere, Replicated, BlueprintReadWrite, Category = Ammo) int32 TotalAmmoCount;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Ammo) int32 MaxAmmo;
+
+	UPROPERTY(Replicated) bool bReloading;
+	UPROPERTY(Replicated) float ReloadTimer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Reload) float ReloadTimeFinish;
+	
+
+		void Reload();
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerReload();
+		void ServerReload_Implementation();
+		bool ServerReload_Validate();
 
 protected:
 
