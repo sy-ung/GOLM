@@ -13,7 +13,7 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 
-
+#include "GOLMKillWidget.h"
 
 #include "GOLMInGameHudWidget.generated.h"
 
@@ -49,6 +49,7 @@ private:
 
 	EEquipSlot CurrentSelection;
 
+	UVerticalBox *KillBox;
 
 	bool bHandWeaponReloading;
 	bool bLeftShoulderWeaponReloading;
@@ -80,4 +81,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = CoolDowns) void UpdateReturnHomeCooldownUI();
 	UFUNCTION(BlueprintCallable, Category = Init) void SetReturnHomeCooldownUI(UImage *Image, UTextBlock *CooldownTimer);
+
+	UFUNCTION(BlueprintCallable, Category = Init) void SetKillBox(UVerticalBox *VerticalKillBox);
+	UFUNCTION(BlueprintCallable, Category = KillMessage) void AddToKillBox(FName Killer, FName Victim);
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = KillMessage) TSubclassOf<UUserWidget> KillWidget;
 };

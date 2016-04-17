@@ -1121,10 +1121,9 @@ void AGOLMCharacter::SetRagDoll(bool value)
 			}
 			else
 			{
-				
 				GetMesh()->SetCollisionProfileName("CharacterMesh");
 				GetMesh()->AttachTo(GetCapsuleComponent(), NAME_None, EAttachLocation::SnapToTarget, true);
-				//GetMesh()->AddLocalOffset(FVector(0, 0, 0));
+				GetMesh()->AddLocalOffset(FVector(0, 0, 20));
 				GetMesh()->AddLocalRotation(FRotator(0, -90, 0));
 			}
 

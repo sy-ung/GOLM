@@ -153,8 +153,9 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category = PlayerData) FName CurrentPlayerName;
 
+	UFUNCTION(BlueprintCallable, Category = TestStuff) void MakeTestKillMessage(FName Killer, FName Victim);
 
-//Non Unreal Engine 4 Application
+
 public:
 	EPlayerCursorType CurrentCursorType;
 	EEquipSlot GetMenuWeaponSlotChoice();

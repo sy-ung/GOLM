@@ -270,3 +270,15 @@ void UGOLMInGameHudWidget::UpdateReturnHomeCooldownUI()
 		}
 	}
 }
+
+void UGOLMInGameHudWidget::SetKillBox(UVerticalBox *VerticalKillBox)
+{
+	KillBox = VerticalKillBox;
+}
+
+void UGOLMInGameHudWidget::AddToKillBox(FName Killer, FName Victim)
+{
+	UGOLMKillWidget *KillMessage = CreateWidget<UGOLMKillWidget>(UGameplayStatics::GetPlayerController(GetWorld(), 0), KillWidget.GetDefaultObject()->GetClass());
+	KillMessage->SetKillMessage(Killer, Victim);
+	KillBox->AddChild(KillMessage);
+}

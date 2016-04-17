@@ -610,3 +610,8 @@ void AGOLMPlayerController::SelectWeapon(EEquipSlot WeaponSlot, bool GotoNext, b
 		}
 	}
 }
+
+void AGOLMPlayerController::MakeTestKillMessage(FName Killer, FName Victim)
+{
+	Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->CreateKillMessage(Killer, Victim);
+}

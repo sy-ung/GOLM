@@ -18,8 +18,9 @@ class GOLM_API AGOLMGameState : public AGameState
 public:
 	AGOLMGameState();
 
-
+	virtual void Tick(float DeltaSeconds) override;
 	
+	void CreateKillMessage(FName Killer, FName Victim);
 	
 	
 };
