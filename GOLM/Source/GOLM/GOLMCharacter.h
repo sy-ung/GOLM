@@ -35,12 +35,8 @@ class AGOLMCharacter : public ACharacter
 	GENERATED_BODY()
 
 
-	AGOLMPlayerState *PlayerState;
 
 	FVector Direction;
-
-
-
 
 	void TracePath(FVector &start, FVector &finish);
 
@@ -132,8 +128,6 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
-
-	UPROPERTY(Replicated, BlueprintReadOnly, Category = CharacterData) FName CharacterName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CharacterData")					bool bGodMode;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector HandSupportLocation;
@@ -323,14 +317,6 @@ public:
 		void ClientSetRagDoll(bool value);
 		void ClientSetRagDoll_Implementation(bool value);
 
-	UFUNCTION(BlueprintCallable, Category = PlayerCharacterAction)
-		void RecieveDamage(float damage);
-
-	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerRecieveDamage(float damage);
-		void ServerRecieveDamage_Implementation(float damage);
-		bool ServerRecieveDamage_Validate(float damage);
-
 		void SetPawnCollisionType(EPlayerCollisionProfile NewCollision);
 	UFUNCTION(Server, Reliable, WithValidation)
 		void ServerSetPawnCollisionType(EPlayerCollisionProfile NewCollisionType);
@@ -366,7 +352,10 @@ public:
 		void ClientChangeColor(USkeletalMesh *NewSkin);
 		void ClientChangeColor_Implementation(USkeletalMesh *NewSkin);
 
-		
+	UFUNCTION(BlueprintCallable, Category = CharacterData)
+		FString GetCharacterName();
+	UFUNCTION(BlueprintCallable, Category = CharacterData)
+		void SetCharacterName(FString NewName);
 
 };
 

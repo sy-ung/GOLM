@@ -8,7 +8,6 @@
 void AGOLMPlayerState::BeginPlay()
 {
 	Super::BeginPlay();
-	Health = 100;
 }
 
 void AGOLMPlayerState::Tick(float DeltaSeconds)
@@ -20,18 +19,24 @@ void AGOLMPlayerState::Tick(float DeltaSeconds)
 void AGOLMPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-	DOREPLIFETIME(AGOLMPlayerState, Health);
+	DOREPLIFETIME(AGOLMPlayerState, PlayerKills);
+	DOREPLIFETIME(AGOLMPlayerState, PlayerDeath);
+
+	DOREPLIFETIME(AGOLMPlayerState, HandWeapon);
+	DOREPLIFETIME(AGOLMPlayerState, RightShoulder);
+	DOREPLIFETIME(AGOLMPlayerState, LeftShoulder);
+
 }
 
-float AGOLMPlayerState::GetCurrentHealth()
+void AGOLMPlayerState::AddToScore(int32 AdditionalKill, int32 AdditionalDeath)
 {
-	return Health;
+	if (Role == ROLE_Authority)
+	{
+		PlayerKills += AdditionalKill;
+		PlayerDeath += AdditionalDeath;
+	}
 }
 
-void AGOLMPlayerState::ResetPlayer()
-{
-
-}
 
 AWeapon *AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
 {
@@ -59,18 +64,34 @@ AWeapon *AGOLMPlayerState::GetWeaponFor(EEquipSlot slot)
 
 void AGOLMPlayerState::SetWeaponFor(AWeapon* Weapon, EEquipSlot Slot)
 {
-	switch (Slot)
+	if(Role == ROLE_Authority)
 	{
-	case EEquipSlot::HAND_SLOT:
-		HandWeapon = Weapon;
-		break;
-	case EEquipSlot::LEFT_SHOULDER:
-		LeftShoulder = Weapon;
-		break;
-	case EEquipSlot::RIGHT_SHOULDER:
-		RightShoulder = Weapon;
-		break;
-	default:
-		break;
+		switch (Slot)
+		{
+		case EEquipSlot::HAND_SLOT:
+			HandWeapon = Weapon;
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			LeftShoulder = Weapon;
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			RightShoulder = Weapon;
+			break;
+		default:
+			break;
+		}
 	}
+	else
+	{
+		ServerSetWeaponFor(Weapon, Slot);
+	}
+}
+
+void AGOLMPlayerState::ServerSetWeaponFor_Implementation(AWeapon* Weapon, EEquipSlot Slot)
+{
+	SetWeaponFor(Weapon, Slot);
+}
+bool AGOLMPlayerState::ServerSetWeaponFor_Validate(AWeapon* Weapon, EEquipSlot Slot)
+{
+	return true;
 }

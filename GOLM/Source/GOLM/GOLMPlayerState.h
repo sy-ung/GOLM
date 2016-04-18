@@ -42,15 +42,6 @@ public:
 
 	virtual void BeginPlay() override;
 
-	UPROPERTY(Replicated)
-		float Health;
-	
-	UFUNCTION(BlueprintCallable, Category = PlayerStateInformation)
-		float GetCurrentHealth();
-
-	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
-		void ResetPlayer();
-
 	UFUNCTION()
 		virtual void Tick(float DeltaSeconds) override;
 
@@ -60,20 +51,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category = PlayerStateAction)
 		void SetWeaponFor(class AWeapon *Weapon, EEquipSlot Slot);
 
+	UFUNCTION(Server, Reliable, WithValidation)
+		void ServerSetWeaponFor(class AWeapon *Weapon, EEquipSlot Slot);
+		void ServerSetWeaponFor_Implementation(class AWeapon *Weapon, EEquipSlot Slot);
+		bool ServerSetWeaponFor_Validate(class AWeapon *Weapon, EEquipSlot Slot);
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ListOfWeapons)
 		TArray<TSubclassOf<class AWeapon>> WeaponsList;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ListOfWeapons)
 		TArray<USkeletalMesh*> SkinList;
 
-	UPROPERTY(BlueprintReadWrite, Category = PlayerData)
-		FName CurrentPlayerName;
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerData)
+		int32 PlayerKills;
+
+	UPROPERTY(Replicated, BlueprintReadWrite, Category = PlayerData)
+		int32 PlayerDeath;
+
+	UPROPERTY(Replicated)
+		class AWeapon *HandWeapon;
+
+	UPROPERTY(Replicated)
+		class AWeapon *RightShoulder;
+
+	UPROPERTY(Replicated)
+		class AWeapon *LeftShoulder;
+
+	void AddToScore(int32 AdditionalKill, int32 AdditionalDeath);
 
 private:
 
-	class AWeapon *HandWeapon;
-	class AWeapon *RightShoulder;
-	class AWeapon *LeftShoulder;
+
 
 
 };

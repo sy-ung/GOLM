@@ -24,10 +24,11 @@ class AGOLMPlayerController : public APlayerController
 public:
 	AGOLMPlayerController();
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> CursorWidget;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> EquipmentMenu;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> InGameSettingsMenu;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Cursor)	class TSubclassOf<UUserWidget> InGameHUD;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Menus)	class TSubclassOf<UUserWidget> CursorWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Menus)	class TSubclassOf<UUserWidget> EquipmentMenu;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Menus)	class TSubclassOf<UUserWidget> InGameSettingsMenu;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Menus)	class TSubclassOf<UUserWidget> InGameHUD;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Menus)	class TSubclassOf<UUserWidget> ScoreBoard;
 
 
 
@@ -98,8 +99,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = DebugStuffICanDo)
 															void KillCharacter();
 
-	UFUNCTION(BlueprintCallable, Category = Debug)			void DoDamage(float damage);
-
 	UFUNCTION(BlueprintCallable, Category = Cursor)			void ChangeCursor(EPlayerCursorType NewCursor);
 	
 	UFUNCTION(BlueprintCallable, Category = EquipmentMenuInteraction)
@@ -126,6 +125,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = InGameHudFunction)
 															void SelectWeapon(EEquipSlot WeaponSlot,bool GotoNext, bool GotoPrevious);
 
+	UFUNCTION(BlueprintCallable, Category = ScoreboardFunction)
+															void ShowScoreBoard(bool value);
 
 
 	UFUNCTION(BlueprintCallable, Category = PlayerAction)
@@ -164,6 +165,7 @@ public:
 	class UGOLMEquipmentMenuWidget *EquipmentMenuReference;
 	class UUserWidget *InGameSettingsMenuReference;
 	class UGOLMInGameHudWidget *InGameHUDReference;
+	class UGOLMScoreboard *ScoreboardReference;
 
 private:
 	EEquipSlot MenuSlotChoice;

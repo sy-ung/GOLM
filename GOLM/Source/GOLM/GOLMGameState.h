@@ -21,6 +21,12 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	
 	void CreateKillMessage(FName Killer, FName Victim);
+
+	UFUNCTION(Client, Unreliable, NetMulticast)
+		void ClientCreateKillMessage(FName Killer, FName Victim);
+		void ClientCreateKillMessage_Implementation(FName Killer, FName Victim);
+
+
 	
 	
 };

@@ -6,6 +6,7 @@
 #include "GOLMMouseWidget.h"
 #include "GOLMEquipmentMenuWidget.h"
 #include "GOLMInGameHUDWidget.h"
+#include "GOLMScoreboard.h"
 #include "GOLMGameInstance.h"
 #include "Engine.h"
 #include "AI/Navigation/NavigationSystem.h"
@@ -38,7 +39,9 @@ void AGOLMPlayerController::BeginPlay()
 void AGOLMPlayerController::SetCharacterName(FName NewName)
 {
 	if(Role == ROLE_Authority)
-		Cast<AGOLMCharacter>(GetCharacter())->CharacterName = NewName;
+	{
+		PlayerState->SetPlayerName(NewName.ToString());
+	}
 	if (Role != ROLE_Authority)
 		ServerSetCharacterName(NewName);
 }
@@ -84,11 +87,15 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 void AGOLMPlayerController::FireWeapon(EEquipSlot WeaponSlot, bool StartShooting, bool InstantFire)
 {
 	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
-	if (!PlayerChar->bIsInMenu)
-		PlayerChar->FireWeapon(InGameHUDReference->GetCurrentWeaponSelection(), StartShooting);
-
-	if (InstantFire)
+	if(!InstantFire)
+	{
+		if (!PlayerChar->bIsInMenu)
+			PlayerChar->FireWeapon(InGameHUDReference->GetCurrentWeaponSelection(), StartShooting);
+	}
+	else if (InstantFire)
+	{
 		PlayerChar->FireWeapon(WeaponSlot, StartShooting);
+	}
 
 }
 
@@ -281,16 +288,6 @@ void AGOLMPlayerController::ClientGetEquippedWeapons_Implementation()
 		GetEquippedWeapons();
 }
 
-void AGOLMPlayerController::DoDamage(float damage)
-{
-	//if (CheckIsNotServer())
-	{
-		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
-		if (PlayerChar)
-			PlayerChar->RecieveDamage(damage);
-	}
-}
-
 void AGOLMPlayerController::KillCharacter()
 {
 	//if (CheckIsNotServer())
@@ -479,6 +476,30 @@ void AGOLMPlayerController::ZoomMiniMap(float value)
 	}
 	else
 		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "IN GAME HUD IS NULL");
+}
+
+void AGOLMPlayerController::ShowScoreBoard(bool value)
+{
+	if(value)
+	{
+		if (ScoreboardReference == NULL)
+		{
+			ScoreboardReference = CreateWidget<UGOLMScoreboard>(this, ScoreBoard.GetDefaultObject()->GetClass());
+			ScoreboardReference->AddToRoot();
+		}
+
+		if (ScoreboardReference != NULL)
+		{
+			ScoreboardReference->AddToViewport(2);
+		}
+	}
+	else
+	{
+		if (ScoreboardReference != NULL)
+		{
+			ScoreboardReference->RemoveFromParent();
+		}
+	}
 }
 
 void AGOLMPlayerController::GotoPlayerCamera()

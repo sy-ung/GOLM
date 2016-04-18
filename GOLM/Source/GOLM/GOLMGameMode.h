@@ -69,6 +69,8 @@ public:
 
 	void KillAllEnemies();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemiesTracking) TArray<AGOLMCharacter*> Enemies;
+
 	uint32 NumOfEnemies;
 	uint32 NumOfPlayers;
 

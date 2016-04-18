@@ -10,8 +10,8 @@ AGOLMGameMode::AGOLMGameMode()
 {
 	EnemySpawnTimer = 1.0f;
 	NumOfEnemies = 0;
-	MaxNumOfEnemies = 1;
-	EnemySpawnInterval = 3.0f;
+	MaxNumOfEnemies = 25;
+	EnemySpawnInterval = 0.50f;
 	NumOfPlayers = 1;
 }
 
@@ -65,6 +65,7 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 void AGOLMGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
 	if (NumOfEnemies < MaxNumOfEnemies )
 	{
 		
@@ -127,7 +128,7 @@ void AGOLMGameMode::SpawnEnemy()
 	if (EnemySpawnLocations.Num() != 0)
 	{
 		AGOLMPlayerStart *RandomEnemySpawn = EnemySpawnLocations[FMath::RandRange(0, EnemySpawnLocations.Num()-1)];
-		GetWorld()->SpawnActor<AGOLMCharacter>(EnemyAI.GetDefaultObject()->GetClass(), RandomEnemySpawn->GetSpawnLocation(),FRotator(0,0,0));
+		Enemies.Add(GetWorld()->SpawnActor<AGOLMCharacter>(EnemyAI.GetDefaultObject()->GetClass(), RandomEnemySpawn->GetSpawnLocation(),FRotator(0,0,0)));
 		NumOfEnemies++;
 	}
 }
@@ -157,4 +158,5 @@ void AGOLMGameMode::KillAllEnemies()
 			RobotCheck->Destroy();
 		}
 	}
+	Enemies.Empty();
 }

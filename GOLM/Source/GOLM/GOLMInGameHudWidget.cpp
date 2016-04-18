@@ -229,23 +229,27 @@ EEquipSlot UGOLMInGameHudWidget::GetCurrentWeaponSelection()
 
 void UGOLMInGameHudWidget::PlayReload(EEquipSlot WeaponSlot, AWeapon *CurrentWeapon)
 {
-	switch (WeaponSlot)
-	{
-	case EEquipSlot::HAND_SLOT:
-		HandWeaponImage->SetBrushFromTexture(ReloadImage);
-		HandWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
-		break;
-	case EEquipSlot::LEFT_SHOULDER:
-		LeftShoulderWeaponImage->SetBrushFromTexture(ReloadImage);
-		LeftShoulderWeaponWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
 
-		break;
-	case EEquipSlot::RIGHT_SHOULDER:
-		RightShoulderWeaponImage->SetBrushFromTexture(ReloadImage);
-		RightShoulderWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
-		break;
-	default:
-		break;
+	if (CurrentWeapon->CurrentAmmoCount != CurrentWeapon->MagazineSize && CurrentWeapon->bReloading)
+	{
+		switch (WeaponSlot)
+		{
+		case EEquipSlot::HAND_SLOT:
+			HandWeaponImage->SetBrushFromTexture(ReloadImage);
+			HandWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
+			break;
+		case EEquipSlot::LEFT_SHOULDER:
+			LeftShoulderWeaponImage->SetBrushFromTexture(ReloadImage);
+			LeftShoulderWeaponWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
+
+			break;
+		case EEquipSlot::RIGHT_SHOULDER:
+			RightShoulderWeaponImage->SetBrushFromTexture(ReloadImage);
+			RightShoulderWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
+			break;
+		default:
+			break;
+		}
 	}
 }
 void UGOLMInGameHudWidget::SetReturnHomeCooldownUI(UImage *Image, UTextBlock *CooldownTimer)
@@ -280,5 +284,9 @@ void UGOLMInGameHudWidget::AddToKillBox(FName Killer, FName Victim)
 {
 	UGOLMKillWidget *KillMessage = CreateWidget<UGOLMKillWidget>(UGameplayStatics::GetPlayerController(GetWorld(), 0), KillWidget.GetDefaultObject()->GetClass());
 	KillMessage->SetKillMessage(Killer, Victim);
+	if (KillBox->GetChildrenCount() >= 3)
+	{
+		KillBox->RemoveChildAt(0);
+	}
 	KillBox->AddChild(KillMessage);
 }

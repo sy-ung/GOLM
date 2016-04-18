@@ -72,6 +72,11 @@ void AWeapon::Tick(float DeltaSeconds)
 			if (bReloading)
 				bReloading = false;
 		}
+		if (bReloading)
+		{
+			if (CurrentAmmoCount == MagazineSize)
+				bReloading = false;
+		}
 
 		if ((TotalAmmoCount + CurrentAmmoCount) <= 0)
 		{
@@ -430,9 +435,10 @@ void AWeapon::DrawProjectilePath()
 
 void AWeapon::Reload()
 {
-	bReloading = true;
 	if (Role != ROLE_Authority)
 		ServerReload();
+	else
+		bReloading = true;
 }
 void AWeapon::ServerReload_Implementation()
 {

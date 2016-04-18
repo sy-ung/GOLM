@@ -2,6 +2,7 @@
 #include "GOLM.h"
 #include "GOLMCharacter.h"
 #include "GOLMGameMode.h"
+#include "GOLMGameState.h"
 #include "GOLMLevelStreamBeacon.h"
 #include "GOLMEquipmentMenuWidget.h"
 #include "GOLMPlayerController.h"
@@ -166,8 +167,6 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, bAlive);
 	DOREPLIFETIME(AGOLMCharacter, TimeUntilRespawn);
 
-	DOREPLIFETIME(AGOLMCharacter, CharacterName);
-
 	DOREPLIFETIME(AGOLMCharacter, ReturnHomeTimer);
 	DOREPLIFETIME(AGOLMCharacter, bCanGoHome);
 }
@@ -242,16 +241,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	//****Updates on server side that will replicate to client
 	if (Role == ROLE_Authority)
 	{
-		if (bAlive)
-		{
-			if (Health <= 0)
-			{
-				Death();
-				bMoving = false;
-			}
-			
-		}
-		else
+		if (!bAlive)
 		{
 			RespawnTimeCheck += DeltaSeconds;
 			TimeUntilRespawn = deathTimer - RespawnTimeCheck;
@@ -263,12 +253,33 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 					Respawn();
 			}
 		}
+		else
+		{
+
+		}
 	}
 
 
 	if (bIsAI)
 		return;
 
+	if (Role == ROLE_Authority)
+	{
+		if (bAlive)
+		{
+			if (!bCanGoHome)
+			{
+				if (bStartHomeTimer)
+				{
+					ReturnHomeTimer += DeltaSeconds;
+					if (ReturnHomeTimer >= ReturnHomeCoolDown)
+					{
+						bCanGoHome = true;
+					}
+				}
+			}
+		}
+	}
 
 
 
@@ -284,51 +295,37 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 	//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Respawn In: " + FString::SanitizeFloat(TimeUntilRespawn));
 	//}
 
-	if(bAlive)
-	{
+
 		if (IsLocallyControlled())
 		{
-			if (MiniMapCameraReference != NULL)
-				MiniMapCameraReference->UpdateCamera();
+			if (bAlive)
+			{
+				if (MiniMapCameraReference != NULL)
+					MiniMapCameraReference->UpdateCamera();
 
 
-			if (bRotatingCamera)
-				RotateCamera();
+				if (bRotatingCamera)
+					RotateCamera();
+
+				UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
 
 			
-			if(!bCanGoHome)
-			{
-				if (bStartHomeTimer)
+
+				MoveCheck();
+
+				if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
 				{
-					ReturnHomeTimer += DeltaSeconds;
-					if (ReturnHomeTimer >= ReturnHomeCoolDown)
-					{
-						bCanGoHome = true;
-					}
+					PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
+				}
+
+				if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
+				{
+					PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
 				}
 			}
-				
-
-
-
-	
-			UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
 			MoveCamera();
-
-			MoveCheck();
-
-			if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
-			{
-				PlayerCameraBoom->TargetOffset = FMath::Lerp<FVector>(PlayerCameraBoom->TargetOffset, NewCameraOffset, 0.05);
-			}
-
-			if (PlayerCameraBoom->TargetArmLength != NewCameraHeight)
-			{
-				PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
-			}
-
 		}
-	}
+	
 
 }
 
@@ -548,13 +545,10 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 
 void AGOLMCharacter::GetEquippedWeapons()
 {
-	if (Role != ROLE_Authority || IsLocallyControlled())
+	//if (Role != ROLE_Authority || IsLocallyControlled())
 	{
 		AGOLMPlayerState *PS = NULL;
-		if(GetController() != NULL)
-			 PS = Cast<AGOLMPlayerState>(GetController()->PlayerState);
-		else
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player Controller is NULL from Character");
+		PS = Cast<AGOLMPlayerState>(PlayerState);
 
 		if (PS!=NULL)
 		{
@@ -566,10 +560,10 @@ void AGOLMCharacter::GetEquippedWeapons()
 			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "Player State is NULL from Character");
 	}
 	
-	if(Role == ROLE_Authority)
-	{
-		ClientGetEquippedWeapons();
-	}
+	//if(Role == ROLE_Authority)
+	//{
+	//	ClientGetEquippedWeapons();
+	//}
 }
 
 void AGOLMCharacter::ClientGetEquippedWeapons_Implementation()
@@ -805,6 +799,7 @@ void AGOLMCharacter::Death()
 	{
 		SetRagDoll(true);
 		bAlive = false;
+		bMoving = false;
 		ClientDeath();
 	}
 	
@@ -816,6 +811,7 @@ void AGOLMCharacter::ClientDeath_Implementation()
 	{
 		bAlive = false;
 		Death();
+		NewCameraOffset = FVector::ZeroVector;
 	}
 
 }
@@ -837,6 +833,10 @@ void AGOLMCharacter::RotateCamera()
 
 void AGOLMCharacter::MoveCamera()
 {
+	if (!bAlive)
+	{
+		NewCameraOffset = FVector::ZeroVector;
+	}
 
 
 	if (CurrentHandWeapon == NULL && CurrentLeftShoulderWeapon == NULL && CurrentRightShoulderWeapon == NULL)
@@ -912,7 +912,18 @@ void AGOLMCharacter::Destroyed()
 		{
 			AGOLMGameMode *GM = Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
 			if(GM != NULL)
+			{
 				GM->NumOfEnemies--;
+				for (int32 i = 0; i < GM->Enemies.Num(); i++)
+				{
+					if (GM->Enemies[i] == this)
+					{
+						GM->Enemies.RemoveAt(i);
+						break;
+					}
+				}
+			}
+			
 		}
 	}
 	Super::Destroyed();
@@ -1159,27 +1170,7 @@ void AGOLMCharacter::ClientSetRagDoll_Implementation(bool value)
 		SetRagDoll(value);
 }
 
-void AGOLMCharacter::RecieveDamage(float damage)
-{
-	if (Role == ROLE_Authority)
-	{
-		PlayerState->Health -= damage;
-	}
-	if (Role != ROLE_Authority)
-	{
-		ServerRecieveDamage(damage);
-	}
-}
 
-void AGOLMCharacter::ServerRecieveDamage_Implementation(float damage)
-{
-	RecieveDamage(damage);
-}
-
-bool AGOLMCharacter::ServerRecieveDamage_Validate(float damage)
-{
-	return true;
-}
 
 void AGOLMCharacter::CalculateRelativeDirectionScale()
 {
@@ -1281,7 +1272,23 @@ float AGOLMCharacter::TakeDamage(float DamageAmount, FDamageEvent const &DamageE
 		{
 			Health -= Damage;
 			if (Health <= 0)
-				SetRagDoll(true);
+			{
+				if (bAlive)
+				{
+					Death();
+					AGOLMCharacter *Killer = Cast<AGOLMCharacter>(DamageCauser);
+					if (!Killer->bIsAI)
+					{
+						Cast<AGOLMPlayerState>(Killer->PlayerState)->AddToScore(1, 0);
+					}
+					if (!bIsAI)
+					{
+						Cast<AGOLMPlayerState>(PlayerState)->AddToScore(0, 1);
+					}
+					Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->CreateKillMessage(FName(*Killer->GetCharacterName()), FName(*GetCharacterName()));
+				}
+			}
+		
 		}
 
 	}
@@ -1352,4 +1359,25 @@ void AGOLMCharacter::ClientChangeColor_Implementation(USkeletalMesh *NewSkin)
 {
 	if (Role != ROLE_Authority)
 		GetMesh()->SetSkeletalMesh(NewSkin);
+}
+
+FString AGOLMCharacter::GetCharacterName()
+{
+	if (bIsAI)
+	{
+		return GetName();
+	}
+	else
+	{
+		if (PlayerState != NULL)
+			return PlayerState->PlayerName;
+		else
+			return "Loading Name...";
+	}
+}
+
+void AGOLMCharacter::SetCharacterName(FString NewName)
+{
+	if(Role == ROLE_Authority)
+		PlayerState->PlayerName = NewName;
 }

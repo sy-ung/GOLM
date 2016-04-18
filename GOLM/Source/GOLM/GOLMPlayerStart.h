@@ -22,7 +22,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Data) FVector GetSpawnLocation();
 
-
 private:
 	
 	

@@ -127,7 +127,7 @@ void AProjectile::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 	if (Role == ROLE_Authority)
 	{
-		if(Alive)
+		if (Alive)
 		{
 			LifeTime -= DeltaSeconds;
 			if (LifeTime <= 0)
@@ -138,12 +138,15 @@ void AProjectile::Tick(float DeltaSeconds)
 
 		if (!Alive)
 		{
-
+			if (bExplosive)
+			{
+				InflictExplosiveDamage();
+			}
 			OnDeath();
 		}
 		else if (bIsClusterProjectile)
 		{
-			if(bVTOL)
+			if (bVTOL)
 			{
 				if ((TargetLocation - GetActorLocation()).Size() <= ClusterLaunchDistance && bVTOLStage2Complete)
 					OnDeath();
@@ -154,41 +157,26 @@ void AProjectile::Tick(float DeltaSeconds)
 					OnDeath();
 			}
 		}
-
-		if (bVTOL)
-		{
-			if (bBeginVTOL)
-			{
-				VTOLMovement(DeltaSeconds);
-			}
-			else if (!bBeginVTOL)
-			{
-				if (VTOLStartTimer <= 0)
-				{
-					bBeginVTOL = true;
-
-					BeginParticle();
-					
-				}
-				VTOLStartTimer -= DeltaSeconds;
-			}
-		}
-
-
-		if(!Alive)
-		{
-			if (bExplosive)
-			{
-				InflictExplosiveDamage();
-			}
-		}
 	}
 
+	if (bVTOL)
+	{
+		if (bBeginVTOL)
+		{
+			VTOLMovement(DeltaSeconds);
+		}
+		else if (!bBeginVTOL)
+		{
+			if (VTOLStartTimer <= 0)
+			{
+				bBeginVTOL = true;
 
-	
-	
-
-
+				BeginParticle();
+					
+			}
+			VTOLStartTimer -= DeltaSeconds;
+		}
+	}
 }
 
 void AProjectile::VTOLMovement(float DeltaSeconds)
@@ -213,7 +201,7 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 	else if(!bVTOLStage2Complete)
 	{
 		FVector VTOLDropStagingLoc = FVector(TargetLocation.X, TargetLocation.Y, TargetLocation.Z + VTOLHeight);
-		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 1.0f).Vector() * VTOLSpeed;
+		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 0.75f).Vector() * VTOLSpeed;
 
 		if ((VTOLDropStagingLoc - GetActorLocation()).Size() < VTOLDropRadius)
 			bVTOLStage2Complete = true;
@@ -221,7 +209,7 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 	}
 	else if (!bVTOLStage3Complete)
 	{
-		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),0.25f).Vector() * VTOLSpeed;
+		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),0.35f).Vector() * (VTOLSpeed * 1.5);
 		
 	}
 	MovementComponent->UpdateComponentVelocity();
