@@ -78,7 +78,8 @@ bool UGOLMMultiplayerMenuWidget::CheckPlayerName(FText PlayerNameCheck)
 		{
 
 			Cast<UGOLMGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()))->CurrentPlayerName = FName(*PlayerNameCheck.ToString());
-
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, Cast<UGOLMGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()))->CurrentPlayerName.ToString());
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, UGameplayStatics::GetGameInstance(GetWorld())->GetName());
 			StatusTextBox->SetText(FText::FromString(""));
 			return true;
 		}

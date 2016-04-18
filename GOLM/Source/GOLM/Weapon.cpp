@@ -39,8 +39,14 @@ void AWeapon::BeginPlay()
 	{
 		bAbleToShoot = true;
 		CurrentProjectile = CompatibleProjectiles[0].GetDefaultObject();
+		if (Cast<AGOLMCharacter>(GetOwner())->bIsAI)
+		{
+			CurrentProjectile = CompatibleProjectiles[FMath::RandRange(0, CompatibleProjectiles.Num() - 1)].GetDefaultObject();
+		}
 
 	}
+	
+
 	
 
 

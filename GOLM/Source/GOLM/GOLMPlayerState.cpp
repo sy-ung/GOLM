@@ -26,6 +26,8 @@ void AGOLMPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &Out
 	DOREPLIFETIME(AGOLMPlayerState, RightShoulder);
 	DOREPLIFETIME(AGOLMPlayerState, LeftShoulder);
 
+	DOREPLIFETIME(AGOLMPlayerState, bIsKyle);
+
 }
 
 void AGOLMPlayerState::AddToScore(int32 AdditionalKill, int32 AdditionalDeath)

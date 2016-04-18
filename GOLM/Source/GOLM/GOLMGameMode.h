@@ -49,15 +49,17 @@ private:
 	bool bAllLevelLoaded;
 	TArray<class AGOLMPlayerStart*> EnemySpawnLocations;
 
-	float EnemySpawnInterval;
+	
 	float EnemySpawnTimer;
 
-	uint32 MaxNumOfEnemies;
+	
 	
 
 
 public:
 	//Server Infomation
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData) int32 MaxNumOfEnemies;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData) float EnemySpawnInterval;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	FName NameOfSession;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = ServerData)	bool IsLanServer;
 
@@ -71,8 +73,10 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = EnemiesTracking) TArray<AGOLMCharacter*> Enemies;
 
-	uint32 NumOfEnemies;
-	uint32 NumOfPlayers;
+	bool bIsThereKyle;
+
+	int32 NumOfEnemies;
+	int32 NumOfPlayers;
 
 protected:
 	

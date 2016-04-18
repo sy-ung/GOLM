@@ -22,7 +22,7 @@ public:
 	
 	void CreateKillMessage(FName Killer, FName Victim);
 
-	UFUNCTION(Client, Unreliable, NetMulticast)
+	UFUNCTION(Client, Reliable, NetMulticast)
 		void ClientCreateKillMessage(FName Killer, FName Victim);
 		void ClientCreateKillMessage_Implementation(FName Killer, FName Victim);
 

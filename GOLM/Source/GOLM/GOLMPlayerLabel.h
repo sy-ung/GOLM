@@ -22,17 +22,16 @@ class GOLM_API UGOLMPlayerLabel : public UUserWidget
 	UProgressBar *HealthBar;
 	UTextBlock *PlayerNameText;
 
-	class AGOLMPlayerCharacter *TrackingCharacter;
+	class AGOLMCharacter *TrackingCharacter;
 
 public:
-
 	UFUNCTION(BlueprintCallable, Category = init)
 		void SetPlayerLabels(UProgressBar *HealthProgressBar, UTextBlock *PlayerNameTextBlock);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Config) float LifeTime;
 	float Timer;
 
-	void SetCharacterReference(class AGOLMPlayerCharacter *CurrentCharacter);
+	void SetCharacterReference(class AGOLMCharacter *CurrentCharacter);
 
 	virtual void NativeTick(const FGeometry &MyGeometry, float InDeltaTime) override;
 };

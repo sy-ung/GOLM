@@ -16,9 +16,24 @@ void UGOLMPlayerLabel::SetPlayerLabels(UProgressBar *HealthProgressBar, UTextBlo
 void UGOLMPlayerLabel::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
 {
 	Super::NativeTick(MyGeometry, InDeltaTime);
+
+	if(TrackingCharacter != NULL)
+	{
+		if(TrackingCharacter->PlayerState!=NULL)
+		{
+			if (Cast<AGOLMPlayerState>(TrackingCharacter->PlayerState)->bIsKyle)
+			{
+				PlayerNameText->SetColorAndOpacity(FLinearColor::MakeRandomColor());
+			}
+			PlayerNameText->SetText(FText::FromString(TrackingCharacter->PlayerState->PlayerName));
+		}
+		
+		HealthBar->SetPercent(TrackingCharacter->Health / 100.0f);
+	}
+
 }
 
-void UGOLMPlayerLabel::SetCharacterReference(class AGOLMPlayerCharacter *CurrentCharacter)
+void UGOLMPlayerLabel::SetCharacterReference(class AGOLMCharacter *CurrentCharacter)
 {
-
+	TrackingCharacter = CurrentCharacter;
 }

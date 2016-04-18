@@ -201,7 +201,7 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 	else if(!bVTOLStage2Complete)
 	{
 		FVector VTOLDropStagingLoc = FVector(TargetLocation.X, TargetLocation.Y, TargetLocation.Z + VTOLHeight);
-		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 0.75f).Vector() * VTOLSpeed;
+		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 0.25f).Vector() * VTOLSpeed;
 
 		if ((VTOLDropStagingLoc - GetActorLocation()).Size() < VTOLDropRadius)
 			bVTOLStage2Complete = true;
@@ -209,7 +209,7 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 	}
 	else if (!bVTOLStage3Complete)
 	{
-		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),0.35f).Vector() * (VTOLSpeed * 1.5);
+		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),1.0f).Vector() * (VTOLSpeed * 1.5);
 		
 	}
 	MovementComponent->UpdateComponentVelocity();
@@ -236,10 +236,13 @@ void AProjectile::InflictExplosiveDamage()
 	{
 		TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
 		AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
-		if (bExplosive)
+		if(ConInstigator != NULL && GetInstigator() != NULL)
 		{
-			TArray<AActor*> OverlappedActors;
-			UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
+			if (bExplosive)
+			{
+				TArray<AActor*> OverlappedActors;
+				UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
+			}
 		}
 	}
 }

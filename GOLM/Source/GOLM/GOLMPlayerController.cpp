@@ -40,7 +40,25 @@ void AGOLMPlayerController::SetCharacterName(FName NewName)
 {
 	if(Role == ROLE_Authority)
 	{
+		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), NewName.ToString());
 		PlayerState->SetPlayerName(NewName.ToString());
+		if (NewName == "TheKyle" || NewName == "thekyle" || NewName == "THEKYLE")
+		{
+			AGOLMGameMode *GM = Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()));
+			if(GM!=NULL)
+			{
+				if (!GM->bIsThereKyle)
+				{
+					GM->bIsThereKyle = true;
+					PlayerState->SetPlayerName("The Annointed One, Kyle");
+					Cast<AGOLMPlayerState>(PlayerState)->bIsKyle = true;
+				}
+				else
+				{
+					PlayerState->SetPlayerName("There Can Be Only One");
+				}
+			}
+		}
 	}
 	if (Role != ROLE_Authority)
 		ServerSetCharacterName(NewName);

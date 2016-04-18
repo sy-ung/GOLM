@@ -10,7 +10,7 @@ AGOLMGameMode::AGOLMGameMode()
 {
 	EnemySpawnTimer = 1.0f;
 	NumOfEnemies = 0;
-	MaxNumOfEnemies = 25;
+	MaxNumOfEnemies = 1;
 	EnemySpawnInterval = 0.50f;
 	NumOfPlayers = 1;
 }
@@ -20,6 +20,7 @@ void AGOLMGameMode::BeginPlay()
 	//StartDedicatedServer();
 	//GEngine->AddOnScreenStart
 	GetEnemySpawnLocations();
+	bIsThereKyle = false;
 }
 
 void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)

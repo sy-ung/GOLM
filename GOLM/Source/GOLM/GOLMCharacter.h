@@ -3,6 +3,7 @@
 #include "Weapon.h"
 #include "GOLMPlayerState.h"
 #include "GOLMPlayerStart.h"
+#include "Components/WidgetComponent.h"
 #include "GameFramework/Character.h"
 #include "GOLMCharacter.generated.h"
 
@@ -78,6 +79,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	UCameraComponent *EquipmentCameraRightShoulder;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera)	USpringArmComponent* EquipmentCameraRightShoulderBoom;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadwrite, Category = Labels)	UWidgetComponent *PlayerLabel;
 
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon Scale")	float WeaponScale;
@@ -102,9 +104,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AI)					bool bIsAI;
 																				
 
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float Health;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float deathTimer;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = PlayerData)		float RespawnTimeCheck;
+	UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = PlayerData)		float Health;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = PlayerData)		float deathTimer;
+	float RespawnTimeCheck;
 
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Replicated)		bool bBoosting;

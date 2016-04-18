@@ -5,6 +5,7 @@
 #include "GOLMGameState.h"
 #include "GOLMLevelStreamBeacon.h"
 #include "GOLMEquipmentMenuWidget.h"
+#include "GOLMPlayerLabel.h"
 #include "GOLMPlayerController.h"
 #include "GOLMMiniMapCamera.h"
 
@@ -62,7 +63,8 @@ AGOLMCharacter::AGOLMCharacter()
 	EquipmentCameraRightShoulderBoom->AttachTo(RootComponent);
 
 
-
+	PlayerLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerLabel"));
+	PlayerLabel->AttachTo(PlayerCameraBoom);
 
 
 	//MovementComponent = CreateDefaultSubobject<UGOLMPawnMovementComponent>(TEXT("GOLM Movement Component"));
@@ -103,13 +105,12 @@ void AGOLMCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	bAlive = true;
-	Health = 100;
-	deathTimer = 5.0f;
-
 
 	if (bIsAI)
 		return;
 
+	Cast<UGOLMPlayerLabel>(PlayerLabel->GetUserWidgetObject())->SetCharacterReference(this);
+	
 	GetCharacterMovement()->MaxWalkSpeed = MovingSpeed;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate.Yaw = TurnSpeed;
@@ -128,6 +129,12 @@ void AGOLMCharacter::BeginPlay()
 	FrontCameraActor->CameraComponent = EquipmentCameraFront;
 	LeftShoulderCameraActor->CameraComponent = EquipmentCameraLeftShoulder;
 	RightShoulderCameraActor->CameraComponent = EquipmentCameraRightShoulder;
+
+
+	PlayerCameraActor->SetActorEnableCollision(false);
+	FrontCameraActor->SetActorEnableCollision(false);
+	LeftShoulderCameraActor->SetActorEnableCollision(false);
+	RightShoulderCameraActor->SetActorEnableCollision(false);
 
 	RespawnTimeCheck = 0;
 
@@ -169,6 +176,8 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 
 	DOREPLIFETIME(AGOLMCharacter, ReturnHomeTimer);
 	DOREPLIFETIME(AGOLMCharacter, bCanGoHome);
+
+
 }
 
 void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker)
@@ -226,7 +235,19 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 					GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
 			}
 		}
+		PlayerLabel->SetWorldLocation(GetActorLocation());
+		
+		if (PlayerLabel->GetUserWidgetObject() != NULL && PlayerCamera != NULL)
+		{
+			PlayerLabel->SetWorldRotation(
+				UKismetMathLibrary::FindLookAtRotation(
+					PlayerLabel->GetComponentLocation(),
+					Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->PlayerCameraManager->GetCameraLocation()
+					));
+		}
 
+
+		
 	}
 
 
@@ -298,6 +319,9 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 		if (IsLocallyControlled())
 		{
+
+			//PlayerLabel->SetWorldRotation((Cast<AGOLMPlayerController>(GetController())->PlayerCameraManager->GetCameraLocation() - PlayerLabel->GetComponentLocation()).Rotation());
+			MoveCamera();
 			if (bAlive)
 			{
 				if (MiniMapCameraReference != NULL)
@@ -323,7 +347,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 					PlayerCameraBoom->TargetArmLength = FMath::Lerp<float>(PlayerCameraBoom->TargetArmLength, NewCameraHeight, 0.1);
 				}
 			}
-			MoveCamera();
+			
 		}
 	
 
@@ -360,6 +384,11 @@ void AGOLMCharacter::UpdateAim()
 
 	if (CurrentHandWeapon != NULL)
 	{
+		FVector LengthCheck = (TargetLocation - CurrentHandWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash"));
+		if (LengthCheck.Size() <= 100)
+		{
+			return;
+		}
 
 		FRotator aim = (TargetLocation - CurrentHandWeapon->WeaponMesh->GetSocketLocation("MuzzleFlash")).Rotation();
 		SetActorRotation(FRotator(0, aim.Yaw, 0));
@@ -743,8 +772,8 @@ void AGOLMCharacter::Respawn()
 
 		ReturnHomeTimer = 0;
 
-		if (!bIsAI)
-			Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->KillAllEnemies();
+		//if (!bIsAI)
+		//	Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->KillAllEnemies();
 
 		//ChangePlayerCollisionProfile(NoPawnCollisionProfile);
 		LoadEntranceLevel("LockerRoom");
@@ -793,7 +822,6 @@ bool AGOLMCharacter::ServerRespawn_Validate()
 }
 void AGOLMCharacter::Death()
 {
-
 	SetPawnCollisionType(EPlayerCollisionProfile::DEATH);
 	if (Role == ROLE_Authority)
 	{
@@ -811,7 +839,6 @@ void AGOLMCharacter::ClientDeath_Implementation()
 	{
 		bAlive = false;
 		Death();
-		NewCameraOffset = FVector::ZeroVector;
 	}
 
 }
@@ -836,6 +863,7 @@ void AGOLMCharacter::MoveCamera()
 	if (!bAlive)
 	{
 		NewCameraOffset = FVector::ZeroVector;
+		return;
 	}
 
 
@@ -1379,5 +1407,7 @@ FString AGOLMCharacter::GetCharacterName()
 void AGOLMCharacter::SetCharacterName(FString NewName)
 {
 	if(Role == ROLE_Authority)
+	{
 		PlayerState->PlayerName = NewName;
+	}
 }

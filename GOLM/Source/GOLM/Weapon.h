@@ -13,7 +13,7 @@ class GOLM_API AWeapon : public AActor
 {
 	GENERATED_BODY()
 
-	UFUNCTION(Client, Unreliable, NetMulticast)
+	UFUNCTION(Client, Reliable, NetMulticast)
 		void ClientPlayLaunchEffects();
 		void ClientPlayLaunchEffects_Implementation();
 	

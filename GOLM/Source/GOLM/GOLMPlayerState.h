@@ -77,6 +77,11 @@ public:
 	UPROPERTY(Replicated)
 		class AWeapon *LeftShoulder;
 
+	UPROPERTY(VisibleAnywhere,Replicated,BlueprintReadOnly)
+		bool bIsKyle;
+
+
+
 	void AddToScore(int32 AdditionalKill, int32 AdditionalDeath);
 
 private:
