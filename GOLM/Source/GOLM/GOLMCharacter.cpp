@@ -62,6 +62,8 @@ AGOLMCharacter::AGOLMCharacter()
 	EquipmentCameraRightShoulder->AttachTo(EquipmentCameraRightShoulderBoom, USpringArmComponent::SocketName);
 	EquipmentCameraRightShoulderBoom->AttachTo(RootComponent);
 
+	LeftJetBoosters = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LeftBoosters"));
+	RightJetBoosters = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RightBoosters"));
 
 	PlayerLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerLabel"));
 	PlayerLabel->AttachTo(PlayerCameraBoom);
@@ -104,6 +106,9 @@ void AGOLMCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
+
+
+	
 	bAlive = true;
 
 	if (bIsAI)
@@ -157,8 +162,6 @@ void AGOLMCharacter::BeginPlay()
 void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
 
 	DOREPLIFETIME(AGOLMCharacter, FinalOrientation);
 	DOREPLIFETIME(AGOLMCharacter, bMoving);
@@ -216,7 +219,22 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 		CalculateRelativeDirectionScale();
 		if (bBoosting)
+		{
+
 			Boost();
+		}
+		else
+		{
+
+		}
+		if (RightJetBoosters->IsActive())
+		{
+			RightJetBoosters->Deactivate();
+		}
+		if (LeftJetBoosters->IsActive())
+		{
+			LeftJetBoosters->Deactivate();
+		}
 
 		if (bMoving)
 		{
@@ -224,7 +242,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 			if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
 			{
-				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation(), FinalOrientation, 0.25f));
+				SetActorRotation(FMath::Lerp(GetActorForwardVector().Rotation().Quaternion(), FinalOrientation, 0.25f));
 				
 				if(!bIsAI)
 					GetCharacterMovement()->AddInputVector(GetActorForwardVector() * (MovingSpeed)* DeltaSeconds);
@@ -232,7 +250,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			else
 			{
 				if (!bIsAI)
-					GetCharacterMovement()->AddInputVector(FinalOrientation.Vector() * (MovingSpeed)* DeltaSeconds);
+					GetCharacterMovement()->AddInputVector(FinalOrientation.Rotator().Vector() * (MovingSpeed)* DeltaSeconds);
 			}
 		}
 		PlayerLabel->SetWorldLocation(GetActorLocation());
@@ -276,13 +294,19 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		}
 		else
 		{
-
+			if (bIsAI)
+			{
+				FinalOrientation = FinalOrientationROT.Quaternion();
+			}
 		}
+
+
 	}
 
 
 	if (bIsAI)
 		return;
+		
 
 	if (Role == ROLE_Authority)
 	{
@@ -331,7 +355,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 				if (bRotatingCamera)
 					RotateCamera();
 
-				UpdateTargetLocation(Cast<AGOLMPlayerController>(GetController())->GetMouseHit());
+				FVector NewTargetLocation = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
+				UpdateTargetLocation(FVector_NetQuantize10(NewTargetLocation.X,NewTargetLocation.Y,NewTargetLocation.Z));
 
 			
 
@@ -361,19 +386,19 @@ void AGOLMCharacter::NotifyHit
 
 }
 
-void AGOLMCharacter::UpdateTargetLocation(FVector NewTargetLocation)
+void AGOLMCharacter::UpdateTargetLocation(FVector_NetQuantize10 NewTargetLocation)
 {
 	TargetLocation = NewTargetLocation;
 	if (Role != ROLE_Authority)
 		ServerUpdateTargetLocation(NewTargetLocation);
 }
 
-void AGOLMCharacter::ServerUpdateTargetLocation_Implementation(FVector NewTargetLocation)
+void AGOLMCharacter::ServerUpdateTargetLocation_Implementation(FVector_NetQuantize10 NewTargetLocation)
 {
 	UpdateTargetLocation(NewTargetLocation);
 }
 
-bool AGOLMCharacter::ServerUpdateTargetLocation_Validate(FVector NewTargetLocation)
+bool AGOLMCharacter::ServerUpdateTargetLocation_Validate(FVector_NetQuantize10 NewTargetLocation)
 {
 	return true;
 }
@@ -461,6 +486,7 @@ void AGOLMCharacter::Equip(AWeapon *NewWeapon, EEquipSlot In)
 	{
 		FActorSpawnParameters spawnParams;
 		spawnParams.Owner = this;
+		spawnParams.Instigator = this;
 		AWeapon *SpawnedWeapon = NULL;
 		//SpawnedWeapon = GetWorld()->SpawnActor<AWeapon>(NewWeapon, spawnParams);
 
@@ -675,7 +701,7 @@ void AGOLMCharacter::MoveCheck()
 		OverallDirection.Z = 0;
 		OverallDirection.Normalize();
 
-		FinalOrientation = OverallDirection.Rotation();
+		FinalOrientation = OverallDirection.Rotation().Quaternion();
 
 		if (Role != ROLE_Authority)
 		{
@@ -685,13 +711,12 @@ void AGOLMCharacter::MoveCheck()
 	
 }
 
-void AGOLMCharacter::ServerMove_Implementation(FRotator direction, bool bIsMoving)
+void AGOLMCharacter::ServerMove_Implementation(FQuat direction, bool bIsMoving)
 {
 	bMoving = bIsMoving;
 	FinalOrientation = direction;
 }
-bool AGOLMCharacter::ServerMove_Validate(FRotator direction, bool bIsMoving){return true;}
-
+bool AGOLMCharacter::ServerMove_Validate(FQuat direction, bool bIsMoving){return true;}
 
 
 void AGOLMCharacter::Boost()
@@ -714,50 +739,56 @@ void AGOLMCharacter::Boost()
 				//if (Role != ROLE_Authority)
 				{
 					if (direction != FVector::ZeroVector)
-						BoostCharacter(direction * BoostSpeed);
+					{
+						FVector LaunchVel = direction * BoostSpeed;
+						FVector_NetQuantize10 NetLaunchVel;
+						NetLaunchVel.X = LaunchVel.X;
+						NetLaunchVel.Y = LaunchVel.Y;
+						NetLaunchVel.Z = LaunchVel.Z;
+						BoostCharacter(NetLaunchVel);
+					}
 				}
 			}
 		}
 	}
 }
 
-void AGOLMCharacter::ServerBoost_Implementation(FVector LaunchDirection)
+void AGOLMCharacter::ServerBoost_Implementation(FVector_NetQuantize10 LaunchDirection)
 {
 	BoostCharacter(LaunchDirection);
 }
-bool AGOLMCharacter::ServerBoost_Validate(FVector LaunchDirection)
+bool AGOLMCharacter::ServerBoost_Validate(FVector_NetQuantize10 LaunchDirection)
 {
 	return true;
 }
 
-void AGOLMCharacter::BoostCharacter(FVector LaunchVelocity)
+void AGOLMCharacter::BoostCharacter(FVector_NetQuantize10 LaunchVelocity)
 {
-	LaunchCharacter(LaunchVelocity.GetSafeNormal() * BoostSpeed, false, false);
-	if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
-		SetActorRotation(LaunchVelocity.GetSafeNormal().Rotation());
-
-
+	PlayBoostEffects();
 	
 
 	if (Role != ROLE_Authority)
 	{
 		ServerBoost(LaunchVelocity);
 	}
-	
 	if (Role == ROLE_Authority)
 	{
-		//ClientBoostCharacter(LaunchVelocity);
+		LaunchCharacter(LaunchVelocity.GetSafeNormal() * BoostSpeed, false, false);
+		if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
+			SetActorRotation(LaunchVelocity.GetSafeNormal().Rotation());
+		ClientBoostCharacter(LaunchVelocity);
 	}
 }
-
-void AGOLMCharacter::ClientBoostCharacter_Implementation(FVector NewLaunchVelocity)
+void AGOLMCharacter::PlayBoostEffects()
+{
+	UGameplayStatics::SpawnEmitterAttached(RightJetBoosters->Template, GetMesh(), "RightBackBoosterSock");
+	UGameplayStatics::SpawnEmitterAttached(LeftJetBoosters->Template, GetMesh(), "LeftBackBoosterSock");
+}
+void AGOLMCharacter::ClientBoostCharacter_Implementation(FVector_NetQuantize10 NewLaunchVelocity)
 {
 	if (Role != ROLE_Authority)
 	{
-		BoostCharacter(NewLaunchVelocity);
-		//LaunchCharacter(NewLaunchVelocity.GetSafeNormal() * BoostSpeed, false, false);
-		//if (!bHasHandWeapon)
-		//	SetActorRotation(NewLaunchVelocity.GetSafeNormal().Rotation());
+		PlayBoostEffects();
 	}
 }
 
@@ -785,7 +816,7 @@ void AGOLMCharacter::Respawn()
 			SetRagDoll(false);
 		}
 		GetEquippedWeapons();
-
+		ClientRespawn();
 
 	}
 	
@@ -795,7 +826,7 @@ void AGOLMCharacter::ClientRespawn_Implementation()
 {
 	if(Role != ROLE_Authority)
 	{
-		
+		SetReplicates(true);
 	}
 }
 bool AGOLMCharacter::ClientRespawn_Validate()
@@ -823,6 +854,7 @@ bool AGOLMCharacter::ServerRespawn_Validate()
 void AGOLMCharacter::Death()
 {
 	SetPawnCollisionType(EPlayerCollisionProfile::DEATH);
+
 	if (Role == ROLE_Authority)
 	{
 		SetRagDoll(true);
@@ -839,6 +871,7 @@ void AGOLMCharacter::ClientDeath_Implementation()
 	{
 		bAlive = false;
 		Death();
+		SetReplicates(false);
 	}
 
 }
@@ -1209,7 +1242,7 @@ void AGOLMCharacter::CalculateRelativeDirectionScale()
 			{
 				FVector FacingVec = GetActorForwardVector();
 				FacingVec.Z = 0;
-				FVector MovementVec = FinalOrientation.Vector();
+				FVector MovementVec = FinalOrientation.Rotator().Vector();
 				MovementVec.Z = 0;
 				FVector RightFacingVec = GetActorRightVector();
 				RightFacingVec.Z = 0;

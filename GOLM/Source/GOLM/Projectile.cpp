@@ -47,7 +47,6 @@ void AProjectile::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifet
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 	DOREPLIFETIME(AProjectile, Alive);
-	DOREPLIFETIME(AProjectile, CurrentLevelStream);
 	DOREPLIFETIME(AProjectile, TargetLocation);
 }
 
@@ -201,7 +200,7 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 	else if(!bVTOLStage2Complete)
 	{
 		FVector VTOLDropStagingLoc = FVector(TargetLocation.X, TargetLocation.Y, TargetLocation.Z + VTOLHeight);
-		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 0.25f).Vector() * VTOLSpeed;
+		MovementComponent->Velocity = FMath::LerpStable<FRotator>(GetActorForwardVector().Rotation(), (VTOLDropStagingLoc - GetActorLocation()).Rotation(), 1.0f).Vector() * VTOLSpeed;
 
 		if ((VTOLDropStagingLoc - GetActorLocation()).Size() < VTOLDropRadius)
 			bVTOLStage2Complete = true;
@@ -209,7 +208,10 @@ void AProjectile::VTOLMovement(float DeltaSeconds)
 	}
 	else if (!bVTOLStage3Complete)
 	{
-		MovementComponent->Velocity = FMath::Lerp<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),1.0f).Vector() * (VTOLSpeed * 1.5);
+		if(GetActorLocation().Z >= TargetLocation.Z)
+		{
+			MovementComponent->Velocity = FMath::LerpStable<FRotator>(GetActorForwardVector().Rotation(), (TargetLocation - GetActorLocation()).Rotation(),1.0f).Vector() * (VTOLSpeed * 2.25);
+		}
 		
 	}
 	MovementComponent->UpdateComponentVelocity();
@@ -235,15 +237,26 @@ void AProjectile::InflictExplosiveDamage()
 	if(bExplosive)
 	{
 		TSubclassOf<UDamageType> DamageType = TSubclassOf<UDamageType>(UDamageType::StaticClass());
-		AController *ConInstigator = Cast<AGOLMCharacter>(GetInstigator())->GetController();
-		if(ConInstigator != NULL && GetInstigator() != NULL)
+		AController *ConInstigator = NULL;
+		if(GetOwner()!=NULL)
+		{
+			ConInstigator = Cast<AGOLMCharacter>(GetOwner())->GetController();
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "OWNER IS NULL");
+		}
+
+
+		if(ConInstigator != NULL)
 		{
 			if (bExplosive)
 			{
 				TArray<AActor*> OverlappedActors;
-				UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetInstigator(), ConInstigator);
+				UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetOwner(), ConInstigator);
 			}
 		}
+		
 	}
 }
 
@@ -278,7 +291,9 @@ void AProjectile::NotifyHit(class UPrimitiveComponent * MyComp, AActor * Other, 
 				if (HitPlayer2 != NULL)
 				{
 					if (!bExplosive)
-						UGameplayStatics::ApplyDamage(Other, Damage, ConInstigator, GetInstigator(), DamageType);
+						UGameplayStatics::ApplyDamage(Other, Damage, ConInstigator, GetOwner(), DamageType);
+					else
+						InflictExplosiveDamage();
 				}
 			}
 		}
@@ -294,6 +309,10 @@ void AProjectile::FireCluster()
 {
 	if(Role == ROLE_Authority)
 	{
+		FActorSpawnParameters spawnParams;
+		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
+		spawnParams.Owner = GetOwner();
+
 		for (int32 i = 0; i < NumberInCluster; i++)
 		{
 			int32 RandomSeed = FMath::Rand();
@@ -306,11 +325,9 @@ void AProjectile::FireCluster()
 			if (MovementComponent->bShouldBounce)
 				Direction = SpreadRandom.VRandCone(FVector::UpVector, SpreadCone, SpreadCone);
 
-			FActorSpawnParameters spawnParams;
-			spawnParams.Instigator = Cast<AGOLMCharacter>(GetInstigator());
+
 			AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(ClusterProjectile.GetDefaultObject()->GetClass(), GetActorLocation(), Direction.Rotation(), spawnParams);
 			projectile->TargetLocation = TargetLocation;
-			projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetInstigator())->CurrentLevelStream;
 			projectile->SetActorScale3D(this->GetActorScale3D() * ClusterProjectileScale);
 			
 		}

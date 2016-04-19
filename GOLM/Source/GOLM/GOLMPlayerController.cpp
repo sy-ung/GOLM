@@ -29,8 +29,6 @@ void AGOLMPlayerController::BeginPlay()
 		CursorWidgetReference->AddToViewport(3);
 		ChangeCursor(EPlayerCursorType::MENU);
 	}
-	else
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "CURSOR WIDGET IS NULL");
 	//bShowMouseCursor = true;
 
 
@@ -40,7 +38,6 @@ void AGOLMPlayerController::SetCharacterName(FName NewName)
 {
 	if(Role == ROLE_Authority)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), NewName.ToString());
 		PlayerState->SetPlayerName(NewName.ToString());
 		if (NewName == "TheKyle" || NewName == "thekyle" || NewName == "THEKYLE")
 		{

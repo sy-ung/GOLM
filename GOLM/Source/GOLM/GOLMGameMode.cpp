@@ -129,7 +129,12 @@ void AGOLMGameMode::SpawnEnemy()
 	if (EnemySpawnLocations.Num() != 0)
 	{
 		AGOLMPlayerStart *RandomEnemySpawn = EnemySpawnLocations[FMath::RandRange(0, EnemySpawnLocations.Num()-1)];
-		Enemies.Add(GetWorld()->SpawnActor<AGOLMCharacter>(EnemyAI.GetDefaultObject()->GetClass(), RandomEnemySpawn->GetSpawnLocation(),FRotator(0,0,0)));
+		
+		Enemies.Add(
+			GetWorld()->SpawnActor<AGOLMCharacter>(
+				EnemyAISpawning[FMath::RandRange(0,EnemyAISpawning.Num()-1)].GetDefaultObject()->GetClass(),
+				RandomEnemySpawn->GetSpawnLocation(),FRotator(0,0,0)));
+
 		NumOfEnemies++;
 	}
 }

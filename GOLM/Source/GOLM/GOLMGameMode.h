@@ -19,7 +19,7 @@ public:
 	AGOLMGameMode();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerCharacters) TSubclassOf<AGOLMCharacter> PlayerCharacterRegular;
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerCharacters) TSubclassOf<AGOLMCharacter> EnemyAI;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = PlayerCharacters) TArray<TSubclassOf<AGOLMCharacter>> EnemyAISpawning;
 
 	UFUNCTION(BlueprintCallable, Category = ServerActions)
 		void RequestRespawn(APlayerController *RequestingPlayer);

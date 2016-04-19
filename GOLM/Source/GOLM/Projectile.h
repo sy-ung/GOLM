@@ -85,7 +85,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UAudioComponent *MoveSounds;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileSetup)		UAudioComponent *DeathSounds;
 	
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = ProjectileData)		FName CurrentLevelStream;
+	//Only Server needs to know about Current Level Stream
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = ProjectileData)		FName CurrentLevelStream;
 	
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileCluster) TSubclassOf<AProjectile> ClusterProjectile;

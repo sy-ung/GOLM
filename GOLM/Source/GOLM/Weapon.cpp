@@ -25,7 +25,6 @@ AWeapon::AWeapon()
 	WeaponAutoMaticEnd = CreateDefaultSubobject<UAudioComponent>(TEXT("WeaponAutomaticEnd"));
 	WeaponAutoMaticEnd->AttachTo(RootComponent);
 
-	bReplicates = true;
 	SetReplicates(true);
 }
 
@@ -252,8 +251,8 @@ void AWeapon::LaunchProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 		if (UKismetSystemLibrary::IsValid(WeaponOwner))
 		{
 			FActorSpawnParameters spawnParams;
+			spawnParams.Owner = WeaponOwner;
 			spawnParams.Instigator = WeaponOwner;
-
 
 			if (bIsSpread)
 			{
@@ -292,7 +291,10 @@ bool AWeapon::ServerLaunchProjectile_Validate(FVector MuzzleLocation, FRotator M
 
 void AWeapon::LaunchSpreadProjectile(FVector MuzzleLocation, FRotator MuzzleRotation)
 {
-
+	AGOLMCharacter *WeaponOwner = Cast<AGOLMCharacter>(GetOwner());
+	FActorSpawnParameters spawnParams;
+	spawnParams.Owner = WeaponOwner;
+	spawnParams.Instigator = WeaponOwner;
 	for (int32 i = 0; i < NumberOfSpread;i++)
 	{
 		
@@ -300,7 +302,6 @@ void AWeapon::LaunchSpreadProjectile(FVector MuzzleLocation, FRotator MuzzleRota
 		FRandomStream SpreadRandom(RandomSeed);
 		float SpreadCone = FMath::DegreesToRadians(SpreadAmount * 0.5);
 		FVector Direction = SpreadRandom.VRandCone(MuzzleRotation.Vector(), SpreadCone, SpreadCone);
-		FActorSpawnParameters spawnParams;
 		spawnParams.Instigator = Cast<AGOLMCharacter>(GetOwner());
 		AProjectile *projectile = GetWorld()->SpawnActor<AProjectile>(CurrentProjectile->GetClass(), MuzzleLocation, Direction.Rotation(), spawnParams);
 		projectile->CurrentLevelStream = Cast<AGOLMCharacter>(GetOwner())->CurrentLevelStream;

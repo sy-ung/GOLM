@@ -81,7 +81,9 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadwrite, Category = Labels)	UWidgetComponent *PlayerLabel;
 
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Jets)		UParticleSystemComponent *LeftJetBoosters;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Jets)		UParticleSystemComponent *RightJetBoosters;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon Scale")	float WeaponScale;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Available Weapons")	TSubclassOf<class AWeapon> RocketLauncher;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Available Weapons")	TSubclassOf<class AWeapon> Rifle;
@@ -122,11 +124,12 @@ public:
 
 	UPROPERTY(BlueprintReadOnly)		float CurrentHandWeaponAimPitch;
 
-	UPROPERTY(BlueprintReadOnly, Replicated)		FName CurrentLevelStream;
+	//Only Server needs to know about CurrentLevelStream
+	UPROPERTY(BlueprintReadOnly)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedHandWeapon)				AWeapon *CurrentHandWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedLeftShoulderWeapon)		AWeapon *CurrentLeftShoulderWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedRightShoulder)			AWeapon *CurrentRightShoulderWeapon;
-	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "CharacterData")	FVector TargetLocation;
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "CharacterData")	FVector_NetQuantize10 TargetLocation;
 
 	UPROPERTY(BlueprintReadOnly)					FName OriginalCollisionProfile;
 	UPROPERTY(BlueprintReadOnly)					FName NoPawnCollisionProfile;
@@ -136,7 +139,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector GripBoneLocation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")				FVector LeftPalmLocation;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, Category = "CharacterData")	FRotator FinalOrientation;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "CharacterAIData")			FRotator FinalOrientationROT;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Replicated, Category = "CharacterData")	FQuat FinalOrientation;
 	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite, Category = "CharacterData")	bool bMoving;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "CharacterData")	bool bMovingUp;
@@ -146,11 +150,11 @@ public:
 
 	void UpdateAim();
 	
-	void UpdateTargetLocation(FVector NewTargetLocation);
+	void UpdateTargetLocation(FVector_NetQuantize10 NewTargetLocation);
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerUpdateTargetLocation(FVector NewTargetLocation);
-		void ServerUpdateTargetLocation_Implementation(FVector NewTargetLocation);
-		bool ServerUpdateTargetLocation_Validate(FVector NewTargetLocation);
+		void ServerUpdateTargetLocation(FVector_NetQuantize10 NewTargetLocation);
+		void ServerUpdateTargetLocation_Implementation(FVector_NetQuantize10 NewTargetLocation);
+		bool ServerUpdateTargetLocation_Validate(FVector_NetQuantize10 NewTargetLocation);
 
 	UFUNCTION()
 		virtual void BeginPlay() override;
@@ -240,9 +244,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MyMovements)
 		void MoveCheck();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerMove(FRotator direction, bool bIsMoving);
-		void ServerMove_Implementation(FRotator direction, bool bIsMoving);
-		bool ServerMove_Validate(FRotator direction, bool bIsMoving);
+		void ServerMove(FQuat direction, bool bIsMoving);
+		void ServerMove_Implementation(FQuat direction, bool bIsMoving);
+		bool ServerMove_Validate(FQuat direction, bool bIsMoving);
 
 
 
@@ -250,16 +254,17 @@ public:
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
 		void Boost();
 	UFUNCTION(Server, Reliable, WithValidation)
-		void ServerBoost(FVector LaunchDirection);
-		void ServerBoost_Implementation(FVector LaunchDirection);
-		bool ServerBoost_Validate(FVector LaunchDirection);
+		void ServerBoost(FVector_NetQuantize10 LaunchDirection);
+		void ServerBoost_Implementation(FVector_NetQuantize10 LaunchDirection);
+		bool ServerBoost_Validate(FVector_NetQuantize10 LaunchDirection);
 
 
-		void BoostCharacter(FVector LaunchVelocity);
+		void BoostCharacter(FVector_NetQuantize10 LaunchVelocity);
 	UFUNCTION(Client, Reliable, NetMulticast)
-		void ClientBoostCharacter(FVector NewLaunchVelocity);
-		void ClientBoostCharacter_Implementation(FVector NewLaunchVelocity);
+		void ClientBoostCharacter(FVector_NetQuantize10 NewLaunchVelocity);
+		void ClientBoostCharacter_Implementation(FVector_NetQuantize10 NewLaunchVelocity);
 
+		void PlayBoostEffects();
 
 	UFUNCTION(BlueprintCallable, Category = StuffICanDo)
 		void RotateCamera();
