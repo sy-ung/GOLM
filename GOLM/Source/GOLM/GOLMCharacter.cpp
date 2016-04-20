@@ -255,14 +255,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 		}
 		PlayerLabel->SetWorldLocation(GetActorLocation());
 		
-		if (PlayerLabel->GetUserWidgetObject() != NULL && PlayerCamera != NULL)
-		{
-			PlayerLabel->SetWorldRotation(
-				UKismetMathLibrary::FindLookAtRotation(
-					PlayerLabel->GetComponentLocation(),
-					Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->PlayerCameraManager->GetCameraLocation()
-					));
-		}
+		UpdatePlayerLabel();
+
 
 
 		
@@ -676,6 +670,24 @@ bool AGOLMCharacter::ServerFireWeapon_Validate(EEquipSlot WeaponSlot, bool Start
 	return true;
 }
 
+void AGOLMCharacter::UpdatePlayerLabel()
+{
+	if (PlayerLabel->GetUserWidgetObject() != NULL && PlayerCamera != NULL)
+	{
+		FVector2D ScreenCenter = GEngine->GameViewport->Viewport->GetSizeXY();
+		ScreenCenter /= 2;
+		FVector ScreenCenterWorld;
+		FVector ScreenCenterDir;
+		Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, ScreenCenterWorld, ScreenCenterDir);
+		FRotator NewRot = UKismetMathLibrary::FindLookAtRotation(PlayerLabel->GetComponentLocation(), ScreenCenterWorld);
+		
+
+		PlayerLabel->SetWorldRotation(NewRot);
+
+		PlayerLabel->SetWorldLocation(GetActorLocation() + (GetActorUpVector() * 50) + (PlayerLabel->GetUpVector() * PlayerLabel->GetDrawSize().Y));
+		PlayerLabel->SetWorldScale3D(FVector(1,1,1) * (PlayerCameraBoom->TargetArmLength/MaxCameraHeight * 3));
+	}
+}
 
 void AGOLMCharacter::MoveCheck()
 {
@@ -773,10 +785,13 @@ void AGOLMCharacter::BoostCharacter(FVector_NetQuantize10 LaunchVelocity)
 	}
 	if (Role == ROLE_Authority)
 	{
-		LaunchCharacter(LaunchVelocity.GetSafeNormal() * BoostSpeed, false, false);
-		if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
-			SetActorRotation(LaunchVelocity.GetSafeNormal().Rotation());
-		ClientBoostCharacter(LaunchVelocity);
+		if(!GetMovementComponent()->IsFalling())
+		{
+			LaunchCharacter(LaunchVelocity.GetSafeNormal() * BoostSpeed, false, false);
+			if (!UKismetSystemLibrary::IsValid(CurrentHandWeapon))
+				SetActorRotation(LaunchVelocity.GetSafeNormal().Rotation());
+			ClientBoostCharacter(LaunchVelocity);
+		}
 	}
 }
 void AGOLMCharacter::PlayBoostEffects()

@@ -25,6 +25,15 @@ void UGOLMPlayerLabel::NativeTick(const FGeometry &MyGeometry, float InDeltaTime
 			{
 				PlayerNameText->SetColorAndOpacity(FLinearColor::MakeRandomColor());
 			}
+			else if (TrackingCharacter->IsLocallyControlled())
+			{
+				PlayerNameText->SetColorAndOpacity(FLinearColor(FColor::Cyan));
+			}
+			else
+			{
+				PlayerNameText->SetColorAndOpacity(FLinearColor::Red);
+			}
+
 			PlayerNameText->SetText(FText::FromString(TrackingCharacter->PlayerState->PlayerName));
 		}
 		

@@ -52,6 +52,7 @@ void UGOLMGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSu
 
 		FLatentActionInfo LatInfo;
 		//UGameplayStatics::LoadStreamLevel(GetWorld(), "MainGame", true, false, LatInfo);
+		RemoveCurrentMenu();
 		UGameplayStatics::OpenLevel(GetWorld(), "GameLevel", true, "listen");
 		
 
@@ -65,32 +66,6 @@ void UGOLMGameInstance::OnStartOnlineGameComplete(FName SessionName, bool bWasSu
 
 
 
-void UGOLMGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
-{
-	/*GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red, 
-		FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful)
-		);*/
-
-	//***Get current OnlineSubsystem
-	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
-	if (OnlineSubSys)
-	{
-		//***Get Session Interface
-		IOnlineSessionPtr Sessions = OnlineSubSys->GetSessionInterface();
-		
-		if (Sessions.IsUnique())
-		{
-			//***Clear OnDestroyCompleteDelegate
-			Sessions->ClearOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegateHandle);
-			if (bWasSuccessful)
-			{
-				//***What do you want to do when you close a Session
-				UGameplayStatics::OpenLevel(GetWorld(), "Beginning", true);
-				SetActiveWidget(MultiplayerMenuWidget);
-			}
-		}
-	}
-}
 
 void UGOLMGameInstance::ShowMainMenu()
 {
@@ -130,9 +105,11 @@ void UGOLMGameInstance::ShowEquipmentMenu()
 
 void UGOLMGameInstance::RemoveCurrentMenu()
 {
-	if (IsValid(CurrentWidget))
+	if (CurrentWidget!=NULL)
 	{
-		CurrentWidget->RemoveFromViewport();
+		CurrentWidget->RemoveFromParent();
+		CurrentWidget->RemoveFromRoot();
+		CurrentWidget = NULL;
 	}
 }
 
@@ -192,6 +169,7 @@ bool UGOLMGameInstance::HostSession(TSharedPtr<const FUniqueNetId> UserID, FName
 		if (Sessions.IsValid() && UserID.IsValid())
 		{
 			//***Set up Session settings
+			SessionSettings = NULL;
 			SessionSettings = MakeShareable(new FOnlineSessionSettings());
 			SessionSettings->bIsLANMatch = bAsLan;
 			SessionSettings->bUsesPresence = bAsPresence;
@@ -233,7 +211,7 @@ void UGOLMGameInstance::OnCreateSessionComplete(FName SessionName, bool bWasSucc
 		if (Sessions.IsValid())
 		{
 			//***Clear SessionComplete delegate handle since it is finished
-			Sessions->ClearOnFindSessionsCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
+			Sessions->ClearOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
 			if (bWasSuccessful)
 			{
 				//***Set StartSession delegate handle
@@ -429,24 +407,53 @@ void UGOLMGameInstance::JoinSelectedSession()
 
 void UGOLMGameInstance::JoinAGame(FSessionToJoin ServerSession)
 {
+	RemoveCurrentMenu();
 	ULocalPlayer *const Player = GetFirstGamePlayer();
-
 	JoinSession(Player->GetPreferredUniqueNetId(), GameSessionName,*ServerSession.GameSession);
 }
 
 void UGOLMGameInstance::LeaveGame()
 {
+	Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->RemoveAllWidgets();
 	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
 	if (OnlineSubSys)
 	{
 		IOnlineSessionPtr Sessions = OnlineSubSys->GetSessionInterface();
 		if (Sessions.IsValid())
 		{
-			Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
+			OnDestroySessionCompleteDelegateHandle = Sessions->AddOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegate);
 			Sessions->DestroySession(GameSessionName);
 		}
 	}
 }
+void UGOLMGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuccessful)
+{
+	/*GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red,
+	FString::Printf(TEXT("OnDestroySessionComplete %s, %d"), *SessionName.ToString(), bWasSuccessful)
+	);*/
+
+	//***Get current OnlineSubsystem
+	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
+	if (OnlineSubSys)
+	{
+		//***Get Session Interface
+		IOnlineSessionPtr Sessions = OnlineSubSys->GetSessionInterface();
+
+		if (Sessions.IsValid())
+		{
+			//***Clear OnDestroyCompleteDelegate
+			Sessions->ClearOnDestroySessionCompleteDelegate_Handle(OnDestroySessionCompleteDelegateHandle);
+			if (bWasSuccessful)
+			{
+				//***What do you want to do when you close a Session
+				
+				UGameplayStatics::OpenLevel(GetWorld(), "Beginning", true);
+				//SetActiveWidget(MultiplayerMenuWidget);
+			}
+		}
+	}
+}
+
 
 void UGOLMGameInstance::CreateServerRowWidget(uint32 index)
 {

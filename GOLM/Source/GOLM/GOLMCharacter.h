@@ -249,7 +249,7 @@ public:
 		bool ServerMove_Validate(FQuat direction, bool bIsMoving);
 
 
-
+		void UpdatePlayerLabel();
 
 	UFUNCTION(BlueprintCallable, Category = MyMovments)
 		void Boost();

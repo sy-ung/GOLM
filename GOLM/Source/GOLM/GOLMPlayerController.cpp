@@ -47,12 +47,12 @@ void AGOLMPlayerController::SetCharacterName(FName NewName)
 				if (!GM->bIsThereKyle)
 				{
 					GM->bIsThereKyle = true;
-					PlayerState->SetPlayerName("The Annointed One, Kyle");
+					PlayerState->SetPlayerName("The One, Supreme Lord Kyle");
 					Cast<AGOLMPlayerState>(PlayerState)->bIsKyle = true;
 				}
 				else
 				{
-					PlayerState->SetPlayerName("There Can Be Only One");
+					PlayerState->SetPlayerName("There Can Be Only One Lord Kyle");
 				}
 			}
 		}
@@ -650,4 +650,39 @@ void AGOLMPlayerController::SelectWeapon(EEquipSlot WeaponSlot, bool GotoNext, b
 void AGOLMPlayerController::MakeTestKillMessage(FName Killer, FName Victim)
 {
 	Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->CreateKillMessage(Killer, Victim);
+}
+
+void AGOLMPlayerController::RemoveAllWidgets()
+{
+	if(CursorWidgetReference!=NULL)
+	{
+		CursorWidgetReference->RemoveFromParent();
+		CursorWidgetReference->RemoveFromRoot();
+		CursorWidgetReference = NULL;
+	}
+	if (EquipmentMenuReference != NULL)
+	{
+		EquipmentMenuReference->RemoveFromParent();
+		EquipmentMenuReference->RemoveFromRoot();
+		EquipmentMenuReference = NULL;
+	}
+	if (InGameSettingsMenuReference != NULL)
+	{
+		InGameSettingsMenuReference->RemoveFromParent();
+		InGameSettingsMenuReference->RemoveFromRoot();
+		InGameSettingsMenuReference = NULL;
+	}
+	if (InGameHUDReference != NULL)
+	{
+		InGameHUDReference->RemoveFromParent();
+		InGameHUDReference->RemoveFromRoot();
+		InGameHUDReference = NULL;
+	}
+	if (ScoreboardReference != NULL)
+	{
+		ScoreboardReference->RemoveFromParent();
+		ScoreboardReference->RemoveFromRoot();
+		ScoreboardReference = NULL;
+	}
+
 }

@@ -36,5 +36,5 @@ void UGOLMScoreboardItemWidget::UpdateScoreDisplay()
 	DeathBlock->SetText(FText::FromString(FString::FromInt(CurrentPlayerState->PlayerDeath)));
 
 	PingBlock->SetColorAndOpacity(FLinearColor::Gray);
-	PingBlock->SetText(FText::FromString(FString::SanitizeFloat(CurrentPlayerState->Ping)));
+	PingBlock->SetText(FText::FromString(FString::SanitizeFloat(CurrentPlayerState->Ping*1000)));
 }

@@ -20,7 +20,8 @@ void AGOLMGameMode::BeginPlay()
 	//StartDedicatedServer();
 	//GEngine->AddOnScreenStart
 	GetEnemySpawnLocations();
-	bIsThereKyle = false;
+	if(!bIsThereKyle)
+		bIsThereKyle = false;
 }
 
 void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)
@@ -81,7 +82,6 @@ void AGOLMGameMode::Tick(float DeltaSeconds)
 
 void AGOLMGameMode::GotoSpawnLocation(FName PlayerStartTag, AGOLMCharacter *RequestingPlayerCharacter)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::White, PlayerStartTag.ToString());
 	if (!IsLevel("Beginning"))
 	{
 		TArray<AActor*, FDefaultAllocator> SpawnLocs;
