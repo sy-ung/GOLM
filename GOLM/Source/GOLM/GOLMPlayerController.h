@@ -156,6 +156,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = TestStuff) void MakeTestKillMessage(FName Killer, FName Victim);
 
+	UFUNCTION(BlueprintCallable, Category = CleanUp)
 	void RemoveAllWidgets();
 
 public:

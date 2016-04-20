@@ -361,6 +361,7 @@ void UGOLMGameInstance::OnJoinSessionComplete(FName SessionName, EOnJoinSessionC
 				ToggleGameInput();
 				//***Get the travelURL and use it to ClientTravel to the server
 				PlayerController->ClientTravel(TravelURL, ETravelType::TRAVEL_Absolute);
+				RemoveCurrentMenu();
 				//GEngine->AddOnScreenDebugMessage(-1, 60.f, FColor::White, "JOINED GAME SUCCESSFULLY");
 				//GEngine->AddOnScreenDebugMessage(-1, 60.f, FColor::Green, "Travel URL is: " + TravelURL);
 
@@ -382,8 +383,6 @@ void UGOLMGameInstance::LookForGames()
 	bCanSearchAgain = false;
 	Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->ClearServers();
 	FindSessions(Player->GetPreferredUniqueNetId(), GameSessionName, true, true);
-
-
 }
 
 void UGOLMGameInstance::SetSelectedSession(FSessionToJoin ServerSession)
@@ -446,7 +445,8 @@ void UGOLMGameInstance::OnDestroySessionComplete(FName SessionName, bool bWasSuc
 			if (bWasSuccessful)
 			{
 				//***What do you want to do when you close a Session
-				
+				RemoveCurrentMenu();
+				Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(),0))->RemoveAllWidgets();
 				UGameplayStatics::OpenLevel(GetWorld(), "Beginning", true);
 				//SetActiveWidget(MultiplayerMenuWidget);
 			}

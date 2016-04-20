@@ -22,6 +22,7 @@ void AGOLMGameMode::BeginPlay()
 	GetEnemySpawnLocations();
 	if(!bIsThereKyle)
 		bIsThereKyle = false;
+
 }
 
 void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)

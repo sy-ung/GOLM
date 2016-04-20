@@ -17,7 +17,7 @@ void AGOLMDestructibleActor::Tick(float DeltaSeconds)
 	Super::Tick(DeltaSeconds);
 
 #if WITH_PHYSX
-	//GEngine->ClearOnScreenDebugMessages();
+	//GEngine->DebugMessages();
 	//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::Red, "I GOT PHYSX BITCH");
 
 	//uint32 ChunkCount = DestructibleComponent->ApexDestructibleActor->getNumVisibleChunks();

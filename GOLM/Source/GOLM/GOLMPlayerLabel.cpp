@@ -5,7 +5,14 @@
 #include "GOLMPlayerLabel.h"
 
 
-
+void UGOLMPlayerLabel::NativeConstruct()
+{
+	Super::NativeConstruct();
+	FTimerHandle TimeHandle;
+	FTimerDynamicDelegate TimerDelegate;
+	TimerDelegate.BindUFunction(this, "DisplayLabels");
+	UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetWorldTimerManager().SetTimer(TimeHandle,TimerDelegate, 0.2f, true,0.2f);
+}
 
 void UGOLMPlayerLabel::SetPlayerLabels(UProgressBar *HealthProgressBar, UTextBlock *PlayerNameTextBlock)
 {
@@ -13,14 +20,13 @@ void UGOLMPlayerLabel::SetPlayerLabels(UProgressBar *HealthProgressBar, UTextBlo
 	PlayerNameText = PlayerNameTextBlock;
 }
 
-void UGOLMPlayerLabel::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
+void UGOLMPlayerLabel::DisplayLabels()
 {
-	Super::NativeTick(MyGeometry, InDeltaTime);
-
-	if(TrackingCharacter != NULL)
+	if (TrackingCharacter != NULL)
 	{
-		if(TrackingCharacter->PlayerState!=NULL)
+		if (TrackingCharacter->PlayerState != NULL)
 		{
+
 			if (Cast<AGOLMPlayerState>(TrackingCharacter->PlayerState)->bIsKyle)
 			{
 				PlayerNameText->SetColorAndOpacity(FLinearColor::MakeRandomColor());
@@ -36,9 +42,16 @@ void UGOLMPlayerLabel::NativeTick(const FGeometry &MyGeometry, float InDeltaTime
 
 			PlayerNameText->SetText(FText::FromString(TrackingCharacter->PlayerState->PlayerName));
 		}
-		
+
 		HealthBar->SetPercent(TrackingCharacter->Health / 100.0f);
 	}
+}
+
+void UGOLMPlayerLabel::NativeTick(const FGeometry &MyGeometry, float InDeltaTime)
+{
+	Super::NativeTick(MyGeometry, InDeltaTime);
+	//DisplayLabels();
+
 
 }
 

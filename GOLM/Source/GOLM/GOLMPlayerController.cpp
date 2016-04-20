@@ -23,15 +23,13 @@ void AGOLMPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 	PlayerCharacter = Cast<AGOLMCharacter>(GetPawn());
-	CursorWidgetReference = Cast<UGOLMMouseWidget>( CreateWidget<UUserWidget>(this, CursorWidget.GetDefaultObject()->GetClass()) );
+	CursorWidgetReference = Cast<UGOLMMouseWidget>(CreateWidget<UUserWidget>(this, CursorWidget.GetDefaultObject()->GetClass()));
 	if (CursorWidgetReference != NULL)
 	{
 		CursorWidgetReference->AddToViewport(3);
+		CursorWidgetReference->AddToRoot();
 		ChangeCursor(EPlayerCursorType::MENU);
 	}
-	//bShowMouseCursor = true;
-
-
 }
 
 void AGOLMPlayerController::SetCharacterName(FName NewName)
@@ -47,12 +45,12 @@ void AGOLMPlayerController::SetCharacterName(FName NewName)
 				if (!GM->bIsThereKyle)
 				{
 					GM->bIsThereKyle = true;
-					PlayerState->SetPlayerName("The One, Supreme Lord Kyle");
+					PlayerState->SetPlayerName("Kyle, The Exalted One");
 					Cast<AGOLMPlayerState>(PlayerState)->bIsKyle = true;
 				}
 				else
 				{
-					PlayerState->SetPlayerName("There Can Be Only One Lord Kyle");
+					PlayerState->SetPlayerName("There Can Be Only One");
 				}
 			}
 		}
@@ -89,8 +87,11 @@ void AGOLMPlayerController::ClientGetCharacterName_Implementation()
 void AGOLMPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	if(CursorWidgetReference != NULL)
+
+
+	if (CursorWidgetReference != NULL)
 		CursorWidgetReference->MoveMouseCursor(this);
+
 	if (InGameHUDReference != NULL)
 	{
 		InGameHUDReference->UpdateWeaponBar();

@@ -831,7 +831,7 @@ void AGOLMCharacter::Respawn()
 			SetRagDoll(false);
 		}
 		GetEquippedWeapons();
-		ClientRespawn();
+		//ClientRespawn();
 
 	}
 	
@@ -839,10 +839,10 @@ void AGOLMCharacter::Respawn()
 
 void AGOLMCharacter::ClientRespawn_Implementation()
 {
-	if(Role != ROLE_Authority)
-	{
-		SetReplicates(true);
-	}
+	//if(Role != ROLE_Authority)
+	//{
+	//	SetReplicates(true);
+	//}
 }
 bool AGOLMCharacter::ClientRespawn_Validate()
 {
@@ -886,7 +886,7 @@ void AGOLMCharacter::ClientDeath_Implementation()
 	{
 		bAlive = false;
 		Death();
-		SetReplicates(false);
+		//SetReplicates(false);
 	}
 
 }
@@ -1086,10 +1086,10 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
 				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
 				{
-					SetActorLocation(StartLocation->GetSpawnLocation());
+					//SetActorLocation(StartLocation->GetSpawnLocation());
 
 
-					//TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
 					CurrentLevelStream = EntranceLevelNameTag;
 					if (CurrentLevelStream == "LockerRoom")
 					{
