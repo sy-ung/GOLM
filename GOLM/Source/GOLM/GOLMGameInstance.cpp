@@ -7,6 +7,7 @@
 
 UGOLMGameInstance::UGOLMGameInstance()
 {
+	bCanHostGame = true;
 	//***Binding delegate for Creating Session
 	OnCreateSessionCompleteDelegate = FOnCreateSessionCompleteDelegate::CreateUObject(this, &UGOLMGameInstance::OnCreateSessionComplete);
 
@@ -270,6 +271,7 @@ void UGOLMGameInstance::OnFindSessionsComplete(bool bWasSuccessful)
 	//GEngine->AddOnScreenDebugMessage(-1, 10.f, FColor::Red,
 	//	FString::Printf(TEXT("OnFindSessionsComplete bSuccess: %d"), bWasSuccessful));
 	bCanSearchAgain = true;
+	bCanHostGame = true;
 	//***Get Online SubSystem to work with
 	IOnlineSubsystem *OnlineSubSys = IOnlineSubsystem::Get();
 	if (OnlineSubSys)
@@ -381,6 +383,7 @@ void UGOLMGameInstance::LookForGames()
 {
 	ULocalPlayer *const Player = GetFirstGamePlayer();
 	bCanSearchAgain = false;
+	bCanHostGame = false;
 	Cast<UGOLMMultiplayerMenuWidget>(CurrentWidget)->ClearServers();
 	FindSessions(Player->GetPreferredUniqueNetId(), GameSessionName, true, true);
 }

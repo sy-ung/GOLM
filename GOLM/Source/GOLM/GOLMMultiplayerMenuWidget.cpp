@@ -68,7 +68,7 @@ bool UGOLMMultiplayerMenuWidget::CheckPlayerName(FText PlayerNameCheck)
 
 	if (Test.GetCharArray().Num() > 15 || Test.GetCharArray().Num() <= 0)
 	{
-		StatusTextBox->SetText(FText::FromString("Name is too long or too short. Must be 1-15 Characters"));
+		StatusTextBox->SetText(FText::FromString("Name is too long or too short. Must be 1-14 Characters"));
 		return false;
 	}
 

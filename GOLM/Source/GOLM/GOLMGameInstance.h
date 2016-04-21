@@ -119,6 +119,7 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bHasSelectedServer;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bCanSearchAgain;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bCanHostGame;
 
 
 	UFUNCTION(BlueprintCallable, Category = MenuInteractions)	void ShowMainMenu();
