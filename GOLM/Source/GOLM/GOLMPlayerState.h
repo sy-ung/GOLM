@@ -81,6 +81,12 @@ public:
 		bool bIsKyle;
 
 
+	UPROPERTY(Replicated)
+		bool isWinner;
+	UPROPERTY(Replicated)
+		bool isTied;
+	UPROPERTY(Replicated)
+		bool isLoser;
 
 	void AddToScore(int32 AdditionalKill, int32 AdditionalDeath);
 

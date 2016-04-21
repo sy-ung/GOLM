@@ -26,7 +26,10 @@ public:
 		void ClientCreateKillMessage(FName Killer, FName Victim);
 		void ClientCreateKillMessage_Implementation(FName Killer, FName Victim);
 
+	UPROPERTY(Replicated)
+		int32 CurrentGameTime;
 
-	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly,Replicated, Category = Status)
+		bool IsGameOver;
 	
 };

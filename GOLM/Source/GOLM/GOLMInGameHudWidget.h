@@ -47,6 +47,8 @@ private:
 	UImage *ReturnHomeImage;
 	UTextBlock *ReturnHomeTimer;
 
+	UTextBlock *GameTimer;
+
 	EEquipSlot CurrentSelection;
 
 	UVerticalBox *KillBox;
@@ -57,7 +59,7 @@ private:
 
 public:
 
-	UFUNCTION(BlueprintCallable, Category = Init) void SetWeaponSlotUI(EEquipSlot WeaponSlot, UImage *WeaponImage, UTextBlock *AmmoCount, UTextBlock *TotalAmmoCount, UTextBlock *WeaponName, UImage *WeaponHighlight);
+	UFUNCTION(BlueprintCallable, Category = Init) void SetWeaponSlotUI(EEquipSlot WeaponSlot, UImage *WeaponImage, UTextBlock *AmmoCount, UTextBlock *TotalAmmoCount, UTextBlock *WeaponName, UImage *WeaponHighlight, UTextBlock *GameTimeBlock);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = UIData) UTexture2D *NullImage;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = UIData) UTexture2D *ReloadImage;
@@ -85,4 +87,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = Init) void SetKillBox(UVerticalBox *VerticalKillBox);
 	UFUNCTION(BlueprintCallable, Category = KillMessage) void AddToKillBox(FName Killer, FName Victim);
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = KillMessage) TSubclassOf<UUserWidget> KillWidget;
+	
+	UFUNCTION(BlueprintCallable, Category = Time)
+		void UpdateGameTimer();
+
 };

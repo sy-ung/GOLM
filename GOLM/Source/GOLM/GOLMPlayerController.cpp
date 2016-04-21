@@ -14,7 +14,8 @@
 AGOLMPlayerController::AGOLMPlayerController()
 {
 	DefaultMouseCursor = EMouseCursor::Crosshairs;
-	bShowMouseCursor = false;
+	
+
 }
 
 
@@ -97,20 +98,46 @@ void AGOLMPlayerController::Tick(float DeltaSeconds)
 		InGameHUDReference->UpdateWeaponBar();
 		InGameHUDReference->UpdateReturnHomeCooldownUI();
 	}
+
+	AGOLMGameState *GS = Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	if(GS!=NULL)
+	{
+
+		if(IsLocalController())
+		{
+			if (GS->IsGameOver)
+			{
+				if (bIsInEquipmentMenu)
+				{
+					bIsInEquipmentMenu = false;
+					HideEquipmentMenu();
+				}
+				ShowScoreBoard(true);
+			}
+		}
+	}
 }
 
 
 void AGOLMPlayerController::FireWeapon(EEquipSlot WeaponSlot, bool StartShooting, bool InstantFire)
 {
+	if (Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->IsGameOver)
+		return;
+
 	AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetCharacter());
-	if(!InstantFire)
+	if (PlayerChar != NULL)
 	{
-		if (!PlayerChar->bIsInMenu)
-			PlayerChar->FireWeapon(InGameHUDReference->GetCurrentWeaponSelection(), StartShooting);
-	}
-	else if (InstantFire)
-	{
-		PlayerChar->FireWeapon(WeaponSlot, StartShooting);
+		if(!InstantFire)
+		{
+			if (!PlayerChar->bIsInMenu)
+				PlayerChar->FireWeapon(InGameHUDReference->GetCurrentWeaponSelection(), StartShooting);
+		}
+		else if (InstantFire)
+		{
+		
+			if (!PlayerChar->bIsInMenu)
+				PlayerChar->FireWeapon(WeaponSlot, StartShooting);
+		}
 	}
 
 }
@@ -121,7 +148,7 @@ FVector AGOLMPlayerController::GetMouseHit()
 	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		FHitResult Hit(ForceInit);
-		GetHitResultUnderCursor(ECollisionChannel::ECC_GameTraceChannel1, false, Hit);
+		GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, false, Hit);
 		return Hit.ImpactPoint;
 	}
 	
@@ -155,6 +182,10 @@ void AGOLMPlayerController::RotatePlayerCamera(bool value)
 
 void AGOLMPlayerController::MovePlayerUp(bool value)
 {
+
+	if (Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->IsGameOver)
+		return;
+
 	if(!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
@@ -166,6 +197,7 @@ void AGOLMPlayerController::MovePlayerUp(bool value)
 
 void AGOLMPlayerController::MovePlayerDown(bool value)
 {
+
 	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
@@ -194,6 +226,9 @@ void AGOLMPlayerController::MovePlayerRight(bool value)
 }
 void AGOLMPlayerController::BoostPlayer(bool value)
 {
+	if (Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->IsGameOver)
+		return;
+
 	if (!bIsInEquipmentMenu && !bIsInSettingsMenu)
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
@@ -223,6 +258,9 @@ void AGOLMPlayerController::ZoomPlayerCamera(float deltaZoom)
 
 void AGOLMPlayerController::GotoLockerRoom()
 {
+	if (Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->IsGameOver)
+		return;
+
 	if(IsLocalController())
 	{
 		AGOLMCharacter *PlayerChar = Cast<AGOLMCharacter>(GetPawn());
@@ -267,7 +305,7 @@ void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 			PlayerChar->Equip(NewWeapon, Slot);
 			EquipmentMenuReference->SetupWeaponProjectileSelection();
 			InGameHUDReference->SetWeaponBarSlot(Slot, NewWeapon);
-			InGameHUDReference->SelectCurrentWeapon(Slot);
+			//InGameHUDReference->SelectCurrentWeapon(Slot);
 		}
 	}
 }
@@ -591,16 +629,19 @@ void AGOLMPlayerController::ReloadWeapon(EEquipSlot WeaponSlot)
 	AGOLMCharacter *ConChar = Cast<AGOLMCharacter>(GetCharacter());
 	if (ConChar != NULL)
 	{
-		switch (InGameHUDReference->GetCurrentWeaponSelection())
+		switch (WeaponSlot)
 		{
 		case EEquipSlot::HAND_SLOT:
-			ConChar->CurrentHandWeapon->Reload();
+			if(ConChar->CurrentHandWeapon!= NULL)
+				ConChar->CurrentHandWeapon->Reload();
 			break;
 		case EEquipSlot::LEFT_SHOULDER:
-			ConChar->CurrentLeftShoulderWeapon->Reload();
+			if (ConChar->CurrentLeftShoulderWeapon != NULL)
+				ConChar->CurrentLeftShoulderWeapon->Reload();
 			break;
 		case EEquipSlot::RIGHT_SHOULDER:
-			ConChar->CurrentRightShoulderWeapon->Reload();
+			if (ConChar->CurrentRightShoulderWeapon != NULL)
+				ConChar->CurrentRightShoulderWeapon->Reload();
 			break;
 		default:
 			break;

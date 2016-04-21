@@ -8,30 +8,54 @@
 
 AGOLMGameMode::AGOLMGameMode()
 {
-	EnemySpawnTimer = 1.0f;
+	EnemySpawnTimer = 10.0f;
 	NumOfEnemies = 0;
-	MaxNumOfEnemies = 1;
-	EnemySpawnInterval = 0.50f;
-	NumOfPlayers = 1;
+	MaxNumOfEnemies = 0;
+	EnemySpawnInterval = 2.0f;
+	NumOfPlayers = 0;
+	UpdateTimeEvent = 0;
+	bHasInitialized = false;
+	MaxGameTime = 10;
+	GameStarted = false;
 }
 
 void AGOLMGameMode::BeginPlay()
 {
 	//StartDedicatedServer();
 	//GEngine->AddOnScreenStart
-	GetEnemySpawnLocations();
-	if(!bIsThereKyle)
-		bIsThereKyle = false;
+	Super::BeginPlay();
 
+
+}
+void AGOLMGameMode::Init()
+{
+	GetSpawnLocations();
+	//MaxGameTime = 3000;
+	MaxGameTime = Cast<UGOLMGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()))->GameTimeInSeconds;
+	MaxNumOfEnemies = Cast<UGOLMGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()))->MaxAIBot;
+	CurrentGameState = Cast<AGOLMGameState>(GameState);
+	CurrentGameTime = MaxGameTime;
+	GameStarted = true;
 }
 
 void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)
 {
 
+
+
 	if (IsValid(this))//May have to delete this if game crashes
 	{
 		Super::PostLogin(NewPlayer);
-		RequestRespawn(NewPlayer);
+		if (!bHasInitialized)
+		{
+			if(IsLevel("GameLevel"))
+			{
+				Init();
+				bHasInitialized = true;
+				RequestRespawn(NewPlayer);
+			}
+		}
+		
 	}
 }
 
@@ -61,7 +85,6 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 					NumOfPlayers++;
 				}
 			}
-
 		}
 	}
 }
@@ -69,16 +92,43 @@ void AGOLMGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (NumOfEnemies < MaxNumOfEnemies )
+	if(GameStarted)
 	{
-		
-		EnemySpawnTimer -= DeltaSeconds;
-		if (EnemySpawnTimer <= 0)
+		if (NumOfEnemies < MaxNumOfEnemies )
 		{
-			SpawnEnemy();
-			EnemySpawnTimer = EnemySpawnInterval;
+		
+			EnemySpawnTimer -= DeltaSeconds;
+			if (EnemySpawnTimer <= 0)
+			{
+				SpawnEnemy();
+				EnemySpawnTimer = EnemySpawnInterval;
+			}
+		}
+
+		if(!GameIsDone)
+		{
+			CurrentGameTime -= DeltaSeconds;
+			if (CurrentGameTime <= 0)
+			{
+				GameIsDone = true;
+				CurrentGameState->IsGameOver = true;
+			}
+			else
+			{
+				UpdateTimeEvent += DeltaSeconds;
+				if(UpdateTimeEvent>=1)
+				{
+					CurrentGameState->CurrentGameTime = (int)CurrentGameTime;
+					UpdateTimeEvent = 0;
+				}
+			}
+		}
+		else
+		{
+			FindWinner();
 		}
 	}
+
 }
 
 void AGOLMGameMode::GotoSpawnLocation(FName PlayerStartTag, AGOLMCharacter *RequestingPlayerCharacter)
@@ -140,7 +190,7 @@ void AGOLMGameMode::SpawnEnemy()
 	}
 }
 
-void AGOLMGameMode::GetEnemySpawnLocations()
+void AGOLMGameMode::GetSpawnLocations()
 {
 	TArray<AActor*,FDefaultAllocator> GetSpawnLocs;
 	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), GetSpawnLocs);
@@ -149,8 +199,21 @@ void AGOLMGameMode::GetEnemySpawnLocations()
 		AGOLMPlayerStart *StartCheck = Cast<AGOLMPlayerStart>(GetSpawnLocs[i]);
 		if(StartCheck->PlayerStartTag == "EnemySpawn")
 			EnemySpawnLocations.Add(StartCheck);
+		else if (StartCheck->PlayerStartTag == "GameLevel_Random")
+			PlayerSpawnLocations.Add(StartCheck);
+		else if (StartCheck->PlayerStartTag == "LockerRoom")
+			LockerRoomLocation = StartCheck;
 	}
 
+}
+
+FVector AGOLMGameMode::GetPlayerRandomSpawnLocation()
+{
+	return PlayerSpawnLocations[FMath::RandRange(0, PlayerSpawnLocations.Num() - 1)]->GetSpawnLocation();
+}
+FVector AGOLMGameMode::GetLockerRoomSpawnLocation()
+{
+	return LockerRoomLocation->GetSpawnLocation();
 }
 
 void AGOLMGameMode::KillAllEnemies()
@@ -166,4 +229,95 @@ void AGOLMGameMode::KillAllEnemies()
 		}
 	}
 	Enemies.Empty();
+}
+
+void AGOLMGameMode::FindWinner()
+{
+	TArray<AGOLMPlayerState*> TiedPlayers;
+	AGOLMPlayerState *Winner = NULL;
+	for (int32 i = 0; i < CurrentGameState->PlayerArray.Num(); i++)
+	{
+		AGOLMPlayerState *PlayerCheck = Cast<AGOLMPlayerState>(CurrentGameState->PlayerArray[i]);
+		if(Winner == NULL)
+		{
+			Winner = PlayerCheck;
+		}
+		else
+		{
+			if (PlayerCheck->PlayerKills == Winner->PlayerKills)
+			{
+				if (PlayerCheck->PlayerDeath == Winner->PlayerDeath)
+				{
+					TiedPlayers.Add(PlayerCheck);
+					TiedPlayers.Add(Winner);
+				}
+				else if (PlayerCheck->PlayerDeath < Winner->PlayerDeath)
+				{
+					Winner->isLoser = true;
+					Winner = PlayerCheck;
+				}
+				else if (PlayerCheck->PlayerDeath > Winner->PlayerDeath)
+				{
+					PlayerCheck->isLoser = true;
+				}
+			}
+			else if (PlayerCheck->PlayerKills < Winner->PlayerKills)
+			{
+				PlayerCheck->isLoser = true;
+			}
+			else
+			{
+				Winner->isLoser = true;
+				Winner = PlayerCheck;
+			}
+		}
+	}
+	if(TiedPlayers.Num() > 0)
+	{
+		for (int32 i = 0; i < TiedPlayers.Num(); i++)
+		{
+			if (TiedPlayers[i] != Winner)
+			{
+				if (Winner->PlayerKills == TiedPlayers[i]->PlayerKills)
+				{
+					if (Winner->PlayerDeath == TiedPlayers[i]->PlayerDeath)
+					{
+						for (int32 j = 0; j < TiedPlayers.Num(); j++)
+						{
+							if (TiedPlayers[j] != Winner)
+							{
+								TiedPlayers.Add(Winner);
+							}
+							else
+								break;	
+						}
+					}
+					else if (Winner->PlayerDeath < TiedPlayers[i]->PlayerDeath)
+					{
+						TiedPlayers[i]->isLoser = true;
+					}
+					else if(TiedPlayers[i]->PlayerDeath < Winner->PlayerDeath)
+					{
+						Winner->isLoser = true;
+						Winner = TiedPlayers[i];
+					}
+				}
+				else if(Winner->PlayerKills> TiedPlayers[i]->PlayerKills)
+				{
+					TiedPlayers[i]->isLoser = true;
+				}
+				else if (Winner->PlayerKills < TiedPlayers[i]->PlayerKills)
+				{
+					Winner->isLoser = true;
+					Winner = TiedPlayers[i];
+				}
+			}
+		}
+	}
+	else
+	{
+		Winner->isWinner = true;
+	}
+	
+
 }

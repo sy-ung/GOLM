@@ -114,6 +114,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Menus) TSubclassOf<UUserWidget> InGameMenuWidget;
 
 	UPROPERTY(BlueprintReadOnly, Category = PlayerData) FName CurrentPlayerName;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = SessionData) float GameTimeInSeconds;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = SessionData) int32 MaxAIBot;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bHasSelectedServer;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ServerSelected) bool bCanSearchAgain;

@@ -28,6 +28,10 @@ void AGOLMPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &Out
 
 	DOREPLIFETIME(AGOLMPlayerState, bIsKyle);
 
+	DOREPLIFETIME(AGOLMPlayerState, isWinner);
+	DOREPLIFETIME(AGOLMPlayerState, isTied);
+	DOREPLIFETIME(AGOLMPlayerState, isLoser);
+
 }
 
 void AGOLMPlayerState::AddToScore(int32 AdditionalKill, int32 AdditionalDeath)

@@ -2,6 +2,7 @@
 
 #include "GOLM.h"
 #include "GOLMCharacter.h"
+#include "GOLMGameState.h"
 #include "Weapon.h"
 
 
@@ -142,6 +143,11 @@ void AWeapon::Tick(float DeltaSeconds)
 				}
 			}
 		}
+	}
+
+	if (Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->IsGameOver)
+	{
+		bStartShooting = false;
 	}
 
 	if(GetOwner() != NULL)

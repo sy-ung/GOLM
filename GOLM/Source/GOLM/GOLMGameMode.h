@@ -48,12 +48,14 @@ private:
 	bool IsLevel(FString LevelName);
 	bool bAllLevelLoaded;
 	TArray<class AGOLMPlayerStart*> EnemySpawnLocations;
+	TArray<class AGOLMPlayerStart*> PlayerSpawnLocations;
+	class AGOLMPlayerStart* LockerRoomLocation;
 
 	
 	float EnemySpawnTimer;
 
 	
-	
+	class AGOLMGameState *CurrentGameState;
 
 
 public:
@@ -67,7 +69,13 @@ public:
 		void SpawnEnemy();
 
 	UFUNCTION(BlueprintCallable, Category = Init)
-		void GetEnemySpawnLocations();
+		void GetSpawnLocations();
+
+	FVector GetPlayerRandomSpawnLocation();
+	FVector GetLockerRoomSpawnLocation();
+
+	void Init();
+	bool bHasInitialized;
 
 	void KillAllEnemies();
 
@@ -77,6 +85,22 @@ public:
 
 	int32 NumOfEnemies;
 	int32 NumOfPlayers;
+
+	float MatchLengthinSeconds;
+	bool GameIsDone;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = GameStatus) bool GameStarted;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = GameTime)
+		float MaxGameTime;
+	float CurrentGameTime;
+	bool IsGameOver;
+
+	float UpdateTimeEvent;
+
+	void FindWinner();
+
+
 
 protected:
 	

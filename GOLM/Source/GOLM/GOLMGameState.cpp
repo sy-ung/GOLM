@@ -17,11 +17,17 @@ AGOLMGameState::AGOLMGameState()
 void AGOLMGameState::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	for (int32 i = 0; i < PlayerArray.Num(); i++)
-	{
-		/*GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), PlayerArray[i]->GetName());*/
-	}
+	
 }
+
+void AGOLMGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	DOREPLIFETIME(AGOLMGameState, CurrentGameTime);
+	DOREPLIFETIME(AGOLMGameState, IsGameOver);
+
+}
+
 
 void AGOLMGameState::CreateKillMessage(FName Killer, FName Victim)
 {

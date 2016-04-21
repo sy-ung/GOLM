@@ -364,5 +364,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = CharacterData)
 		void SetCharacterName(FString NewName);
 
+	void HealAndReplenish();
+
 };
 

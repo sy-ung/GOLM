@@ -186,20 +186,21 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 void AGOLMCharacter::PreReplication(IRepChangedPropertyTracker &ChangedPropertyTracker)
 {
 	Super::PreReplication(ChangedPropertyTracker);
-
 }
 
 //***RealViewer refers to player controller and ViewTarget refers to Character
 bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* ViewTarget, const FVector& SrcLocation) const
 {
-	if (Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation))
+
+	if (CurrentLevelStream == "LockerRoom")
 	{
-		return true;
+		if (ViewTarget == this)
+			return true;
+		else
+			return false;
 	}
-	else
-	{
-		return false;
-	}
+	return Super::IsNetRelevantFor(RealViewer, ViewTarget, SrcLocation);
+
 		
 
 }
@@ -208,15 +209,19 @@ bool AGOLMCharacter::IsNetRelevantFor(const AActor* RealViewer, const AActor* Vi
 void AGOLMCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
+	if (Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->IsGameOver)
+	{
+		bMoving = false;
+		return;
+	}
 
 	//****NON-Network updates - Runs on client and server simultaneously
-	UpdateAim();
+
 
 	if (bAlive)
 	{
 
-
+		UpdateAim();
 		CalculateRelativeDirectionScale();
 		if (bBoosting)
 		{
@@ -294,6 +299,8 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 			}
 		}
 
+		if (CurrentLevelStream == "LockerRoom")
+			HealAndReplenish();
 
 	}
 
@@ -349,11 +356,12 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 				if (bRotatingCamera)
 					RotateCamera();
 
+				
+
 				FVector NewTargetLocation = Cast<AGOLMPlayerController>(GetController())->GetMouseHit();
 				UpdateTargetLocation(FVector_NetQuantize10(NewTargetLocation.X,NewTargetLocation.Y,NewTargetLocation.Z));
-
 			
-
+			
 				MoveCheck();
 
 				if (PlayerCameraBoom->TargetOffset != NewCameraOffset)
@@ -1012,15 +1020,15 @@ FName AGOLMCharacter::GetCurrentLevelStream()
 
 void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName)
 {
-	if (IsLocallyControlled() && Role != ROLE_Authority)
-	{
+	//if (IsLocallyControlled() && Role != ROLE_Authority)
+	//{
 
 		//UGameplayStatics::GetStreamingLevel(GetWorld(), EntranceLevelName)->bShouldBeVisible = true;
 		//if (CurrentLevelStream != "None" && CurrentLevelStream != EntranceLevelName)
 		//	UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
 
-		CurrentLevelStream = EntranceLevelName;
-	}
+		//CurrentLevelStream = EntranceLevelName;
+	//}
 
 	if (IsLocallyControlled() || Role != ROLE_Authority)
 		MoveToEntrance(EntranceLevelName);
@@ -1075,45 +1083,58 @@ void AGOLMCharacter::MoveToEntrance(FName EntranceLevelNameTag)
 {
 	if (Role == ROLE_Authority)
 	{
-		TArray<AActor*, FDefaultAllocator> SpawnLocs;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
-
-		//Looking for a start location to teleport to
-		if (SpawnLocs.Num() != 0)
+		if (EntranceLevelNameTag == "LockerRoom")
 		{
-			for (int32 i = 0; i < SpawnLocs.Num(); i++)
-			{
-				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
-				if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
-				{
-					//SetActorLocation(StartLocation->GetSpawnLocation());
-
-
-					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
-					CurrentLevelStream = EntranceLevelNameTag;
-					if (CurrentLevelStream == "LockerRoom")
-					{
-						bStartHomeTimer = false;
-						ReturnHomeTimer = 0;
-						bCanGoHome = false;
-					}
-					else
-					{
-						bStartHomeTimer = true;
-					}
-					break;
-				}
-			}
-
+			bStartHomeTimer = false;
+			ReturnHomeTimer = 0;
+			bCanGoHome = false;
 		}
 		else
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+		{
+			bStartHomeTimer = true;
+		}
 
-
+		CurrentLevelStream = EntranceLevelNameTag;
+	
 		if (EntranceLevelNameTag == "LockerRoom")
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
 			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
+
+		if (EntranceLevelNameTag == "GameLevel_Random")
+		{
+			TeleportTo(Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GetPlayerRandomSpawnLocation(), GetActorRotation());
+		}
+		else if (EntranceLevelNameTag == "LockerRoom")
+		{
+			TeleportTo(Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GetLockerRoomSpawnLocation(), GetActorRotation());
+		}
+
+		//TArray<AActor*, FDefaultAllocator> SpawnLocs;
+		//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
+
+		////Looking for a start location to teleport to
+		//if (SpawnLocs.Num() != 0)
+		//{
+		//	for (int32 i = 0; i < SpawnLocs.Num(); i++)
+		//	{
+		//		AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
+		//		if (StartLocation->PlayerStartTag == EntranceLevelNameTag)
+		//		{
+		//			//SetActorLocation(StartLocation->GetSpawnLocation());
+
+		//			TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+		//			CurrentLevelStream = EntranceLevelNameTag;
+		//			break;
+		//		}
+		//	}
+
+		//}
+		//else
+		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+
+
+
 	}
 	
 	if (Role != ROLE_Authority)
@@ -1135,45 +1156,76 @@ void AGOLMCharacter::MoveToEntrance(AGOLMLevelStreamBeacon *LevelBeacon)
 {
 	if (Role == ROLE_Authority)
 	{
-		if (LevelBeacon->NameOfLevelToLoad == "LockerRoom")
+		//if (LevelBeacon->NameOfLevelToLoad == "LockerRoom")
+		//	SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
+		//else
+		//	SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
+
+		//TArray<AActor*, FDefaultAllocator> SpawnLocs;
+		//UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
+
+		////Looking for a start location to teleport to
+		//if (SpawnLocs.Num() != 0)
+		//{
+		//	for (int32 i = 0; i < SpawnLocs.Num(); i++)
+		//	{
+		//		AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
+		//		if (StartLocation->PlayerStartTag == LevelBeacon->PlayStartLocationTag)
+		//		{
+		//			//SetActorLocation(SpawnLocs[i]->GetActorLocation());
+		//			//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), StartLocation->GetSpawnLocation().ToString());
+		//			
+		//			
+		//			TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
+		//			CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
+
+		//			if (CurrentLevelStream == "LockerRoom")
+		//			{
+		//				bStartHomeTimer = false;
+		//				ReturnHomeTimer = 0;
+		//				bCanGoHome = false;
+		//			}
+		//			else
+		//			{
+		//				bStartHomeTimer = true;
+		//			}
+		//			break;
+		//		}
+		//	}
+		//}
+		//else
+		//	GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+
+
+
+		CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
+
+		if (CurrentLevelStream == "LockerRoom")
 			SetPawnCollisionType(EPlayerCollisionProfile::LOCKER);
 		else
 			SetPawnCollisionType(EPlayerCollisionProfile::REGULAR);
 
-		TArray<AActor*, FDefaultAllocator> SpawnLocs;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGOLMPlayerStart::StaticClass(), SpawnLocs);
 
-		//Looking for a start location to teleport to
-		if (SpawnLocs.Num() != 0)
+		if (LevelBeacon->PlayStartLocationTag == "LockerRoom")
 		{
-			for (int32 i = 0; i < SpawnLocs.Num(); i++)
-			{
-				AGOLMPlayerStart *StartLocation = Cast<AGOLMPlayerStart>(SpawnLocs[i]);
-				if (StartLocation->PlayerStartTag == LevelBeacon->PlayStartLocationTag)
-				{
-					//SetActorLocation(SpawnLocs[i]->GetActorLocation());
-					//GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), StartLocation->GetSpawnLocation().ToString());
-					
-					
-					TeleportTo(StartLocation->GetSpawnLocation(), GetActorRotation());
-					CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
-
-					if (CurrentLevelStream == "LockerRoom")
-					{
-						bStartHomeTimer = false;
-						ReturnHomeTimer = 0;
-						bCanGoHome = false;
-					}
-					else
-					{
-						bStartHomeTimer = true;
-					}
-					break;
-				}
-			}
+			bStartHomeTimer = false;
+			ReturnHomeTimer = 0;
+			bCanGoHome = false;
 		}
 		else
-			GEngine->AddOnScreenDebugMessage(-1, 100.0f, FColor::MakeRandomColor(), "NO SPAWN LOCATIONS");
+		{
+			bStartHomeTimer = true;
+		}
+		
+		
+		if (LevelBeacon->PlayStartLocationTag == "GameLevel_Random")
+		{
+			TeleportTo(Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GetPlayerRandomSpawnLocation(), GetActorRotation());
+		}
+		else if (LevelBeacon->PlayStartLocationTag == "LockerRoom")
+		{
+			TeleportTo(Cast<AGOLMGameMode>(UGameplayStatics::GetGameMode(GetWorld()))->GetLockerRoomSpawnLocation(), GetActorRotation());
+		}
 	}
 
 	if (Role != ROLE_Authority)
@@ -1457,5 +1509,55 @@ void AGOLMCharacter::SetCharacterName(FString NewName)
 	if(Role == ROLE_Authority)
 	{
 		PlayerState->PlayerName = NewName;
+	}
+}
+
+void AGOLMCharacter::HealAndReplenish()
+{
+	if (Role == ROLE_Authority)
+	{
+		if(Health<100)
+			Health += 1;
+		if (Health > 100)
+			Health = 100;
+
+		if (CurrentHandWeapon != NULL)
+		{
+			if (CurrentHandWeapon->TotalAmmoCount < CurrentHandWeapon->MaxAmmo)
+				CurrentHandWeapon->TotalAmmoCount += CurrentHandWeapon->MaxAmmo / 20;
+
+			if (CurrentHandWeapon->TotalAmmoCount > CurrentHandWeapon->MaxAmmo)
+				CurrentHandWeapon->TotalAmmoCount = CurrentHandWeapon->MaxAmmo;
+
+			if (CurrentHandWeapon->CurrentAmmoCount < CurrentHandWeapon->MagazineSize)
+				CurrentHandWeapon->CurrentAmmoCount = CurrentHandWeapon->MagazineSize;
+
+		}
+
+		if (CurrentLeftShoulderWeapon != NULL)
+		{
+			if (CurrentLeftShoulderWeapon->TotalAmmoCount < CurrentLeftShoulderWeapon->MaxAmmo)
+				CurrentLeftShoulderWeapon->TotalAmmoCount += CurrentLeftShoulderWeapon->MaxAmmo / 20;
+
+			if (CurrentLeftShoulderWeapon->TotalAmmoCount > CurrentLeftShoulderWeapon->MaxAmmo)
+				CurrentLeftShoulderWeapon->TotalAmmoCount = CurrentLeftShoulderWeapon->MaxAmmo;
+
+			if (CurrentLeftShoulderWeapon->CurrentAmmoCount < CurrentLeftShoulderWeapon->MagazineSize)
+				CurrentLeftShoulderWeapon->CurrentAmmoCount = CurrentLeftShoulderWeapon->MagazineSize;
+		}
+
+		if (CurrentRightShoulderWeapon != NULL)
+		{
+			if (CurrentRightShoulderWeapon->TotalAmmoCount < CurrentRightShoulderWeapon->MaxAmmo)
+				CurrentRightShoulderWeapon->TotalAmmoCount += CurrentRightShoulderWeapon->MaxAmmo / 20;
+
+			if (CurrentRightShoulderWeapon->TotalAmmoCount > CurrentRightShoulderWeapon->MaxAmmo)
+				CurrentRightShoulderWeapon->TotalAmmoCount = CurrentRightShoulderWeapon->MaxAmmo;
+
+			if (CurrentRightShoulderWeapon->CurrentAmmoCount < CurrentRightShoulderWeapon->MagazineSize)
+				CurrentRightShoulderWeapon->CurrentAmmoCount = CurrentRightShoulderWeapon->MagazineSize;
+		}
+
+
 	}
 }

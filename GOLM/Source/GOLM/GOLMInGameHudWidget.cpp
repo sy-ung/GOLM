@@ -2,6 +2,7 @@
 
 #include "GOLM.h"
 #include "GOLMCharacter.h"
+#include "GOLMGameState.h"
 #include "GOLMInGameHudWidget.h"
 
 void UGOLMInGameHudWidget::MapZoom(float value)
@@ -30,6 +31,7 @@ void UGOLMInGameHudWidget::UpdateWeaponBar()
 				bHandWeaponReloading = PlayerChar->CurrentHandWeapon->bReloading;
 				if (!bHandWeaponReloading)
 				{
+
 					SetWeaponBarSlot(EEquipSlot::HAND_SLOT, PlayerChar->CurrentHandWeapon);
 				}
 			}
@@ -108,6 +110,7 @@ void UGOLMInGameHudWidget::SetWeaponBarSlot(EEquipSlot WeaponSlot, AWeapon *NewW
 		}
 		else
 		{
+			HandWeaponHighlight->SetColorAndOpacity(FColor(0, 0, 0, 0));
 			HandWeaponImage->SetBrushFromTexture(NewWeapon->WeaponImage);
 
 			HandWeaponName->SetText(FText::FromString(NewWeapon->Name.ToString()));
@@ -128,6 +131,7 @@ void UGOLMInGameHudWidget::SetWeaponBarSlot(EEquipSlot WeaponSlot, AWeapon *NewW
 		}
 		else
 		{
+			LeftShoulderWeaponHighlight->SetColorAndOpacity(FColor(0, 0, 0, 0));
 			LeftShoulderWeaponImage->SetBrushFromTexture(NewWeapon->WeaponImage);
 			LeftShoulderWeaponWeaponName->SetText(FText::FromString(NewWeapon->Name.ToString()));
 			LeftShoulderWeaponWeaponAmmoCount->SetText(FText::FromString(
@@ -146,6 +150,7 @@ void UGOLMInGameHudWidget::SetWeaponBarSlot(EEquipSlot WeaponSlot, AWeapon *NewW
 		}
 		else
 		{
+			RightShoulderWeaponHighlight->SetColorAndOpacity(FColor(0, 0, 0, 0));
 			RightShoulderWeaponImage->SetBrushFromTexture(NewWeapon->WeaponImage);
 			RightShoulderWeaponName->SetText(FText::FromString(NewWeapon->Name.ToString()));
 			RightShoulderWeaponAmmoCount->SetText(FText::FromString(
@@ -166,8 +171,12 @@ void UGOLMInGameHudWidget::SetWeaponSlotUI(
 	UTextBlock *AmmoCount, 
 	UTextBlock *TotalAmmoCount, 
 	UTextBlock *WeaponName,
-	UImage *WeaponHighlight)
+	UImage *WeaponHighlight,
+	UTextBlock *GameTimeBlock)
 {
+	if(GameTimer == NULL)
+		GameTimer = GameTimeBlock;
+
 	switch (WeaponSlot)
 	{
 	case EEquipSlot::HAND_SLOT:
@@ -235,15 +244,17 @@ void UGOLMInGameHudWidget::PlayReload(EEquipSlot WeaponSlot, AWeapon *CurrentWea
 		switch (WeaponSlot)
 		{
 		case EEquipSlot::HAND_SLOT:
+			HandWeaponHighlight->SetColorAndOpacity(FColor::Red);
 			HandWeaponImage->SetBrushFromTexture(ReloadImage);
 			HandWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
 			break;
 		case EEquipSlot::LEFT_SHOULDER:
+			LeftShoulderWeaponHighlight->SetColorAndOpacity(FColor::Red);
 			LeftShoulderWeaponImage->SetBrushFromTexture(ReloadImage);
 			LeftShoulderWeaponWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
-
 			break;
 		case EEquipSlot::RIGHT_SHOULDER:
+			RightShoulderWeaponHighlight->SetColorAndOpacity(FColor::Red);
 			RightShoulderWeaponImage->SetBrushFromTexture(ReloadImage);
 			RightShoulderWeaponAmmoCount->SetText(FText::FromString(FString::SanitizeFloat(CurrentWeapon->ReloadTimeFinish - CurrentWeapon->ReloadTimer).Left(3)));
 			break;
@@ -289,4 +300,17 @@ void UGOLMInGameHudWidget::AddToKillBox(FName Killer, FName Victim)
 		KillBox->RemoveChildAt(0);
 	}
 	KillBox->AddChild(KillMessage);
+}
+
+void UGOLMInGameHudWidget::UpdateGameTimer()
+{
+	int32 CurrentGameTime = Cast<AGOLMGameState>(UGameplayStatics::GetGameState(GetWorld()))->CurrentGameTime;
+	int32 minutes = (CurrentGameTime / 60) % 60 ;
+	int32 seconds = CurrentGameTime % 60;
+	FString Seconds = FString::FromInt(seconds);
+	if (Seconds.Len() == 1)
+	{
+		Seconds.InsertAt(0, "0");
+	}
+	GameTimer->SetText(FText::FromString(FString::FromInt(minutes) + ":" + Seconds));
 }

@@ -130,7 +130,7 @@ void UGOLMGameInstance::SetActiveWidget(TSubclassOf<UUserWidget> NewWidget)
 	
 	if(CurrentWidget != NULL)
 	{
-		FInputModeUIOnly UI;
+		FInputModeGameAndUI UI;
 		UI.SetWidgetToFocus(CurrentWidget->GetCachedWidget());
 		PlayerCon->SetInputMode(UI);
 		CurrentWidget->AddToViewport(0);
