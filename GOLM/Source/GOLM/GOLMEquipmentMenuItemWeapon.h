@@ -21,4 +21,5 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = Action)	void GetWeapon();
 	UFUNCTION(BlueprintCallable, Category = Data) FName GetWeaponName();
+	UFUNCTION(BlueprintCallable, Category = Data) UTexture2D *GetImage();
 };

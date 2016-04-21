@@ -16,11 +16,11 @@ class GOLM_API UGOLMEquipmentMenuItemProjectile : public UUserWidget
 
 private:
 	AProjectile *CurrentProjectile;
+	
 public:
 	void SetProjectile(AProjectile *NewProjectile);
-
 	UFUNCTION(BlueprintCallable, Category = Action) void GetProjectile();
 	UFUNCTION(BlueprintCallable, Category = Data) FName GetProjectileName();
-	
+	UFUNCTION(BlueprintCallable, Category = Data) UTexture2D *GetProjectileImage();
 	
 };

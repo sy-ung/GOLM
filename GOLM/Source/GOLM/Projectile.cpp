@@ -13,7 +13,7 @@ AProjectile::AProjectile()
 	PrimaryActorTick.bCanEverTick = true;
 
 	
-
+	bNetUseOwnerRelevancy = true;
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionComp"));
 	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("WeaponStaticMesh"));
 	RearParticle = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RearParticle"));
@@ -250,10 +250,17 @@ void AProjectile::InflictExplosiveDamage()
 
 		if(ConInstigator != NULL)
 		{
-			if (bExplosive)
+			AGOLMCharacter *InChar = Cast<AGOLMCharacter>(ConInstigator->GetCharacter());
+			if(InChar != NULL)
 			{
-				TArray<AActor*> OverlappedActors;
-				UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetOwner(), ConInstigator);
+				if (bExplosive)
+				{
+					if (InChar->CurrentLevelStream != "LockerRoom")
+					{
+						TArray<AActor*> OverlappedActors;
+						UGameplayStatics::ApplyRadialDamage(GetWorld(), Damage, GetActorLocation(), ExplosionRadius, DamageType, OverlappedActors, GetOwner(), ConInstigator);
+					}
+				}
 			}
 		}
 		

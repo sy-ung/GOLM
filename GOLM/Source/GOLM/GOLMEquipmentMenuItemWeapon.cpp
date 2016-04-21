@@ -25,3 +25,11 @@ FName UGOLMEquipmentMenuItemWeapon::GetWeaponName()
 	else
 		return "None";
 }
+
+UTexture2D *UGOLMEquipmentMenuItemWeapon::GetImage()
+{
+	if (Weapon != NULL)
+		return Weapon->WeaponImage;
+	else
+		return NULL;
+}

@@ -58,6 +58,7 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		bool bExplosive;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		float  ExplosionRadius;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		FName Name;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = ProjectileSetup)		UTexture2D *Image;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = ProjectileMovement)	class UProjectileMovementComponent *MovementComponent;
 

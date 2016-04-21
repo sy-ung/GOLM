@@ -42,3 +42,10 @@ FName UGOLMEquipmentMenuItemProjectile::GetProjectileName()
 	else
 		return "None";
 }
+UTexture2D *UGOLMEquipmentMenuItemProjectile::GetProjectileImage()
+{
+	if (CurrentProjectile != NULL)
+		return CurrentProjectile->Image;
+	else
+		return NULL;
+}

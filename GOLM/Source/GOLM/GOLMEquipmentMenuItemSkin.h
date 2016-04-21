@@ -14,12 +14,12 @@ class GOLM_API UGOLMEquipmentMenuItemSkin : public UUserWidget
 {
 	GENERATED_BODY()
 
-	USkeletalMesh *CurrentSkin;
+
 public:
 	void SetSkinColor(USkeletalMesh *NewSkin);
 
 	UFUNCTION(BlueprintCallable, Category = Action)	void GetSkin();
 	UFUNCTION(BlueprintCallable, Category = Data) FName GetSkinName();
-	
-	
+	UPROPERTY(VisibleAnywhere,BlueprintReadWrite, Category = Data) FColor SkinColor;
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Data) USkeletalMesh *CurrentSkin;
 };
