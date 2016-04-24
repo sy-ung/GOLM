@@ -125,7 +125,7 @@ public:
 	UPROPERTY(BlueprintReadOnly)		float CurrentHandWeaponAimPitch;
 
 	//Only Server needs to know about CurrentLevelStream
-	UPROPERTY(BlueprintReadOnly)		FName CurrentLevelStream;
+	UPROPERTY(BlueprintReadOnly,Replicated)		FName CurrentLevelStream;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedHandWeapon)				AWeapon *CurrentHandWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedLeftShoulderWeapon)		AWeapon *CurrentLeftShoulderWeapon;
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_OnEquippedRightShoulder)			AWeapon *CurrentRightShoulderWeapon;

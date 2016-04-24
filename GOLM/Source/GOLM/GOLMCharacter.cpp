@@ -21,8 +21,12 @@ AGOLMCharacter::AGOLMCharacter()
 	bAlive = true;
 	SetReplicates(true);
 
+	PlayerLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerLabel"));
+
 	if (bIsAI)
+	{
 		return;
+	}
 
 	// Set size for player capsule
 	//GetCapsuleComponent()->InitCapsuleSize(42.f, 96.0f);
@@ -65,9 +69,8 @@ AGOLMCharacter::AGOLMCharacter()
 	LeftJetBoosters = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("LeftBoosters"));
 	RightJetBoosters = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("RightBoosters"));
 
-	PlayerLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerLabel"));
+	//PlayerLabel = CreateDefaultSubobject<UWidgetComponent>(TEXT("PlayerLabel"));
 	PlayerLabel->AttachTo(PlayerCameraBoom);
-
 
 	//MovementComponent = CreateDefaultSubobject<UGOLMPawnMovementComponent>(TEXT("GOLM Movement Component"));
 	//MovementComponent->UpdatedComponent = RootComponent;
@@ -84,7 +87,7 @@ void AGOLMCharacter::Init()
 
 	if (IsLocallyControlled() && Role != ROLE_Authority)
 	{
-		UWorld *World = GetWorld();
+		//UWorld *World = GetWorld();
 		//UGameplayStatics::GetStreamingLevel(World, "LockerRoom")->bShouldBeVisible = false;
 		//UGameplayStatics::GetStreamingLevel(World, "GameLevel")->bShouldBeVisible = false;
 		//UGameplayStatics::GetStreamingLevel(World, "Bottomworld")->bShouldBeVisible = false;
@@ -110,11 +113,13 @@ void AGOLMCharacter::BeginPlay()
 
 	
 	bAlive = true;
+	if(PlayerLabel->GetUserWidgetObject()!= NULL)
+		Cast<UGOLMPlayerLabel>(PlayerLabel->GetUserWidgetObject())->SetCharacterReference(this);
 
 	if (bIsAI)
 		return;
 
-	Cast<UGOLMPlayerLabel>(PlayerLabel->GetUserWidgetObject())->SetCharacterReference(this);
+	
 	
 	GetCharacterMovement()->MaxWalkSpeed = MovingSpeed;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -180,6 +185,8 @@ void AGOLMCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty> &OutLi
 	DOREPLIFETIME(AGOLMCharacter, ReturnHomeTimer);
 	DOREPLIFETIME(AGOLMCharacter, bCanGoHome);
 
+	DOREPLIFETIME(AGOLMCharacter, CurrentLevelStream);
+
 
 }
 
@@ -220,7 +227,7 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 
 	if (bAlive)
 	{
-
+		UpdatePlayerLabel();
 		UpdateAim();
 		CalculateRelativeDirectionScale();
 		if (bBoosting)
@@ -258,13 +265,6 @@ void AGOLMCharacter::Tick(float DeltaSeconds)
 					GetCharacterMovement()->AddInputVector(FinalOrientation.Rotator().Vector() * (MovingSpeed)* DeltaSeconds);
 			}
 		}
-		PlayerLabel->SetWorldLocation(GetActorLocation());
-		
-		UpdatePlayerLabel();
-
-
-
-		
 	}
 
 
@@ -680,20 +680,23 @@ bool AGOLMCharacter::ServerFireWeapon_Validate(EEquipSlot WeaponSlot, bool Start
 
 void AGOLMCharacter::UpdatePlayerLabel()
 {
-	if (PlayerLabel->GetUserWidgetObject() != NULL && PlayerCamera != NULL)
+	PlayerLabel->SetWorldLocation(GetActorLocation());
+	AGOLMPlayerController *LocalViewerPlayerController = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0));
+	AGOLMCharacter *LocalViewerCharacter = Cast<AGOLMCharacter>(LocalViewerPlayerController->GetCharacter());
+	if (PlayerLabel->GetUserWidgetObject() != NULL && LocalViewerPlayerController != NULL && LocalViewerCharacter != NULL)
 	{
 		FVector2D ScreenCenter = GEngine->GameViewport->Viewport->GetSizeXY();
 		ScreenCenter /= 2;
 		FVector ScreenCenterWorld;
 		FVector ScreenCenterDir;
-		Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, ScreenCenterWorld, ScreenCenterDir);
+		LocalViewerPlayerController->DeprojectScreenPositionToWorld(ScreenCenter.X, ScreenCenter.Y, ScreenCenterWorld, ScreenCenterDir);
 		FRotator NewRot = UKismetMathLibrary::FindLookAtRotation(PlayerLabel->GetComponentLocation(), ScreenCenterWorld);
 		
 
 		PlayerLabel->SetWorldRotation(NewRot);
 
 		PlayerLabel->SetWorldLocation(GetActorLocation() + (GetActorUpVector() * 50) + (PlayerLabel->GetUpVector() * PlayerLabel->GetDrawSize().Y));
-		PlayerLabel->SetWorldScale3D(FVector(1,1,1) * (PlayerCameraBoom->TargetArmLength/MaxCameraHeight * 3));
+		PlayerLabel->SetWorldScale3D(FVector(1,1,1) * (LocalViewerCharacter->PlayerCameraBoom->TargetArmLength/LocalViewerCharacter->MaxCameraHeight * 3));
 	}
 }
 
@@ -877,6 +880,8 @@ bool AGOLMCharacter::ServerRespawn_Validate()
 void AGOLMCharacter::Death()
 {
 	SetPawnCollisionType(EPlayerCollisionProfile::DEATH);
+	if(bIsAI)
+		PlayerLabel->DestroyComponent();
 
 	if (Role == ROLE_Authority)
 	{
@@ -1030,13 +1035,13 @@ void AGOLMCharacter::LoadEntranceLevel(FName EntranceLevelName)
 		//CurrentLevelStream = EntranceLevelName;
 	//}
 
-	if (IsLocallyControlled() || Role != ROLE_Authority)
+	//if (IsLocallyControlled() || Role != ROLE_Authority)
 		MoveToEntrance(EntranceLevelName);
 
-	if (Role == ROLE_Authority)
-	{
-		ClientLoadEntranceLevelNameOnly(EntranceLevelName);
-	}
+	//if (Role == ROLE_Authority)
+	//{
+	//	ClientLoadEntranceLevelNameOnly(EntranceLevelName);
+	//}
 }
 
 void AGOLMCharacter::ClientLoadEntranceLevelNameOnly_Implementation(FName EntranceLevelName)
@@ -1048,28 +1053,28 @@ void AGOLMCharacter::ClientLoadEntranceLevelNameOnly_Implementation(FName Entran
 
 void AGOLMCharacter::LoadEntranceLevel(AGOLMLevelStreamBeacon *LevelBeacon)
 {
-	if (IsLocallyControlled() && Role != ROLE_Authority)
-	{
-		if (LevelBeacon != NULL)
-		{
+	//if (IsLocallyControlled() && Role != ROLE_Authority)
+	//{
+	//	if (LevelBeacon != NULL)
+	//	{
 
-			//UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
-			//if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
-			//	UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
+	//		//UGameplayStatics::GetStreamingLevel(GetWorld(), LevelBeacon->NameOfLevelToLoad)->bShouldBeVisible = true;
+	//		//if (CurrentLevelStream != "None" && CurrentLevelStream != LevelBeacon->NameOfLevelToLoad)
+	//		//	UGameplayStatics::GetStreamingLevel(GetWorld(), CurrentLevelStream)->bShouldBeVisible = false;
 
-			CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
-		}
-		else
-			GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "LevelBeacon is NULL");
-	}
+	//		CurrentLevelStream = LevelBeacon->NameOfLevelToLoad;
+	//	}
+	//	else
+	//		GEngine->AddOnScreenDebugMessage(-1, 10.0f, FColor::Red, "LevelBeacon is NULL");
+	//}
 
-	if (IsLocallyControlled() || Role != ROLE_Authority)
+	//if (IsLocallyControlled() || Role != ROLE_Authority)
 		MoveToEntrance(LevelBeacon);
 
-	if (Role == ROLE_Authority)
-	{
-		ClientLoadEntranceLevel(LevelBeacon);
-	}
+	//if (Role == ROLE_Authority)
+	//{
+	//	ClientLoadEntranceLevel(LevelBeacon);
+	//}
 }
 
 void AGOLMCharacter::ClientLoadEntranceLevel_Implementation(AGOLMLevelStreamBeacon *LevelBeacon)

@@ -25,7 +25,7 @@ AWeapon::AWeapon()
 	
 	WeaponAutoMaticEnd = CreateDefaultSubobject<UAudioComponent>(TEXT("WeaponAutomaticEnd"));
 	WeaponAutoMaticEnd->AttachTo(RootComponent);
-
+	bNetUseOwnerRelevancy = true;
 	SetReplicates(true);
 }
 

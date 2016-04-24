@@ -305,6 +305,7 @@ void AGOLMPlayerController::ChangeWeapon(AWeapon *NewWeapon, EEquipSlot Slot)
 			PlayerChar->Equip(NewWeapon, Slot);
 			EquipmentMenuReference->SetupWeaponProjectileSelection();
 			InGameHUDReference->SetWeaponBarSlot(Slot, NewWeapon);
+			UpdateWeaponSelection(NewWeapon, Slot);
 			//InGameHUDReference->SelectCurrentWeapon(Slot);
 		}
 	}
@@ -450,10 +451,6 @@ void AGOLMPlayerController::HideEquipmentMenu()
 			else
 				ChangeCursor(EPlayerCursorType::CROSSHAIR);
 
-			UpdateWeaponSelection(PlayerChar->CurrentHandWeapon, EEquipSlot::HAND_SLOT);
-			UpdateWeaponSelection(PlayerChar->CurrentLeftShoulderWeapon, EEquipSlot::LEFT_SHOULDER);
-			UpdateWeaponSelection(PlayerChar->CurrentRightShoulderWeapon, EEquipSlot::RIGHT_SHOULDER);
-		
 
 			bIsInEquipmentMenu = false;
 			Cast<AGOLMCharacter>(GetCharacter())->bIsInMenu = false;

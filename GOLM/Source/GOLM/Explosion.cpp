@@ -21,6 +21,7 @@ AExplosion::AExplosion()
 
 	ParticleFinishedDelegate.BindUFunction(this,FName("DestroyMe"));
 	ExplosionEmitter->OnSystemFinished.Add(ParticleFinishedDelegate);
+	bNetUseOwnerRelevancy = true;
 	bAppliedForce = false;
 }
 

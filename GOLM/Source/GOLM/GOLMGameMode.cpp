@@ -52,9 +52,10 @@ void AGOLMGameMode::PostLogin(APlayerController *NewPlayer)
 			{
 				Init();
 				bHasInitialized = true;
-				RequestRespawn(NewPlayer);
+				
 			}
 		}
+		RequestRespawn(NewPlayer);
 		
 	}
 }
@@ -78,9 +79,10 @@ void AGOLMGameMode::RequestRespawn(APlayerController *RequestingPlayer)
 				{
 					RequestingPlayer->UnPossess();
 					RequestingPlayer->Possess(PlayerCharacter);
-					//PlayerCharacter->SetOwner(RequestingPlayer);
+					PlayerCharacter->SetOwner(RequestingPlayer);
 					Cast<AGOLMPlayerController>(RequestingPlayer)->GetCharacterName();
-					PlayerCharacter->Init();
+					PlayerCharacter->CurrentLevelStream = "LockerRoom";
+					//PlayerCharacter->Init();
 					PlayerCharacter->Respawn();
 					NumOfPlayers++;
 				}

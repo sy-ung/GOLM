@@ -3,6 +3,7 @@
 #include "GOLM.h"
 #include "GOLMCharacter.h"
 #include "GOLMPlayerController.h"
+#include "GOLMPlayerState.h"
 #include "GOLMEquipmentMenuItemProjectile.h"
 
 
@@ -16,7 +17,11 @@ void UGOLMEquipmentMenuItemProjectile::SetProjectile(AProjectile *NewProjectile)
 void UGOLMEquipmentMenuItemProjectile::GetProjectile()
 {
 	AGOLMCharacter *Player = Cast<AGOLMCharacter>(UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetCharacter());
-	switch (Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->GetMenuWeaponSlotChoice())
+	AGOLMPlayerState *PS = Cast<AGOLMPlayerState>(Player->PlayerState);
+	EEquipSlot CurrentSlotSelection = Cast<AGOLMPlayerController>(UGameplayStatics::GetPlayerController(GetWorld(), 0))->GetMenuWeaponSlotChoice();
+	PS->GetWeaponFor(CurrentSlotSelection)->SetNewProjectile(CurrentProjectile);
+
+	switch (CurrentSlotSelection)
 	{
 	case EEquipSlot::HAND_SLOT:
 		Player->CurrentHandWeapon->SetNewProjectile(CurrentProjectile);
